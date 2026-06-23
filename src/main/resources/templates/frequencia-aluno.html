@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>Grade de Frequência | SEPLAG-MT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-[#F4F6F9] min-h-screen">
+
+<nav class="bg-[#00457C] text-white shadow-md px-6 py-4 flex justify-between items-center">
+    <h1 class="font-bold text-lg">Controle de Frequência: <span th:text="${evento.titulo}"></span></h1>
+    <a th:href="@{/organizador/eventos/{id}/inscritos(id=${evento.id})}" class="text-sm underline">Voltar para Inscritos</a>
+</nav>
+<div class="max-w-7xl mx-auto mt-4 px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center space-x-1 bg-white p-1 rounded-lg shadow-sm border border-gray-200 inline-flex">
+
+        <a th:href="@{/organizador/eventos/{id}/inscritos(id=${evento.id})}"
+           th:classappend="${paginaAtiva == 'inscritos' ? 'bg-[#00457C] text-white shadow' : 'text-gray-600 hover:bg-gray-100'}"
+           class="px-4 py-2 rounded-md text-sm font-semibold transition-all">
+            <i class="fa-solid fa-users mr-2"></i> Inscritos
+        </a>
+
+        <a th:href="@{/presencas/{id}/frequencia(id=${evento.id})}"
+           th:classappend="${paginaAtiva == 'frequencia' ? 'bg-[#00457C] text-white shadow' : 'text-gray-600 hover:bg-gray-100'}"
+           class="px-4 py-2 rounded-md text-sm font-semibold transition-all">
+            <i class="fa-solid fa-clipboard-check mr-2"></i> Frequência
+        </a>
+    </div>
+</div>
+<main class="max-w-7xl mx-auto mt-8 px-4">
+
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6">
+        <div class="flex justify-between items-end mb-2">
+            <h2 class="text-gray-700 font-semibold">Desempenho da Turma</h2>
+            <span class="text-sm font-bold text-[#00457C]" th:text="${percentualGlobal} + '% de presença geral'"></span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-4">
+            <div class="bg-emerald-500 h-4 rounded-full transition-all duration-500"
+                 th:style="'width: ' + ${percentualGlobal} + '%'"></div>
+        </div>
+    </div>
+
+    <div class="bg-white shadow rounded-xl border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+            <h3 class="font-bold text-[#00457C]">Grade de Presenças</h3>
+            <button onclick="toggleEdicao()" class="text-xs bg-amber-500 text-white px-3 py-1 rounded hover:bg-amber-600 transition">
+                <i class="fa-solid fa-pen"></i> Alterar Presença
+            </button>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-gray-100 uppercase text-xs text-gray-600 border-b border-gray-200 sticky top-0 z-20">
+                <tr>
+                    <th class="px-6 py-4 text-left font-bold text-gray-700 bg-gray-100 sticky left-0 z-30 shadow-[3px_0_6px_-2px_rgba(0,0,0,0.1)] min-w-[250px]">
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid fa-user text-[#00457C]"></i>
+                            <span>Participante</span>
+                        </div>
+                    </th>
+
+                    <th th:each="s : ${sessoes}"
+                        class="px-3 py-3 text-center border-l border-gray-200 bg-slate-50/80 min-w-[120px] transition-colors hover:bg-slate-100">
+                        <div class="text-[11px] font-bold tracking-wide text-[#00457C]" th:text="${s.nome}">
+                            Seg - Manhã
+                        </div>
+                        <div class="text-[10px] text-gray-400 font-normal mt-0.5 flex items-center justify-center space-x-1">
+                            <i class="fa-regular fa-calendar text-[9px]"></i>
+                            <span th:text="${#temporals.format(s.dataHoraInicio, 'dd/MM')}">18/06</span>
+                        </div>
+                    </th>
+                </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                <tr th:each="i : ${inscritos}" class="hover:bg-gray-50">
+                    <td class="px-6 py-4 font-medium text-gray-900 sticky left-0 bg-white z-10 shadow-[3px_0_6px_-2px_rgba(0,0,0,0.05)]"
+                        th:text="${i.participante.nome}">
+                        Nome do Aluno
+                    </td>
+
+                    <td th:each="s : ${sessoes}" class="px-4 py-4 text-center border-l">
+                        <div class="status-visual">
+                                <span th:with="status=${mapaPresencas.get(i.participante.id + '_' + s.id)}"
+                                      th:classappend="${status == 'PRESENTE' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}"
+                                      class="px-3 py-1 rounded-full text-[10px] font-bold uppercase">
+                                    <span th:text="${status != null ? status : 'FALTA'}">FALTA</span>
+                                </span>
+                        </div>
+
+                        <div class="campos-edicao hidden">
+                            <select onchange="atualizarStatus(this)"
+                                    th:data-aluno-id="${i.participante.id}"
+                                    th:data-sessao-id="${s.id}"
+                                    class="border rounded text-xs p-1">
+                                <option value="FALTA" th:selected="${mapaPresencas.get(i.participante.id + '_' + s.id) != 'PRESENTE'}">FALTA</option>
+                                <option value="PRESENTE" th:selected="${mapaPresencas.get(i.participante.id + '_' + s.id) == 'PRESENTE'}">PRESENTE</option>
+                            </select>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<script>
+    function toggleEdicao() {
+        document.querySelectorAll('.status-visual, .campos-edicao').forEach(el => el.classList.toggle('hidden'));
+    }
+
+    function atualizarStatus(select) {
+        const alunoId = select.getAttribute('data-aluno-id');
+        const sessaoId = select.getAttribute('data-sessao-id');
+        const novoStatus = select.value;
+        const token = document.querySelector("meta[name='_csrf']").content;
+        const header = document.querySelector("meta[name='_csrf_header']").content;
+
+        fetch(`/presencas/alterar-status?alunoId=${alunoId}&sessaoId=${sessaoId}&novoStatus=${novoStatus}`, {
+            method: 'POST',
+            headers: { [header]: token }
+        }).then(() => window.location.reload());
+    }
+</script>
+</body>
+</html>

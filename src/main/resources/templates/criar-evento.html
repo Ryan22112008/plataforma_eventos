@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novo Evento | Portal SEPLAG-MT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .leaflet-container { z-index: 1; }
+        .glass-modal { backdrop-filter: blur(4px); background-color: rgba(0, 0, 0, 0.4); }
+
+        /* Estilização da barra de rolagem das recomendações */
+        .suggestions-scrollbar::-webkit-scrollbar { width: 6px; }
+        .suggestions-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .suggestions-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-[#F4F6F9] min-h-screen flex flex-col">
+
+<nav class="bg-[#00457C] text-white shadow-md px-6 py-4 flex justify-between items-center border-b-4 border-[#FDB813]">
+    <div class="flex items-center space-x-3">
+        <div class="bg-white text-[#00457C] px-2.5 py-1 rounded font-bold text-lg">MT</div>
+        <span class="font-semibold text-lg tracking-wide">Painel do Organizador</span>
+    </div>
+    <a th:href="@{/organizador/painel}" class="text-sm bg-[#00335c] hover:bg-[#002240] px-4 py-2 rounded-md transition-colors">
+        <i class="fa-solid fa-arrow-left mr-2"></i> Voltar ao Painel
+    </a>
+</nav>
+
+<main class="max-w-2xl mx-auto w-full mt-10 px-4 flex-grow mb-10">
+    <div class="bg-white py-8 px-6 shadow sm:rounded-xl border border-gray-200">
+
+        <div class="mb-6 border-b border-gray-100 pb-4">
+            <h2 class="text-2xl font-bold text-[#00457C]">
+                <i class="fa-solid fa-circle-plus mr-2"></i>
+                <span th:text="${eventoDto.id != null} ? 'Editar Detalhes do Evento' : 'Cadastrar Novo Evento'">Cadastrar Novo Evento</span>
+            </h2>
+            <p class="text-sm text-gray-500 mt-1" th:text="${eventoDto.id != null} ? 'Altere as informações necessárias e publique as atualizações.' : 'Preencha as informações para publicar o evento na vitrine oficial.'"></p>
+        </div>
+
+        <div th:if="${erroNegocio}" class="mb-5 bg-red-50 border-l-4 border-red-500 p-4 rounded text-sm text-red-700">
+            <i class="fa-solid fa-triangle-exclamation mr-2"></i> <span th:text="${erroNegocio}">Erro</span>
+        </div>
+
+        <form th:action="${eventoDto.id != null} ? @{/organizador/evento/editar/{id}(id=${eventoDto.id})} : @{/organizador/evento/novo}"
+              th:object="${eventoDto}"
+              method="POST"
+              enctype="multipart/form-data"
+              class="space-y-5">
+
+            <input type="hidden" th:field="*{latitude}" id="latitude">
+            <input type="hidden" th:field="*{longitude}" id="longitude">
+            <input type="hidden" id="totalDisciplinasSalvas" th:value="${eventoDto.disciplinas != null ? eventoDto.disciplinas.size() : 0}">
+
+            <div>
+                <label for="titulo" class="block text-sm font-medium text-gray-700">Título do Evento</label>
+                <input type="text" th:field="*{titulo}" id="titulo"
+                       th:classappend="${#fields.hasErrors('titulo')} ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-[#00457C] focus:border-[#00457C]'"
+                       class="mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 bg-transparent" placeholder="Ex: I Congresso de Gestão Pública de MT">
+                <p th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}" class="mt-1 text-xs text-red-600 font-medium"></p>
+            </div>
+
+            <div>
+                <label for="descricao" class="block text-sm font-medium text-gray-700">Descrição Completa</label>
+                <textarea th:field="*{descricao}" id="descricao" rows="4"
+                          th:classappend="${#fields.hasErrors('descricao')} ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-[#00457C] focus:border-[#00457C]'"
+                          class="mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 bg-transparent" placeholder="Detalhes sobre cronograma..."></textarea>
+                <p th:if="${#fields.hasErrors('descricao')}" th:errors="*{descricao}" class="mt-1 text-xs text-red-600 font-medium"></p>
+            </div>
+
+            <!-- 1. BLOCO DO BANNER (ISOLADO) -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Banner de Identidade Visual</label>
+                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-[#00457C] transition-colors bg-white">
+                    <div class="space-y-1 text-center">
+                        <i class="fa-solid fa-image mx-auto h-12 w-12 text-gray-400 text-4xl block mb-2"></i>
+                        <div class="flex text-sm text-gray-600 justify-center">
+                            <label for="bannerInput" class="relative cursor-pointer bg-white rounded-md font-semibold text-[#00457C] hover:text-[#00335c] focus-within:outline-none">
+                                <span>Faça upload do banner</span>
+                                <input id="bannerInput" name="banner" type="file" accept="image/*" class="sr-only" onchange="exibirNomeArquivo(this)">
+                            </label>
+                        </div>
+                        <p class="text-xs text-gray-500">PNG, JPG, JPEG de proporção retangular</p>
+                        <p id="labelNomeArquivo" class="text-xs font-semibold text-[#008A4B] mt-2 hidden">
+                            <i class="fa-solid fa-circle-check mr-1"></i> <span id="textoNomeArquivo"></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. BLOCO DO CERTIFICADO (LOGOS ABAIXO E SEPARADO) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Layout do Certificado (Frente)</label>
+                    <div class="mt-1 flex justify-center px-4 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-[#00457C] transition-colors bg-white">
+                        <div class="space-y-1 text-center">
+                            <i class="fa-solid fa-graduation-cap mx-auto h-10 w-10 text-gray-400 text-3xl block mb-1"></i>
+                            <div class="flex text-sm text-gray-600 justify-center">
+                                <label for="certificadoFrenteInput" class="relative cursor-pointer bg-white rounded-md font-semibold text-[#00457C] hover:text-[#00335c] focus-within:outline-none">
+                                    <span>Upload da Frente</span>
+                                    <input id="certificadoFrenteInput" name="imagemFrente" type="file" accept="image/*" class="sr-only" onchange="exibirNomeCertificadoFrente(this)">
+                                </label>
+                            </div>
+                            <p class="text-[11px] text-gray-400">Pág 1 - Formato Paisagem</p>
+                            <p id="labelNomeCertificadoFrente" class="text-xs font-semibold text-[#008A4B] mt-2 hidden">
+                                <i class="fa-solid fa-circle-check mr-1"></i> <span id="textoNomeCertificadoFrente"></span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Layout do Certificado (Verso)</label>
+                    <div class="mt-1 flex justify-center px-4 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-[#00457C] transition-colors bg-white">
+                        <div class="space-y-1 text-center">
+                            <i class="fa-solid fa-list-check mx-auto h-10 w-10 text-gray-400 text-3xl block mb-1"></i>
+                            <div class="flex text-sm text-gray-600 justify-center">
+                                <label for="certificadoVersoInput" class="relative cursor-pointer bg-white rounded-md font-semibold text-[#00457C] hover:text-[#00335c] focus-within:outline-none">
+                                    <span>Upload do Verso</span>
+                                    <input id="certificadoVersoInput" name="imagemVerso" type="file" accept="image/*" class="sr-only" onchange="exibirNomeCertificadoVerso(this)">
+                                </label>
+                            </div>
+                            <p class="text-[11px] text-gray-400">Pág 2 - Moldura Ementa</p>
+                            <p id="labelNomeCertificadoVerso" class="text-xs font-semibold text-[#008A4B] mt-2 hidden">
+                                <i class="fa-solid fa-circle-check mr-1"></i> <span id="textoNomeCertificadoVerso"></span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. GRID DE DATAS (CORRIGIDO FORA DAS CAIXAS DE UPLOAD) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="dataInicio" class="block text-sm font-medium text-gray-700">Data de Início</label>
+                    <input type="date" th:field="*{dataInicio}" id="dataInicio"
+                           th:classappend="${#fields.hasErrors('dataInicio')} ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-[#00457C] focus:border-[#00457C]'"
+                           class="mt-1 block w-full rounded-md border px-3 py-2 text-sm bg-transparent">
+                    <p th:if="${#fields.hasErrors('dataInicio')}" th:errors="*{dataInicio}" class="mt-1 text-xs text-red-600 font-medium"></p>
+                </div>
+                <div>
+                    <label for="dataTermino" class="block text-sm font-medium text-gray-700">Data de Término</label>
+                    <input type="date" th:field="*{dataTermino}" id="dataTermino"
+                           th:classappend="${#fields.hasErrors('dataTermino')} ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-[#00457C] focus:border-[#00457C]'"
+                           class="mt-1 block w-full rounded-md border px-3 py-2 text-sm bg-transparent">
+                    <p th:if="${#fields.hasErrors('dataTermino')}" th:errors="*{dataTermino}" class="mt-1 text-xs text-red-600 font-medium"></p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                    <label for="modalidade" class="block text-sm font-medium text-gray-700">Modalidade</label>
+                    <select th:field="*{modalidade}" id="modalidade" onchange="toggleMapsInput()" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#00457C] focus:border-[#00457C]">
+                        <option value="PRESENCIAL">Presencial</option>
+                        <option value="ONLINE">Online / Remoto</option>
+                        <option value="HIBRIDO">Híbrido</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="nicho" class="block text-sm font-medium text-gray-700">Área / Nicho</label>
+                    <input type="text" th:field="*{nicho}" id="nicho" placeholder="Ex: Tecnologia (TI)"
+                           th:classappend="${#fields.hasErrors('nicho')} ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-[#00457C] focus:border-[#00457C]'"
+                           class="mt-1 block w-full rounded-md border px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1">
+                    <p th:if="${#fields.hasErrors('nicho')}" th:errors="*{nicho}" class="mt-1 text-xs text-red-600 font-medium"></p>
+                </div>
+
+                <div>
+                    <label for="cargaHoraria" class="block text-sm font-medium text-gray-700">Carga Horária (em horas)</label>
+                    <input type="number" th:field="*{cargaHoraria}" id="cargaHoraria" min="1" required
+                           th:classappend="${#fields.hasErrors('cargaHoraria')} ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-[#00457C] focus:border-[#00457C]'"
+                           class="mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 bg-transparent" placeholder="Ex: 20">
+                    <p th:if="${#fields.hasErrors('cargaHoraria')}" th:errors="*{cargaHoraria}" class="mt-1 text-xs text-red-600 font-medium"></p>
+                </div>
+            </div>
+
+            <div id="containerLocalizacao" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="sm:col-span-1">
+                    <label for="vagasTotais" class="block text-sm font-medium text-gray-700">Vagas Totais</label>
+                    <input type="number" th:field="*{vagasTotais}" id="vagasTotais" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-transparent">
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label for="local" class="block text-sm font-medium text-gray-700">Local de Realização</label>
+                    <div class="relative mt-1">
+                        <input type="text" th:field="*{local}" id="local" readonly
+                               class="block w-full rounded-md border border-gray-300 bg-gray-50 pl-3 pr-24 py-2 text-sm focus:outline-none text-gray-700 cursor-not-allowed" placeholder="Nenhum local selecionado...">
+                        <button type="button" id="btnAbrirModal" onclick="abrirModal()"
+                                class="absolute inset-y-1 right-1 px-3 bg-[#00457C] text-white rounded-md text-xs font-semibold hover:bg-[#00335c] transition-colors">
+                            <i class="fa-solid fa-map-location-dot mr-1"></i> Buscar Mapa
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-200 pt-5">
+                <div class="flex justify-between items-center mb-3">
+                    <label class="block text-sm font-semibold text-gray-700">Disciplinas / Temas do Curso (Histórico do Verso)</label>
+                    <button type="button" onclick="adicionarLinhaDisciplina()"
+                            class="px-3 py-1.5 bg-[#00457C] text-white text-xs font-semibold rounded hover:bg-[#00335c] transition-colors">
+                        <i class="fa-solid fa-plus mr-1"></i> Adicionar Disciplina
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto border border-gray-200 rounded-md bg-gray-50">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm" id="tabelaDisciplinas">
+                        <tbody class="divide-y divide-gray-200 bg-white" id="corpoTabelaDisciplinas">
+                        <tr th:each="disciplina, stat : *{disciplinas}" class="hover:bg-gray-50 transition-colors">
+                            <td class="px-4 py-2">
+                                <input type="text" th:field="*{disciplinas[__${stat.index}__].nome}" required maxlength="200"
+                                       class="w-full rounded border-gray-300 px-2 py-1 text-sm focus:ring-1 focus:ring-[#00457C] focus:outline-none border">
+                            </td>
+                            <td class="px-4 py-2 w-32">
+                                <input type="number" th:field="*{disciplinas[__${stat.index}__].cargaHoraria}" min="1" required
+                                       class="w-full rounded border-gray-300 px-2 py-1 text-sm text-center focus:ring-1 focus:ring-[#00457C] focus:outline-none border">
+                            </td>
+                            <td class="px-4 py-2 text-center w-12">
+                                <button type="button" onclick="this.closest('tr').remove()" class="text-red-500 hover:text-red-700">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="pt-4 flex flex-col sm:flex-row-reverse gap-3">
+                <button type="submit" class="w-full sm:w-auto flex justify-center py-2.5 px-6 border border-transparent rounded-md shadow-sm text-sm font-semibold text-white bg-[#008A4B] hover:bg-[#00703c]"
+                        th:text="${eventoDto.id != null} ? 'Salvar Alterações' : 'Publicar Evento'">
+                    Publicar Evento
+                </button>
+                <a th:href="@{/organizador/painel}" class="w-full sm:w-auto text-center py-2.5 px-6 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white">
+                    Cancelar e Voltar
+                </a>
+            </div>
+        </form>
+    </div>
+</main>
+
+<div id="modalMapa" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 glass-modal">
+    <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full border border-gray-200 overflow-hidden flex flex-col max-h-[90vh]">
+
+        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white flex-shrink-0">
+            <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                <i class="fa-solid fa-location-dot text-[#00457C] mr-2"></i>Selecione o Local do Evento
+            </h3>
+            <button type="button" onclick="fecharModal()" class="text-gray-400 hover:text-gray-600 transition-colors text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 relative flex-shrink-0 z-20">
+            <div class="flex gap-2">
+                <div class="relative flex-grow">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
+                    <input type="text" id="inputPesquisaMapa" autocomplete="off"
+                           class="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#00457C] focus:border-[#00457C] outline-none"
+                           placeholder="Digite o local ou rua (Ex: SEPLAG, Shopping Pantanal)...">
+                </div>
+                <button type="button" onclick="executarBusca()" class="px-5 py-2 bg-[#00457C] hover:bg-[#00335c] text-white rounded-lg text-sm font-semibold transition-colors shadow">
+                    Buscar
+                </button>
+            </div>
+
+            <div id="boxSugestoes" class="hidden absolute left-6 right-6 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-48 overflow-y-auto suggestions-scrollbar z-50">
+            </div>
+        </div>
+
+        <div class="p-4 bg-gray-100 flex-grow relative h-[450px] md:h-[480px]">
+            <div id="mapaSelecao" class="w-full h-full rounded-lg border border-gray-300 shadow-inner"></div>
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end space-x-3 flex-shrink-0">
+            <button type="button" onclick="fecharModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                Cancelar
+            </button>
+            <button type="button" onclick="confirmarLocalizacao()" class="px-5 py-2 bg-[#00457C] text-white rounded-lg text-sm font-semibold hover:bg-[#00335c] shadow">
+                Confirmar Este Local
+            </button>
+        </div>
+    </div>
+</div>
+
+<footer class="bg-white text-center py-4 border-t border-gray-200 text-xs text-gray-400 mt-auto">
+    © 2026 Secretaria de Estado de Planejamento e Gestão de Mato Grosso.
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    let map;
+    let marker;
+    let tempLat = null;
+    let tempLng = null;
+    let tempAddress = "";
+
+    function abrirSeletorBanner() {
+        document.getElementById('bannerInput').click();
+    }
+
+    const locaisCustomizados = [
+        {
+            nome: "SEPLAG - Secretaria de Estado de Planejamento e Gestão",
+            lat: -15.560113,
+            lon: -56.072314,
+            complemento: "Bloco III, Centro Político Administrativo, Cuiabá - MT"
+        },
+        {
+            nome: "Palácio Paiaguás (Sede do Governo de MT)",
+            lat: -15.559384,
+            lon: -56.070054,
+            complemento: "Centro Político Administrativo, Cuiabá - MT"
+        }
+    ];
+
+    function exibirNomeArquivo(input) {
+        const labelContainer = document.getElementById('labelNomeArquivo');
+        const textoNome = document.getElementById('textoNomeArquivo');
+
+        if (input.files && input.files.length > 0) {
+            textoNome.textContent = input.files[0].name;
+            labelContainer.classList.remove('hidden');
+        } else {
+            textoNome.textContent = '';
+            labelContainer.classList.add('hidden');
+        }
+    }
+    function exibirNomeCertificadoFrente(input) {
+        const labelContainer = document.getElementById('labelNomeCertificadoFrente');
+        const textoNome = document.getElementById('textoNomeCertificadoFrente');
+
+        if (input.files && input.files.length > 0) {
+            textoNome.textContent = input.files[0].name;
+            labelContainer.classList.remove('hidden');
+        } else {
+            textoNome.textContent = '';
+            labelContainer.classList.add('hidden');
+        }
+    }
+
+    function exibirNomeCertificadoVerso(input) {
+        const labelContainer = document.getElementById('labelNomeCertificadoVerso');
+        const textoNome = document.getElementById('textoNomeCertificadoVerso');
+
+        if (input.files && input.files.length > 0) {
+            textoNome.textContent = input.files[0].name;
+            labelContainer.classList.remove('hidden');
+        } else {
+            textoNome.textContent = '';
+            labelContainer.classList.add('hidden');
+        }
+    }
+
+    let indiceDisciplina = parseInt(document.getElementById('totalDisciplinasSalvas').value) || 0;
+
+    function adicionarLinhaDisciplina() {
+        const tbody = document.getElementById('corpoTabelaDisciplinas');
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-gray-50 transition-colors";
+        tr.innerHTML = `
+        <td class="px-4 py-2">
+            <input type="text" name="disciplinas[${indiceDisciplina}].nome" required maxlength="200"
+                   class="w-full rounded border-gray-300 px-2 py-1 text-sm focus:ring-1 focus:ring-[#00457C] focus:outline-none border"
+                   placeholder="Nome da Disciplina (máx. 200 caracteres)">
+        </td>
+        <td class="px-4 py-2 w-32">
+            <input type="number" name="disciplinas[${indiceDisciplina}].cargaHoraria" min="1" required
+                   class="w-full rounded border-gray-300 px-2 py-1 text-sm text-center focus:ring-1 focus:ring-[#00457C] focus:outline-none border"
+                   placeholder="Horas">
+        </td>
+        <td class="px-4 py-2 text-center w-12">
+            <button type="button" onclick="this.closest('tr').remove()" class="text-red-500 hover:text-red-700">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
+        </td>
+    `;
+        tbody.appendChild(tr);
+        indiceDisciplina++;
+    }
+
+    // Inicializa a tela com uma linha de disciplina vazia por padrão para o usuário preencher
+    window.addEventListener('DOMContentLoaded', () => {
+        if (indiceDisciplina === 0) {
+            adicionarLinhaDisciplina();
+        }
+    });
+
+    function initMap() {
+        if (map) return;
+
+        const centroCuiaba = [-15.5641, -56.0725];
+        map = L.map('mapaSelecao').setView(centroCuiaba, 15);
+
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: 'Tiles © Esri — Source: Esri, iCUBED, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        }).addTo(map);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png', {
+            attribution: '© CartoDB'
+        }).addTo(map);
+
+        map.on('click', function(e) {
+            definirMarcador(e.latlng.lat, e.latlng.lng, `Local marcado em (${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)})`);
+        });
+    }
+
+    function definirMarcador(lat, lng, address) {
+        tempLat = lat;
+        tempLng = lng;
+        tempAddress = address;
+
+        if (marker) {
+            marker.setLatLng([lat, lng]);
+        } else {
+            marker = L.marker([lat, lng]).addTo(map);
+        }
+        map.flyTo([lat, lng], 17);
+    }
+
+    function executarBusca() {
+        const valor = document.getElementById('inputPesquisaMapa').value.trim();
+        const valorMinusculo = valor.toLowerCase();
+        const box = document.getElementById('boxSugestoes');
+
+        if (valor.length < 3) {
+            alert("Por favor, digite pelo menos 3 caracteres para buscar.");
+            return;
+        }
+
+        box.innerHTML = '';
+        box.classList.remove('hidden');
+
+        const locaisEncontrados = locaisCustomizados.filter(local =>
+            local.nome.toLowerCase().includes(valorMinusculo) ||
+            local.complemento.toLowerCase().includes(valorMinusculo)
+        );
+
+        locaisEncontrados.forEach(item => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = "px-4 py-2.5 bg-blue-50/60 hover:bg-blue-100/80 cursor-pointer border-b border-blue-100 text-sm text-left transition-colors";
+            itemDiv.innerHTML = `
+                <div class="font-bold text-[#00457C] flex items-center">
+                    <i class="fa-solid fa-building-flag mr-2 text-xs"></i>${item.nome}
+                    <span class="ml-2 text-[10px] bg-[#00457C] text-white px-1.5 py-0.5 rounded font-semibold tracking-wide">Oficial</span>
+                </div>
+                <div class="text-xs text-gray-500 pl-4 truncate">${item.complemento}</div>
+            `;
+
+            itemDiv.onclick = () => {
+                document.getElementById('inputPesquisaMapa').value = item.nome;
+                box.classList.add('hidden');
+                definirMarcador(item.lat, item.lon, item.nome);
+            };
+
+            box.appendChild(itemDiv);
+        });
+
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(valor + ", Cuiaba MT")}&addressdetails=1&limit=5&email=suporte.mapas@seplag.mt.gov.br`;
+
+        if (box.children.length === 0) {
+            box.innerHTML = `<div class="p-3 text-sm text-gray-500 flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Buscando na rede pública...</div>`;
+        }
+
+        fetch(url, { headers: { 'Accept-Language': 'pt-BR' } })
+            .then(response => {
+                if (!response.ok) throw new Error();
+                return response.json();
+            })
+            .then(dados => {
+                if (locaisEncontrados.length === 0) {
+                    box.innerHTML = '';
+                } else {
+                    const loadingText = box.querySelector('.fa-spinner')?.parentElement;
+                    if (loadingText) loadingText.remove();
+                }
+
+                if (dados.length === 0 && locaisEncontrados.length === 0) {
+                    box.innerHTML = `<div class="p-3 text-sm text-red-500 font-medium"><i class="fa-solid fa-circle-exclamation mr-1"></i> Nenhum local encontrado. Tente outro termo.</div>`;
+                    return;
+                }
+
+                dados.forEach(item => {
+                    const partes = item.display_name.split(',');
+                    const nomePrincipal = partes[0];
+                    const complemento = partes.slice(1, 4).join(',');
+
+                    const jáExisteNaLista = locaisEncontrados.some(local => local.nome === nomePrincipal);
+                    if (jáExisteNaLista) return;
+
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = "px-4 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-100 text-sm transition-colors text-left";
+                    itemDiv.innerHTML = `
+                        <div class="font-semibold text-gray-800 flex items-center">
+                            <i class="fa-solid fa-location-dot text-[#00457C] mr-2 text-xs"></i>${nomePrincipal}
+                        </div>
+                        <div class="text-xs text-gray-400 pl-4 truncate">${complemento}</div>
+                    `;
+
+                    itemDiv.onclick = () => {
+                        document.getElementById('inputPesquisaMapa').value = nomePrincipal;
+                        box.classList.add('hidden');
+                        definirMarcador(parseFloat(item.lat), parseFloat(item.lon), nomePrincipal);
+                    };
+
+                    box.appendChild(itemDiv);
+                });
+            })
+            .catch(() => {
+                if (locaisEncontrados.length === 0) {
+                    box.innerHTML = `<div class="p-3 text-sm text-red-500 font-medium"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Erro ao conectar ao servidor de mapas.</div>`;
+                }
+            });
+    }
+
+    document.getElementById('inputPesquisaMapa').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            executarBusca();
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        const box = document.getElementById('boxSugestoes');
+        const input = document.getElementById('inputPesquisaMapa');
+        const btn = document.querySelector('button[onclick="executarBusca()"]');
+        if (e.target !== box && e.target !== input && e.target !== btn) {
+            box.classList.add('hidden');
+        }
+    });
+
+    function abrirModal() {
+        document.getElementById('modalMapa').classList.remove('hidden');
+        initMap();
+
+        setTimeout(() => {
+            if (map) {
+                map.invalidateSize(true);
+            }
+        }, 50);
+    }
+
+    function fecharModal() {
+        document.getElementById('modalMapa').classList.add('hidden');
+        document.getElementById('boxSugestoes').classList.add('hidden');
+        document.getElementById('inputPesquisaMapa').value = '';
+    }
+
+    function confirmarLocalizacao() {
+        if (!tempLat || !tempLng) {
+            alert("Por favor, digite uma localização e selecione uma das recomendações do autocomplete!");
+            return;
+        }
+        document.getElementById('latitude').value = tempLat;
+        document.getElementById('longitude').value = tempLng;
+        document.getElementById('local').value = tempAddress;
+        fecharModal();
+    }
+
+    function toggleMapsInput() {
+        const modalidade = document.getElementById('modalidade').value;
+        const inputLocal = document.getElementById('local');
+        const btnModal = document.getElementById('btnAbrirModal');
+
+        if (modalidade === 'ONLINE') {
+            inputLocal.value = 'Evento Online / Transmissão Digital';
+            document.getElementById('latitude').value = '';
+            document.getElementById('longitude').value = '';
+            btnModal.style.display = 'none';
+        } else {
+            if (inputLocal.value === 'Evento Online / Transmissão Digital') {
+                inputLocal.value = '';
+            }
+            btnModal.style.display = 'block';
+        }
+    }
+
+    window.onload = toggleMapsInput;
+</script>
+</body>
+</html>

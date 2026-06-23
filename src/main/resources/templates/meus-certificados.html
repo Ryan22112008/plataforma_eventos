@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <title>Meus Eventos</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; margin: 0; padding: 40px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .header { margin-bottom: 30px; }
+        .card-certificado { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .info-evento h3 { margin: 0 0 8px 0; color: #1e3a8a; }
+        .info-evento p { margin: 0; color: #64748b; font-size: 14px; }
+        .btn-download { background-color: #10b981; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; transition: background 0.2s; }
+        .btn-download:hover { background-color: #059669; }
+        .sem-certificado { text-align: center; padding: 40px; color: #94a3b8; background: white; border-radius: 8px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h2>🏆 Meus Eventos/Cursos</h2>
+        <p>Aqui estão os certificados dos eventos em que você realizou check-in.</p>
+    </div>
+
+    <div th:if="${not #lists.isEmpty(certificados)}">
+        <div th:each="inscricao : ${certificados}" class="card-certificado">
+            <div class="info-evento">
+                <h3 th:text="${inscricao.evento.titulo}">Nome do Curso/Evento</h3>
+                <p>Carga Horária: <span th:text="${inscricao.evento.cargaHoraria}">0</span> horas</p>
+            </div>
+            <!-- 🎯 BOTÃO CORRIGIDO: Casando perfeitamente com a variável do seu th:each -->
+            <div>
+                <a th:href="@{/participante/inscricoes/{id}/detalhes(id=${inscricao.id})}"
+                   class="bg-[#00457C] hover:bg-[#00335c] text-white font-semibold text-sm px-6 py-2.5 rounded-lg transition-colors shadow-sm flex items-center space-x-2">
+                    <i class="fa-solid fa-circle-info text-xs"></i>
+                    <span>Ver Detalhes</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${#lists.isEmpty(certificados)}" class="sem-certificado">
+        <p>Você ainda não possui certificados disponíveis para download.</p>
+        <p style="font-size: 13px;">Os certificados aparecem aqui automaticamente após a confirmação do seu check-in no evento.</p>
+    </div>
+</div>
+</body>
+</html>
+

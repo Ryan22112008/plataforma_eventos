@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <title>Certificado de Conclusão</title>
+    <style>
+        /* Define o tamanho físico exato do A4 Paisagem sem margens de escape */
+        @page {
+            size: 297mm 210mm;
+            margin: 0;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            background-color: #ffffff;
+        }
+
+        /* ---- PÁGINA 1: FRENTE ---- */
+        .certificado-container {
+            position: relative;
+            width: 297mm;
+            height: 210mm;
+            page-break-inside: avoid;
+            page-break-after: always; /* Força a quebra de linha física para criar a pág 2 */
+        }
+        /* Imagem de fundo dinâmica cobrindo 100% da folha física */
+        .background-fundo {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 297mm;
+            height: 210mm;
+            z-index: 1;
+        }
+        /* Bloco de conteúdo alinhado à esquerda no espaço em branco */
+        .conteudo {
+            position: absolute;
+            top: 95mm;
+            left: 31mm;
+            width: 190mm;
+            text-align: left;
+            z-index: 10;
+        }
+        .nome-aluno {
+            font-size: 34pt;
+            font-weight: bold;
+            color: #333333;
+            margin-bottom: 4mm;
+        }
+        .texto-principal {
+            font-size: 15pt;
+            color: #555555;
+            line-height: 1.6;
+        }
+        /* Chave de validação no rodapé por cima da imagem */
+        .token-autenticidade {
+            position: absolute;
+            bottom: 12mm;
+            left: 31mm;
+            font-size: 9pt;
+            color: #888888;
+            font-style: italic;
+            z-index: 10;
+        }
+
+        /* ---- PÁGINA 2: VERSO ---- */
+        .certificado-container-verso {
+            position: relative;
+            width: 297mm;
+            height: 210mm;
+            page-break-inside: avoid;
+            background-color: #ffffff;
+        }
+
+        /* Caixa que envelopa o texto protegendo as bordas da imagem */
+        .conteudo-verso-restrito {
+            position: absolute;
+            top: 25mm;
+            left: 35mm;
+            width: 227mm;
+            height: 160mm;
+            z-index: 10;
+        }
+
+        .titulo-verso {
+            font-size: 20pt;
+            font-weight: bold;
+            color: #1a1a1a;
+            border-bottom: 2px solid #e2d9c2;
+            padding-bottom: 3mm;
+            margin-bottom: 6mm;
+        }
+
+        .tabela-ementa {
+            width: 100%;
+            border: 0;
+        }
+
+        .coluna-ementa {
+            width: 50%;
+            vertical-align: top;
+            padding-right: 8mm;
+        }
+
+        .modulo-box {
+            margin-bottom: 5mm;
+        }
+
+        .modulo-titulo {
+            font-size: 11pt;
+            font-weight: bold;
+            color: #333333;
+            margin-bottom: 1mm;
+        }
+
+        .modulo-itens {
+            font-size: 9.5pt;
+            color: #555555;
+            line-height: 1.4;
+        }
+
+        /* Rodapé travado rigidamente na base da nossa área segura */
+        .rodape-verso-interno {
+            position: absolute;
+            bottom: 5mm;
+            left: 0;
+            width: 227mm;
+        }
+
+        .tabela-rodape {
+            width: 100%;
+            background-color: #ffffff; /* Cria a zona segura de contraste isolando qualquer cor do Canva */
+            border: 1px solid #d1d5db;   /* Borda fina para dar acabamento de componente oficial */
+            border-radius: 6px;          /* Cantos suavizados (totalmente suportado no Flying Saucer) */
+            padding: 4mm 5mm;            /* Espaçamento interno para os textos e o QR Code respirarem */
+        }
+
+        .texto-validacao {
+            font-size: 9pt;
+            color: #374151;              /* Tom cinza-escuro profissional com alto índice de contraste */
+            line-height: 1.5;
+            vertical-align: middle;
+        }
+
+        /* Nova classe necessária para estruturar a quebra de linha sem gambiarra de style inline */
+        .container-codigo-verificacao {
+            margin-top: 3mm;
+            font-size: 9.5pt;
+            color: #111827;
+        }
+
+        .hash-code {
+            font-family: 'Courier New', monospace; /* Fonte mono explícita segura para renderização em PDF */
+            font-weight: bold;
+            font-size: 10.5pt;
+            color: #000000;
+            background-color: #f3f4f6;   /* Fundo cinza claro que destaca o token dentro do card branco */
+            padding: 2px 6px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+        }
+
+        .bloco-qr {
+            width: 30mm;
+            text-align: right;
+            vertical-align: middle;
+        }
+
+        .qr-img {
+            width: 22mm;
+            height: 22mm;
+        }
+
+        .qr-subtext {
+            font-size: 7pt;
+            color: #6b7280;
+            display: block;
+            text-align: center;
+            width: 22mm;
+            margin-top: 1mm;
+            font-weight: bold;
+            letter-spacing: 0.5px;      /* Melhora a leitura da palavra em caixas pequenas */
+        }
+
+        .card-ementa {
+            background-color: #ffffff; /* Isola o texto das manchas escuras do Canva */
+            border: 1px solid #d1d5db;   /* Mantém a identidade visual do rodapé */
+            border-radius: 6px;          /* Cantos suavizados idênticos aos de baixo */
+            padding: 5mm 6mm;            /* Espaçamento interno para as colunas respirarem */
+            margin-top: 2mm;             /* Afastamento sutil do título */
+            margin-bottom: 5mm;          /* Evita colar no rodapé de validação */
+        }
+    </style>
+</head>
+<body>
+
+<div class="certificado-container">
+
+    <img th:src="${imagemFundoBase64}" class="background-fundo" alt="Fundo Certificado" />
+
+    <div class="conteudo">
+        <div class="nome-aluno" th:text="${usuario.nome}">Nome do Participante</div>
+
+        <p class="texto-principal">
+            concluiu com êxito o curso de capacitação em <strong th:text="${evento.titulo}">Título do Evento</strong>, <br/>
+            realizado no período de
+            <strong th:text="${#temporals.format(evento.dataInicio, 'dd/MM/yyyy')}">01/01/2026</strong> a
+            <strong th:text="${#temporals.format(evento.dataTermino, 'dd/MM/yyyy')}">02/01/2026</strong>,
+            na modalidade <span th:text="${evento.modalidade}">PRESENCIAL</span>,
+            com carga horária total de <strong th:text="${evento.cargaHoraria}">0</strong> horas.
+        </p>
+    </div>
+
+</div>
+
+<div class="certificado-container-verso">
+
+    <img th:src="${imagemVersoBase64}" class="background-fundo" alt="Fundo Verso Certificado" />
+
+    <div class="conteudo-verso-restrito">
+
+        <div class="titulo-verso">CONTEÚDO PROGRAMÁTICO</div>
+
+        <div class="card-ementa">
+            <table class="tabela-ementa" cellspacing="0" cellpadding="0">
+                <tr>
+                    <td class="coluna-ementa">
+                        <div class="modulo-box" th:each="disciplina, iter : ${evento.disciplinas}" th:if="${iter.index % 2 == 0}">
+                            <div class="modulo-titulo" th:text="${disciplina.nome}">Disciplina 1</div>
+                            <div class="modulo-itens">Carga horária: <span th:text="${disciplina.cargaHoraria}">0</span> horas</div>
+                        </div>
+
+                        <div class="modulo-box" th:if="${evento.disciplinas == null or #lists.isEmpty(evento.disciplinas)}">
+                            <div class="modulo-titulo">Módulo 1: Fundamentos Avançados</div>
+                            <div class="modulo-itens">
+                                • Boas práticas de arquitetura, Clean Code e padrões de projeto.<br />
+                                • Análise de requisitos, modelagem estrutural e regras de negócio complexas.
+                            </div>
+                        </div>
+                    </td>
+
+                    <td class="coluna-ementa">
+                        <div class="modulo-box" th:each="disciplina, iter : ${evento.disciplinas}" th:if="${iter.index % 2 != 0}">
+                            <div class="modulo-titulo" th:text="${disciplina.nome}">Disciplina 2</div>
+                            <div class="modulo-itens">Carga horária: <span th:text="${disciplina.cargaHoraria}">0</span> horas</div>
+                        </div>
+
+                        <div class="modulo-box" th:if="${evento.disciplinas == null or #lists.isEmpty(evento.disciplinas)}">
+                            <div class="modulo-titulo">Módulo 2: Performance e Resiliência</div>
+                            <div class="modulo-itens">
+                                • Mecanismos de segurança da informação, autenticação e auditoria.<br />
+                                • Otimização de concorrência, infraestrutura em nuvem e deploy distribuído.
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div> <div class="rodape-verso-interno">
+        <table class="tabela-rodape" cellspacing="0" cellpadding="0">
+            <tr>
+                <td class="texto-validacao">
+                    A autenticidade deste documento pode ser verificada gratuitamente informando o código de validação no portal oficial da plataforma.
+                    <div class="container-codigo-verificacao">
+                        Código de Verificação: <span class="hash-code" th:text="'EV3-' + ${inscricao.tokenIngresso}">TOKEN-123</span>
+                    </div>
+                </td>
+                <td class="bloco-qr">
+                    <img class="qr-img" th:src="${qrCodeBase64}" alt="QR Code Validação" />
+                    <span class="qr-subtext">VALIDAR</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    </div> </div> </body>
+</html>

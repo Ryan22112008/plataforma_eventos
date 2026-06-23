@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Eventos e Submissões | SEPLAG-MT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-[#F4F6F9] text-[#333333] min-h-screen flex flex-col">
+
+
+<header class="bg-white border-b-4 border-[#FDB813] shadow-sm sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+
+        <div class="flex items-center space-x-3">
+            <a th:href="@{/}" class="flex items-center space-x-3 rounded">
+
+                <img th:src="@{/images/images.png}"
+                     alt="Logo SEPLAG"
+                     class="h-12 w-auto object-contain" />
+
+                <div class="flex flex-col border-l-2 border-gray-200 pl-3">
+                    <span class="text-sm font-bold tracking-tight text-[#00457C]">SEPLAG</span>
+                    <span class="text-[10px] text-gray-500 font-medium tracking-widest uppercase">Governo de Mato Grosso</span>
+                </div>
+            </a>
+        </div>
+
+        <nav class="hidden md:flex space-x-8 text-sm font-medium">
+            <a th:href="@{/}" class="text-[#00457C] border-b-2 border-[#00457C] px-1 pb-1">Eventos</a>
+            <a sec:authorize="hasRole('ORGANIZADOR')" th:href="@{/organizador/painel}" class="text-amber-600 font-semibold px-1 pb-1">Painel do Organizador</a>
+            <a sec:authorize="hasRole('PARTICIPANTE')" th:href="@{/participante/meus-ingressos}" class="text-emerald-600 font-semibold px-1 pb-1">Meus Ingressos</a>
+
+            <a sec:authorize="hasRole('PARTICIPANTE')" th:href="@{/participante/meus-certificados}" class="text-[#00457C] hover:text-[#00335c] font-semibold px-1 pb-1">
+                <i class="fa-solid fa-award mr-1 text-amber-500"></i> Meus Eventos
+            </a>
+        </nav>
+
+        <div class="flex items-center space-x-4">
+            <div sec:authorize="isAnonymous()" class="flex items-center space-x-3">
+                <a th:href="@{/login}" class="text-sm font-medium text-gray-700 hover:text-[#00457C] px-3 py-2 transition-colors">Entrar</a>
+                <a th:href="@{/cadastro}" class="text-sm font-medium bg-[#00457C] hover:bg-[#00335c] text-white px-4 py-2 rounded shadow transition-all focus-ring">Criar Conta</a>
+            </div>
+
+            <div sec:authorize="isAuthenticated()" class="flex items-center space-x-4">
+                <span class="text-xs text-gray-600">Olá, <strong class="text-[#00457C]" sec:authentication="name">Usuário</strong></span>
+                <form th:action="@{/logout}" method="post" class="inline">
+                    <button type="submit" class="text-sm text-red-600 hover:text-red-800 font-medium transition-colors" title="Sair do Sistema">
+                        <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</header>
+
+<section class="bg-gradient-to-r from-[#00457C] to-[#002d52] text-white py-16 px-4 relative overflow-hidden shadow-md">
+    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-[#FDB813] via-transparent to-transparent"></div>
+    <div class="max-w-4xl mx-auto text-center relative z-10">
+        <span class="bg-[#008A4B] text-white text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-4 inline-block">Plataforma Unificada</span>
+        <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4">Congressos, Eventos Científicos e Capacitações</h1>
+        <p class="text-gray-200 text-sm md:text-base max-w-2xl mx-auto mb-8 font-light">Inscreva-se gratuitamente em eventos promovidos pela SEPLAG-MT ou submeta seus artigos e relatórios técnicos.</p>
+
+        <form th:action="@{/}" method="get" class="bg-white p-2 rounded-xl shadow-xl max-w-2xl mx-auto flex flex-col sm:flex-row items-center gap-2">
+            <div class="w-full flex items-center px-3 py-2 text-gray-500">
+                <i class="fa-solid fa-magnifying-glass mr-3 text-lg text-gray-400"></i>
+                <input type="text" name="busca" th:value="${param.busca}" placeholder="Buscar eventos ativos..." class="w-full text-sm text-[#333333] placeholder-gray-400 focus:outline-none bg-transparent">
+            </div>
+            <button type="submit" class="w-full sm:w-auto bg-[#008A4B] hover:bg-[#00703c] text-white text-sm font-semibold px-6 py-3 rounded-lg transition-colors shadow shrink-0">
+                <span>Pesquisar</span>
+            </button>
+        </form>
+    </div>
+</section>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow w-full">
+
+    <!-- --- ADICIONADO: CARD VERDE DE INSCRIÇÃO REALIZADA COM SUCESSO --- -->
+    <div th:if="${sucesso}" class="mb-6 bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded shadow-sm flex items-center text-sm text-emerald-800">
+        <i class="fa-solid fa-circle-check mr-3 text-xl text-emerald-600"></i>
+        <div>
+            <span class="font-bold">Excelente!</span>
+            <p class="mt-0.5" th:text="${sucesso}">Inscrição realizada com sucesso!</p>
+        </div>
+    </div>
+
+    <!-- --- ADICIONADO: CARD VERMELHO SE O EVENTO ESTIVER EM RASCUNHO OU JÁ INSCRITO --- -->
+    <div th:if="${erroNegocio}" class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded shadow-sm flex items-center text-sm text-red-700">
+        <i class="fa-solid fa-triangle-exclamation mr-3 text-xl text-red-500"></i>
+        <div>
+            <span class="font-bold">Não foi possível prosseguir</span>
+            <p class="mt-0.5" th:text="${erroNegocio}">Erro de validação do negócio.</p>
+        </div>
+    </div>
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-200 pb-5 mb-8">
+        <div>
+            <h2 class="text-xl font-bold text-[#00457C] tracking-tight">Eventos em Destaque</h2>
+            <p class="text-sm text-gray-500">Inscrições abertas e submissões acadêmicas em andamento.</p>
+        </div>
+        <span class="text-xs text-gray-400 font-medium mt-2 sm:mt-0" th:text="${'Total: ' + (eventos != null ? eventos.size() : 0) + ' cadastrados'}">Total: 0</span>
+    </div>
+
+    <div th:if="${eventos == null or eventos.isEmpty()}" class="bg-white rounded-xl p-8 text-center border border-gray-200 shadow-sm max-w-md mx-auto">
+        <div class="text-[#00457C] text-4xl mb-3"><i class="fa-regular fa-calendar-xmark"></i></div>
+        <h3 class="font-bold text-gray-700 mb-1">Nenhum evento localizado</h3>
+        <p class="text-sm text-gray-500">Não há eventos publicados no momento ou a busca não retornou resultados.</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" th:if="${eventos != null and !eventos.isEmpty()}">
+        <div th:each="evento : ${eventos}" class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md border border-gray-200 transition-all duration-200 flex flex-col group">
+
+            <div class="h-40 bg-gray-100 relative overflow-hidden shrink-0 border-b border-gray-100 flex items-center justify-center">
+
+                <img th:if="${evento.bannerUrl != null}"
+                     th:src="@{|/imagens-eventos/${evento.bannerUrl}|}"
+                     alt="Capa do Evento"
+                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+
+                <div th:if="${evento.bannerUrl == null}" class="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                    <i class="fa-solid fa-building-columns text-4xl text-gray-300 group-hover:scale-110 transition-transform duration-200"></i>
+                </div>
+
+                <span class="absolute top-3 left-3 bg-[#107C41] text-white font-bold text-[10px] uppercase tracking-wider px-2 py-1 rounded shadow-sm">
+        <i class="fa-solid fa-gift mr-1"></i>Gratuito
+    </span>
+            </div>
+
+            <div class="p-5 flex-grow flex flex-col justify-between">
+                <div>
+                    <h3 class="font-bold text-base text-[#333333] tracking-tight line-clamp-2 min-h-[3rem] group-hover:text-[#00457C] transition-colors" th:text="${evento.titulo}">Título</h3>
+                    <div class="mt-3 flex items-center text-xs text-gray-500 space-x-2">
+                        <i class="fa-regular fa-calendar text-[#00457C]"></i>
+                        <span th:text="${#temporals.format(evento.dataInicio, 'dd/MM/yyyy') + ' - ' + #temporals.format(evento.dataTermino, 'dd/MM/yyyy')}">Data</span>
+                    </div>
+                    <p class="text-xs text-gray-600 mt-3 line-clamp-3 leading-relaxed" th:text="${evento.descricao}">Descrição</p>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-gray-100">
+                    <a th:href="@{/eventos/{id}(id=${evento.id})}"
+                       class="w-full bg-[#00457C] hover:bg-[#00335c] text-white text-center text-xs font-semibold py-2.5 px-4 rounded-lg block transition-colors shadow-sm">
+                        <i class="fa-solid fa-eye mr-1"></i> Ver Detalhes
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="bg-[#00457C] text-white border-t-8 border-[#008A4B] mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
+            <div class="space-y-3">
+                <h4 class="font-bold text-base tracking-tight border-b border-[#002d52] pb-2 text-[#FDB813]">SEPLAG-MT</h4>
+                <p class="text-gray-300 font-light text-xs">Secretaria de Estado de Planejamento e Gestão de Mato Grosso<br>Centro Político Administrativo (CPA) - Cuiabá / MT</p>
+            </div>
+            <div class="space-y-3">
+                <h4 class="font-bold text-base tracking-tight border-b border-[#002d52] pb-2 text-[#FDB813]">Links Rápidos</h4>
+                <ul class="space-y-2 text-xs text-gray-300">
+                    <li><a href="https://www.seplag.mt.gov.br" target="_blank" class="hover:text-white hover:underline">Portal Institucional</a></li>
+                </ul>
+            </div>
+            <div class="space-y-3">
+                <h4 class="font-bold text-base tracking-tight border-b border-[#002d52] pb-2 text-[#FDB813]">Atendimento</h4>
+                <p class="text-gray-300 font-light text-xs">Dúvidas sobre submissões e inscrições?<br><span class="font-medium text-white"><i class="fa-solid fa-phone mr-1"></i> (65) 3613-3600</span></p>
+            </div>
+        </div>
+        <div class="border-t border-[#003c6c] mt-8 pt-6 text-center text-xs text-gray-400 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>&copy; 2026 Governo do Estado de Mato Grosso. Todos os direitos reservados.</p>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>
