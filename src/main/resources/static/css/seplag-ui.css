@@ -106,6 +106,69 @@ body > section p { color: #c0d0df !important; }
 body > section form { background: #f6f9fc !important; box-shadow: 0 18px 48px rgba(0,0,0,.22) !important; }
 body > section form input { padding: 10px 14px !important; color: #18324a !important; background: transparent !important; border: 0 !important; box-shadow: none !important; }
 body > section form button { background: #1d6498 !important; }
+.organizer-access-callout {
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  padding: 22px 24px; color: var(--ink);
+  background: linear-gradient(112deg, rgba(24,52,79,.98), rgba(18,41,67,.94));
+  border: 1px solid rgba(132,178,215,.25); border-left: 4px solid #68a9df;
+  border-radius: 16px; box-shadow: var(--shadow-card);
+}
+.organizer-access-copy { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.organizer-access-icon {
+  display: grid; place-items: center; flex: 0 0 48px; width: 48px; height: 48px;
+  color: #a9d8fb; background: rgba(104,169,223,.13); border: 1px solid rgba(104,169,223,.22);
+  border-radius: 13px; font-size: 1.1rem;
+}
+.organizer-access-title { margin: 0; color: #f3f8fc !important; font-size: 1rem; font-weight: 700; line-height: 1.4; }
+.organizer-access-description { margin: 5px 0 0; color: #b9cde0 !important; font-size: .9rem; line-height: 1.5; }
+.organizer-access-button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px; flex: 0 0 auto;
+  min-height: 46px; padding: 0 18px; color: #fff; background: #17669f;
+  border: 1px solid rgba(166,213,247,.18); border-radius: 10px; font-size: .9rem; font-weight: 700;
+  box-shadow: 0 5px 14px rgba(4,20,36,.18); cursor: pointer;
+}
+.organizer-access-button:hover { background: #247db8; box-shadow: 0 8px 20px rgba(4,20,36,.26); transform: translateY(-1px); }
+.map-modal-overlay { padding: clamp(12px, 3vw, 32px); background: rgba(3,12,22,.78); backdrop-filter: blur(9px); }
+.map-modal-dialog {
+  width: min(100%, 1080px); max-height: min(92vh, 900px); color: var(--ink);
+  background: #10263e !important; border: 1px solid rgba(148,187,220,.25) !important;
+  border-radius: 20px !important; box-shadow: 0 28px 90px rgba(0,0,0,.48) !important;
+}
+.map-modal-header, .map-modal-search-panel, .map-modal-footer { background: #122b45 !important; border-color: var(--line) !important; }
+.map-modal-header { min-height: 82px; padding: 16px 24px !important; }
+.map-modal-heading { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.map-modal-heading-icon { display: grid; place-items: center; flex: 0 0 46px; width: 46px; height: 46px; color: #a9d8fb; background: rgba(104,169,223,.13); border: 1px solid rgba(104,169,223,.2); border-radius: 13px; font-size: 1.1rem; }
+.map-modal-heading h3 { margin: 0; color: #f4f8fc !important; font-size: 1.08rem; font-weight: 750; line-height: 1.35; }
+.map-modal-heading p { margin: 4px 0 0; color: #a9bfd3 !important; font-size: .84rem; line-height: 1.4; }
+.map-modal-close { display: grid; place-items: center; flex: 0 0 40px; width: 40px; height: 40px; color: #a9bfd3 !important; background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 10px; }
+.map-modal-close:hover { color: #fff !important; background: rgba(255,255,255,.1); }
+.map-modal-search-panel { padding: 16px 24px 18px !important; }
+.map-search-label { display: block; margin-bottom: 8px; color: #dbe8f3 !important; font-size: .8rem; font-weight: 650 !important; }
+.map-search-row { align-items: stretch; gap: 10px; }
+.map-search-field { min-width: 0; }
+#modalMapa .map-search-icon { position: absolute; z-index: 1; top: 50%; left: 15px; color: #8da8c0; font-size: .95rem; transform: translateY(-50%); pointer-events: none; }
+#modalMapa .map-search-input { min-height: 48px; padding: 10px 14px 10px 44px !important; color: #f1f6fb !important; background: #0b2035 !important; border: 1px solid rgba(157,190,220,.24) !important; border-radius: 11px !important; font-size: .92rem; }
+#modalMapa .map-search-input::placeholder { color: #839bb2 !important; }
+#modalMapa .map-search-input:focus { border-color: #68a9df !important; box-shadow: 0 0 0 3px rgba(104,169,223,.14) !important; }
+.map-search-button, .map-confirm-button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 46px;
+  padding: 0 20px !important; color: #fff !important; background: #176da7 !important;
+  border: 1px solid rgba(166,213,247,.18) !important; border-radius: 10px !important;
+  font-weight: 700 !important; white-space: nowrap; box-shadow: 0 5px 14px rgba(4,20,36,.18);
+}
+.map-search-button:hover, .map-confirm-button:hover { background: #247db8 !important; }
+.map-modal-map-wrap { height: clamp(300px, 51vh, 520px); min-height: 280px; padding: 14px !important; background: #0c2035 !important; }
+#mapaSelecao { height: 100%; min-height: 250px; border: 1px solid rgba(157,190,220,.25) !important; border-radius: 14px !important; box-shadow: 0 8px 24px rgba(0,0,0,.2) !important; }
+.map-modal-map-caption { position: absolute; z-index: 400; top: 24px; right: 24px; padding: 7px 11px; color: #e4edf5; background: rgba(9,27,45,.9); border: 1px solid rgba(220,235,247,.2); border-radius: 8px; font-size: .75rem; font-weight: 550; pointer-events: none; }
+.map-modal-map-caption i { margin-right: 6px; color: #9bcaf0; }
+.map-modal-footer { gap: 10px; padding: 14px 24px !important; }
+.map-cancel-button { min-height: 44px; padding: 0 17px !important; color: #d7e4ef !important; background: transparent !important; border: 1px solid rgba(157,190,220,.25) !important; border-radius: 10px !important; font-weight: 650 !important; }
+.map-cancel-button:hover { background: rgba(255,255,255,.07) !important; }
+.map-suggestions { z-index: 500 !important; max-height: 240px; margin-top: 6px; color: var(--ink); background: #142f4a !important; border-color: var(--line) !important; border-radius: 12px !important; box-shadow: 0 14px 36px rgba(0,0,0,.35) !important; }
+.map-suggestions > * { color: var(--ink-soft); border-color: var(--line) !important; }
+.map-suggestions > *:hover { color: #fff; background: #1b3b5a !important; }
+.map-modal-dialog .leaflet-control-zoom a { color: #16324c !important; }
+.map-modal-dialog .leaflet-control-attribution { font-size: 10px; }
 footer { color: #b7c8d8; background-color: #091a2c !important; border-color: var(--line) !important; line-height: 1.7; }
 
 /* Participant events and certificates page. */
@@ -192,6 +255,26 @@ body:has(form[action$="/login"]) button[type=submit], body:has(form[action$="/ca
   body:has(form[action$="/login"]) > div > div:last-child > div { padding: 24px 20px !important; }
   body:has(form[action$="/login"]) { padding-top: 24px !important; padding-bottom: 24px !important; }
   .certificado-card { grid-template-columns: auto minmax(0,1fr); gap: 14px; padding: 18px; }
+  .organizer-access-callout { align-items: stretch; flex-direction: column; gap: 18px; padding: 18px; }
+  .organizer-access-copy { align-items: flex-start; gap: 12px; }
+  .organizer-access-icon { flex-basis: 42px; width: 42px; height: 42px; }
+  .organizer-access-button { width: 100%; }
+  .map-modal-overlay { padding: 8px; }
+  .map-modal-dialog { max-height: 96vh; border-radius: 15px !important; }
+  .map-modal-header { min-height: 70px; padding: 12px 14px !important; }
+  .map-modal-heading { gap: 10px; }
+  .map-modal-heading-icon { flex-basis: 40px; width: 40px; height: 40px; }
+  .map-modal-heading h3 { font-size: .96rem; }
+  .map-modal-heading p { max-width: 240px; font-size: .75rem; }
+  .map-modal-search-panel { padding: 13px 14px 15px !important; }
+  .map-search-row { gap: 8px; }
+  .map-search-button { flex: 0 0 auto; gap: 0; width: 48px; padding: 0 !important; font-size: 0 !important; }
+  .map-search-button i { font-size: .95rem; }
+  .map-modal-map-wrap { height: 48vh; min-height: 260px; padding: 8px !important; }
+  #mapaSelecao { min-height: 240px; }
+  .map-modal-map-caption { top: 16px; right: 16px; max-width: calc(100% - 76px); padding: 6px 8px; font-size: .65rem; }
+  .map-modal-footer { padding: 11px 14px !important; }
+  .map-cancel-button, .map-confirm-button { flex: 1; min-height: 44px; padding: 0 10px !important; font-size: .8rem !important; }
   .certificado-icon { width: 44px; height: 44px; font-size: 1.05rem; }
   .certificado-info h2 { font-size: 1rem; }
   .certificado-link { grid-column: 1 / -1; width: 100%; }

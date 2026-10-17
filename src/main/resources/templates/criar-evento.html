@@ -245,45 +245,51 @@
     </div>
 </main>
 
-<div id="modalMapa" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 glass-modal">
-    <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full border border-gray-200 overflow-hidden flex flex-col max-h-[90vh]">
+<div id="modalMapa" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 glass-modal map-modal-overlay">
+    <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full border border-gray-200 overflow-hidden flex flex-col max-h-[90vh] map-modal-dialog">
 
-        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white flex-shrink-0">
-            <h3 class="text-lg font-bold text-gray-800 flex items-center">
-                <i class="fa-solid fa-location-dot text-[#00457C] mr-2"></i>Selecione o Local do Evento
-            </h3>
-            <button type="button" onclick="fecharModal()" class="text-gray-400 hover:text-gray-600 transition-colors text-xl">
+        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white flex-shrink-0 map-modal-header">
+            <div class="map-modal-heading">
+                <span class="map-modal-heading-icon" aria-hidden="true"><i class="fa-solid fa-location-dot"></i></span>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800">Selecione o local do evento</h3>
+                    <p>Pesquise um endereço ou marque o ponto diretamente no mapa.</p>
+                </div>
+            </div>
+            <button type="button" onclick="fecharModal()" class="text-gray-400 hover:text-gray-600 transition-colors text-xl map-modal-close" aria-label="Fechar mapa">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
 
-        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 relative flex-shrink-0 z-20">
-            <div class="flex gap-2">
-                <div class="relative flex-grow">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
+        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 relative flex-shrink-0 z-20 map-modal-search-panel">
+            <label class="map-search-label" for="inputPesquisaMapa">Buscar endereço ou local</label>
+            <div class="flex gap-2 map-search-row">
+                <div class="relative flex-grow map-search-field">
+                    <i class="fa-solid fa-magnifying-glass map-search-icon" aria-hidden="true"></i>
                     <input type="text" id="inputPesquisaMapa" autocomplete="off"
-                           class="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#00457C] focus:border-[#00457C] outline-none"
-                           placeholder="Digite o local ou rua (Ex: SEPLAG, Shopping Pantanal)...">
+                           class="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#00457C] focus:border-[#00457C] outline-none map-search-input"
+                           placeholder="Ex.: SEPLAG, Shopping Pantanal ou nome da rua">
                 </div>
-                <button type="button" onclick="executarBusca()" class="px-5 py-2 bg-[#00457C] hover:bg-[#00335c] text-white rounded-lg text-sm font-semibold transition-colors shadow">
-                    Buscar
+                <button type="button" onclick="executarBusca()" class="px-5 py-2 bg-[#00457C] hover:bg-[#00335c] text-white rounded-lg text-sm font-semibold transition-colors shadow map-search-button">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span>Buscar</span>
                 </button>
             </div>
 
-            <div id="boxSugestoes" class="hidden absolute left-6 right-6 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-48 overflow-y-auto suggestions-scrollbar z-50">
+            <div id="boxSugestoes" class="hidden absolute left-6 right-6 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-48 overflow-y-auto suggestions-scrollbar z-50 map-suggestions">
             </div>
         </div>
 
-        <div class="p-4 bg-gray-100 flex-grow relative h-[450px] md:h-[480px]">
+        <div class="p-4 bg-gray-100 flex-grow relative h-[450px] md:h-[480px] map-modal-map-wrap">
+            <div class="map-modal-map-caption"><i class="fa-solid fa-hand-pointer" aria-hidden="true"></i> Clique no mapa para selecionar o local</div>
             <div id="mapaSelecao" class="w-full h-full rounded-lg border border-gray-300 shadow-inner"></div>
         </div>
 
-        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end space-x-3 flex-shrink-0">
-            <button type="button" onclick="fecharModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end space-x-3 flex-shrink-0 map-modal-footer">
+            <button type="button" onclick="fecharModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 map-cancel-button">
                 Cancelar
             </button>
-            <button type="button" onclick="confirmarLocalizacao()" class="px-5 py-2 bg-[#00457C] text-white rounded-lg text-sm font-semibold hover:bg-[#00335c] shadow">
-                Confirmar Este Local
+            <button type="button" onclick="confirmarLocalizacao()" class="px-5 py-2 bg-[#00457C] text-white rounded-lg text-sm font-semibold hover:bg-[#00335c] shadow map-confirm-button">
+                <i class="fa-solid fa-check" aria-hidden="true"></i> Confirmar local
             </button>
         </div>
     </div>
