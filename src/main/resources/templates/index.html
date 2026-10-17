@@ -103,7 +103,7 @@
         <p class="mt-1">Você já pode se inscrever em cursos enquanto a administração analisa a solicitação.</p>
     </div>
 
-    <div sec:authorize="hasRole('PARTICIPANTE')" th:if="${solicitacaoOrganizadorEnviada and not solicitacaoOrganizadorPendente}"
+    <div sec:authorize="hasRole('PARTICIPANTE')" th:if="${solicitacaoOrganizadorEnviada == true and solicitacaoOrganizadorPendente == false}"
          class="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900" role="status">
         <p class="font-semibold"><i class="fa-solid fa-circle-check mr-2"></i>Solicitação enviada para análise da administração.</p>
     </div>
