@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>body { font-family: 'Inter', sans-serif; }</style>
+    <link rel="stylesheet" th:href="@{/css/seplag-ui.css}">
 </head>
 <body class="bg-[#F4F6F9] text-[#333333] min-h-screen flex flex-col">
 
@@ -20,7 +21,7 @@
         <div class="flex items-center space-x-3">
             <a th:href="@{/}" class="flex items-center space-x-3 rounded">
 
-                <img th:src="@{/images/images.png}"
+                <img th:src="@{/images/logo-seplag-branco.png}"
                      alt="Logo SEPLAG"
                      class="h-12 w-auto object-contain" />
 
@@ -154,24 +155,14 @@
 
 <footer class="bg-[#00457C] text-white border-t-8 border-[#008A4B] mt-auto">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
             <div class="space-y-3">
                 <h4 class="font-bold text-base tracking-tight border-b border-[#002d52] pb-2 text-[#FDB813]">SEPLAG-MT</h4>
-                <p class="text-gray-300 font-light text-xs">Secretaria de Estado de Planejamento e Gestão de Mato Grosso<br>Centro Político Administrativo (CPA) - Cuiabá / MT</p>
-            </div>
-            <div class="space-y-3">
-                <h4 class="font-bold text-base tracking-tight border-b border-[#002d52] pb-2 text-[#FDB813]">Links Rápidos</h4>
-                <ul class="space-y-2 text-xs text-gray-300">
-                    <li><a href="https://www.seplag.mt.gov.br" target="_blank" class="hover:text-white hover:underline">Portal Institucional</a></li>
-                </ul>
-            </div>
-            <div class="space-y-3">
-                <h4 class="font-bold text-base tracking-tight border-b border-[#002d52] pb-2 text-[#FDB813]">Atendimento</h4>
-                <p class="text-gray-300 font-light text-xs">Dúvidas sobre submissões e inscrições?<br><span class="font-medium text-white"><i class="fa-solid fa-phone mr-1"></i> (65) 3613-3600</span></p>
+                <p class="text-gray-300 font-light text-xs">Plataforma de eventos e capacitações.</p>
             </div>
         </div>
         <div class="border-t border-[#003c6c] mt-8 pt-6 text-center text-xs text-gray-400 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p>&copy; 2026 Governo do Estado de Mato Grosso. Todos os direitos reservados.</p>
+            <p>&copy; 2026 SEPLAG-MT — Plataforma de Eventos.</p>
         </div>
     </div>
 </footer>

@@ -65,12 +65,18 @@ public class InscricaoController {
     // --- 3. FLUXO DA PORTARIA: Realizar Check-in via Token/QR Code ---
     @PostMapping("/organizador/checkin")
     public String realizarCheckin(@RequestParam("tokenIngresso") String tokenIngresso,
+                                  @AuthenticationPrincipal UserDetails userDetails,
+                                  org.springframework.security.core.Authentication authentication,
                                   RedirectAttributes redirectAttributes) {
         try {
-            inscricaoService.realizarCheckIn(tokenIngresso);
+            boolean admin = authentication.getAuthorities().stream()
+                    .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+            inscricaoService.realizarCheckIn(tokenIngresso, userDetails.getUsername(), admin);
             redirectAttributes.addFlashAttribute("sucesso", "Check-in realizado com sucesso!");
 
             return "redirect:/dashboard";
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            throw e;
         } catch (NegocioException e) {
             redirectAttributes.addFlashAttribute("erroNegocio", e.getMessage());
             return "redirect:/dashboard";
@@ -97,6 +103,8 @@ public class InscricaoController {
             // 3. Define os metadados do cabeçalho HTTP
             response.setContentType("application/pdf");
             response.setHeader("Content-Disposition", "attachment; filename=certificado-evento-" + inscricaoId + ".pdf");
+            response.setHeader("Cache-Control", "private, no-store, max-age=0");
+            response.setHeader("X-Content-Type-Options", "nosniff");
             response.setContentLength(pdfBytes.length);
 
             // 4. Grava o payload binário

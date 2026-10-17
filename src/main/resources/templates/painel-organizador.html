@@ -8,19 +8,20 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>body { font-family: 'Inter', sans-serif; }</style>
+    <link rel="stylesheet" th:href="@{/css/seplag-ui.css}">
 </head>
 <body class="bg-[#F4F6F9] min-h-screen flex flex-col">
 
 <header class="bg-[#00457C] text-white py-4 px-6 shadow flex justify-between items-center border-b-4 border-[#FDB813]">
     <div class="flex items-center space-x-3">
-        <img th:src="@{/images/images.png}" alt="Logotipo SEPLAG-MT" class="h-10 w-auto object-contain select-none">
+        <img th:src="@{/images/logo-seplag-branco.png}" alt="Logotipo SEPLAG-MT" class="h-10 w-auto object-contain select-none">
         <div class="flex items-center space-x-2 border-l border-white/20 pl-3">
             <a th:href="@{/}" class="font-bold text-lg tracking-tight hover:text-gray-200 transition-colors">Painel Corporativo SEPLAG</a>
             <span class="bg-[#008A4B] text-[10px] text-white font-bold uppercase px-2 py-0.5 rounded">Organizador</span>
         </div>
     </div>
     <div class="flex items-center space-x-4">
-        <span class="text-sm font-light" sec:authentication="name">usuario@seplag.mt.gov.br</span>
+        <span class="text-sm font-light" sec:authentication="name">Organizador</span>
         <form th:action="@{/logout}" method="POST" class="inline">
             <button type="submit" class="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded transition-colors">Sair</button>
         </form>
@@ -43,7 +44,7 @@
         <div class="flex items-center space-x-5 flex-1 min-w-0">
 
             <!-- Imagem institucional do corpo -->
-            <img th:src="@{/images/images.png}"
+            <img th:src="@{/images/logo-seplag-branco.png}"
                  alt="SEPLAG Gestão"
                  class="h-14 w-auto object-contain hidden sm:block bg-gray-50 p-1 rounded-lg border border-gray-100" />
 

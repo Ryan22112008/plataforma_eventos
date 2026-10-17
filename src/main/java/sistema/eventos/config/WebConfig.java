@@ -20,8 +20,8 @@ public class WebConfig implements WebMvcConfigurer {
         // Resolve o caminho absoluto de forma portável para o Spring
         Path caminhoUploads = Paths.get(diretorioUploads).toAbsolutePath().normalize();
 
-        // Mapeia a URL pública do site "/imagens-eventos/**" para ler a pasta física
-        registry.addResourceHandler("/imagens-eventos/**")
+        // Só publica formatos raster permitidos; arquivos arbitrários da pasta nunca são servidos.
+        registry.addResourceHandler("/imagens-eventos/*.png", "/imagens-eventos/*.jpg", "/imagens-eventos/*.jpeg")
                 .addResourceLocations("file:" + caminhoUploads.toString() + "/");
     }
 }

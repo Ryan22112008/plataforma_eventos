@@ -1,0 +1,10 @@
+.git
+.idea
+target
+.mvn/wrapper/maven-wrapper.jar
+*.iml
+dados
+uploads
+private_uploads
+.env
+.env.*

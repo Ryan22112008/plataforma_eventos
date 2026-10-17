@@ -2,6 +2,8 @@ package sistema.eventos.controller;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Controller;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -57,6 +59,9 @@ public class HomeController {
     public String exibirDetalhesEvento(@PathVariable("id") Long id, Model model) {
         Evento evento = eventoRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Evento não encontrado com o ID: " + id));
+        if (evento.getStatus() != StatusEvento.PUBLICADO) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
 
         model.addAttribute("evento", evento);
         return "detalhes";

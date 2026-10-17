@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Entity
@@ -34,7 +35,7 @@ public class Sessao {
 
     // Método para validar se a sessão ainda está ativa
     public boolean isAtiva() {
-        LocalDateTime agora = LocalDateTime.now();
+        LocalDateTime agora = LocalDateTime.now(ZoneId.of("America/Cuiaba"));
         return agora.isAfter(dataHoraInicio) && agora.isBefore(dataHoraFim);
     }
 }

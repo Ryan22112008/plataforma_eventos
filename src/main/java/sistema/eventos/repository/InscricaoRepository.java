@@ -24,6 +24,8 @@ public interface InscricaoRepository extends JpaRepository<Inscricao, Long> {
 
     boolean existsByParticipanteIdAndEventoId(Long participanteId, Long eventoId);
 
+    boolean existsByParticipanteIdAndEventoIdAndStatusNot(Long participanteId, Long eventoId, StatusInscricao status);
+
     // 🎯 ADICIONADO PARA O CHECK-IN VIA QR CODE:
     // Busca a inscrição única do aluno no evento e já traz o Evento junto (evitando Lazy)
     @Query("SELECT i FROM Inscricao i JOIN FETCH i.evento WHERE i.participante.id = :participanteId AND i.evento.id = :eventoId")

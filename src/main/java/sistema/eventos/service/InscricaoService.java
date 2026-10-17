@@ -83,9 +83,14 @@ public class InscricaoService {
 
     // --- Célula de Portaria / Check-in via QR Code ---
     @Transactional
-    public void realizarCheckIn(String tokenIngresso) {
+    public void realizarCheckIn(String tokenIngresso, String actorEmail, boolean admin) {
         Inscricao inscricao = inscricaoRepository.findByTokenIngressoComRelacoes(tokenIngresso)
                 .orElseThrow(() -> new NegocioException("Ingresso inválido: QR Code não encontrado no sistema."));
+
+        if (!admin && (actorEmail == null || inscricao.getEvento().getOrganizador() == null
+                || !inscricao.getEvento().getOrganizador().getEmail().equalsIgnoreCase(actorEmail))) {
+            throw new org.springframework.security.access.AccessDeniedException("Você não pode registrar check-in para este evento.");
+        }
 
         if (inscricao.getStatus() == StatusInscricao.CANCELADO) {
             throw new NegocioException("Check-in negado: Esta inscrição foi cancelada pelo usuário ou organizador.");
@@ -95,7 +100,7 @@ public class InscricaoService {
             throw new NegocioException("Alerta de fraude: Este ingresso já foi utilizado para realizar check-in.");
         }
 
-        inscricao.setStatus(StatusInscricao.UTILIZADO);
+        inscricao.realizarCheckIn();
     }
 
     @Transactional(readOnly = true)
@@ -133,8 +138,11 @@ public class InscricaoService {
         Inscricao inscricao = inscricaoRepository.findById(inscricaoId)
                 .orElseThrow(() -> new NegocioException("Inscrição não encontrada no sistema."));
 
-        // Muda o status para UTILIZADO (liberando o certificado no painel do participante)
+        if (inscricao.getStatus() == StatusInscricao.CANCELADO) {
+            throw new NegocioException("Não é possível confirmar presença em uma inscrição cancelada.");
+        }
         inscricao.setStatus(StatusInscricao.UTILIZADO);
+        inscricao.setDataCheckIn(java.time.LocalDateTime.now());
 
         inscricaoRepository.save(inscricao);
     }
@@ -186,8 +194,13 @@ public class InscricaoService {
         // Se está ATIVO, muda para UTILIZADO.
         if (inscricao.getStatus() == StatusInscricao.UTILIZADO) {
             inscricao.setStatus(StatusInscricao.ATIVO);
+            inscricao.setDataCheckIn(null);
         } else {
+            if (inscricao.getStatus() == StatusInscricao.CANCELADO) {
+                throw new NegocioException("Não é possível confirmar presença em uma inscrição cancelada.");
+            }
             inscricao.setStatus(StatusInscricao.UTILIZADO);
+            inscricao.setDataCheckIn(java.time.LocalDateTime.now());
         }
         inscricaoRepository.save(inscricao);
     }

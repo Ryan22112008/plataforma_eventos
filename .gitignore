@@ -35,3 +35,4 @@ build/
 ### Pastas Customizadas do Projeto ###
 dados/
 uploads/
+private_uploads/

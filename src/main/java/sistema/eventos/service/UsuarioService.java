@@ -13,6 +13,8 @@ import sistema.eventos.model.StatusSolicitacao;
 import sistema.eventos.model.Usuario;
 import sistema.eventos.repository.SolicitacaoRepository;
 import sistema.eventos.repository.UsuarioRepository;
+import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 
 @Service
 @AllArgsConstructor
@@ -30,13 +32,17 @@ public class UsuarioService {
      */
     @Transactional
     public void cadastrar(RequestUsuarioDto dto) {
+        if (dto.getSenha().getBytes(StandardCharsets.UTF_8).length > 72) {
+            throw new NegocioException("A senha não pode exceder 72 bytes UTF-8.");
+        }
         // 1. Validação de correspondência de senha (Excelente!)
         if (!dto.getSenha().equals(dto.getConfirmacaoSenha())) {
             throw new NegocioException("A confirmação de senha não coincide com a senha digitada.");
         }
 
         // 2. Fail-Fast: Evita processamento se o e-mail já existir
-        if (usuarioRepository.existsByEmail(dto.getEmail())) {
+        String email = dto.getEmail().trim().toLowerCase(Locale.ROOT);
+        if (usuarioRepository.existsByEmailIgnoreCase(email)) {
             throw new NegocioException("Este e-mail já está cadastrado no sistema.");
         }
 
@@ -45,8 +51,8 @@ public class UsuarioService {
         Perfil perfilInicial = Perfil.ROLE_PARTICIPANTE;
 
         Usuario novoUsuario = Usuario.builder()
-                .nome(dto.getNome())
-                .email(dto.getEmail())
+                .nome(dto.getNome().trim())
+                .email(email)
                 .senha(passwordEncoder.encode(dto.getSenha()))
                 .perfil(perfilInicial) // Força o perfil básico de ouvinte/autor
                 .ativo(true)
@@ -65,25 +71,8 @@ public class UsuarioService {
             solicitacaoRepository.save(solicitacao);
 
             // Dispara a notificação por e-mail para a equipe de TI/Admin da SEPLAG
-            emailService.enviarSolicitacaoParaAdmin(usuarioSalvo, solicitacao.getId());
+            emailService.enviarSolicitacaoParaAdmin(usuarioSalvo);
         }
-    }
-
-    /**
-     * Método idempotente para criação ou atualização de usuários mestres do sistema (carga inicial).
-     */
-    @Transactional
-    public Usuario criarOuAtualizarUsuarioFixo(String nome, String email, String senhaPura, Perfil perfil) {
-        Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseGet(Usuario::new);
-
-        usuario.setNome(nome);
-        usuario.setEmail(email);
-        usuario.setSenha(passwordEncoder.encode(senhaPura));
-        usuario.setPerfil(perfil);
-        usuario.setAtivo(true);
-
-        return usuarioRepository.save(usuario);
     }
 
     /**
@@ -100,7 +89,8 @@ public class UsuarioService {
      */
     @Transactional(readOnly = true)
     public Usuario buscarPorEmail(String email) {
-        return usuarioRepository.findByEmail(email)
+        String normalizedEmail = email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
+        return usuarioRepository.findByEmailIgnoreCase(normalizedEmail)
                 .orElseThrow(() -> new NegocioException("Usuário com e-mail " + email + " não encontrado."));
     }
     @Transactional
@@ -109,9 +99,17 @@ public class UsuarioService {
     }
     @Transactional
     public void cadastrarUsuario(CadastroUsuarioDto dto) {
+        String email = dto.getEmail().trim().toLowerCase(Locale.ROOT);
+        if (usuarioRepository.existsByEmailIgnoreCase(email)) {
+            throw new NegocioException("Este e-mail já está cadastrado no sistema.");
+        }
+        int senhaBytes = dto.getSenha().getBytes(StandardCharsets.UTF_8).length;
+        if (senhaBytes < 12 || senhaBytes > 72) {
+            throw new NegocioException("A senha deve ter ao menos 12 bytes e não exceder 72 bytes UTF-8.");
+        }
         Usuario usuario = new Usuario();
-        usuario.setNome(dto.getNome());
-        usuario.setEmail(dto.getEmail());
+        usuario.setNome(dto.getNome().trim());
+        usuario.setEmail(email);
         usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
 
         // 🔒 Todo mundo nasce como ALuno/Participante comum por segurança
@@ -126,7 +124,7 @@ public class UsuarioService {
             solicitacaoRepository.save(solicitacao);
 
             // Dispara o e-mail em background para o administrador
-            emailService.enviarSolicitacaoParaAdmin(usuario, solicitacao.getId());
+            emailService.enviarSolicitacaoParaAdmin(usuario);
         }
     }
 }

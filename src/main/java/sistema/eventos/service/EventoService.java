@@ -1,5 +1,6 @@
 package sistema.eventos.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,10 +13,7 @@ import sistema.eventos.repository.EventoRepository;
 import sistema.eventos.repository.SessaoRepository; // 🎯 INJETADO
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.net.URI;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -23,17 +21,19 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@Slf4j
 public class EventoService {
 
     private final EventoRepository eventoRepository;
     private final SessaoRepository sessaoRepository; // 🎯 INJETADO VIA CONSTRUTOR SÊNIOR
-
-    private final String DIRETORIO_UPLOADS = "uploads/";
+    private final FileStorageService fileStorageService;
 
     // Construtor único atualizado para injeção segura pelo Spring
-    public EventoService(EventoRepository eventoRepository, SessaoRepository sessaoRepository) {
+    public EventoService(EventoRepository eventoRepository, SessaoRepository sessaoRepository,
+                         FileStorageService fileStorageService) {
         this.eventoRepository = eventoRepository;
         this.sessaoRepository = sessaoRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     @Transactional(readOnly = true)
@@ -54,6 +54,7 @@ public class EventoService {
 
     @Transactional
     public void criarEvento(RequestEventoDto dto, Usuario organizador, MultipartFile banner) {
+        validarUrlGoogleMaps(dto.getUrlGoogleMaps());
         Evento evento = new Evento();
 
         evento.setOrganizador(organizador);
@@ -80,15 +81,15 @@ public class EventoService {
         }
 
         if (banner != null && !banner.isEmpty()) {
-            evento.setBannerUrl(armazenarArquivo(banner));
+            evento.setBannerUrl(fileStorageService.storeImage(banner, "banner"));
         }
 
         if (dto.getImagemFrente() != null && !dto.getImagemFrente().isEmpty()) {
-            evento.setCertificadoTemplate(armazenarArquivo(dto.getImagemFrente()));
+            evento.setCertificadoTemplate(fileStorageService.storeImage(dto.getImagemFrente(), "certificado-frente"));
         }
 
         if (dto.getImagemVerso() != null && !dto.getImagemVerso().isEmpty()) {
-            evento.setCertificadoTemplateVerso(armazenarArquivo(dto.getImagemVerso()));
+            evento.setCertificadoTemplateVerso(fileStorageService.storeImage(dto.getImagemVerso(), "certificado-verso"));
         }
 
         if (dto.getDisciplinas() != null) {
@@ -112,6 +113,7 @@ public class EventoService {
 
     @Transactional
     public void atualizarEvento(Long id, RequestEventoDto dto, MultipartFile banner, MultipartFile imgFrente, MultipartFile imgVerso) {
+        validarUrlGoogleMaps(dto.getUrlGoogleMaps());
         Evento eventoOriginal = eventoRepository.findById(id)
                 .orElseThrow(() -> new NegocioException("Evento não encontrado."));
 
@@ -132,17 +134,17 @@ public class EventoService {
         eventoOriginal.setLongitude(dto.getLongitude());
 
         if (banner != null && !banner.isEmpty()) {
-            String novoBanner = armazenarArquivoFisico(banner);
+            String novoBanner = fileStorageService.storeImage(banner, "banner");
             eventoOriginal.setBannerUrl(novoBanner);
         }
 
         if (imgFrente != null && !imgFrente.isEmpty()) {
-            String novaFrente = armazenarArquivoFisico(imgFrente);
+            String novaFrente = fileStorageService.storeImage(imgFrente, "certificado-frente");
             eventoOriginal.setCertificadoTemplate(novaFrente);
         }
 
         if (imgVerso != null && !imgVerso.isEmpty()) {
-            String novoVerso = armazenarArquivoFisico(imgVerso);
+            String novoVerso = fileStorageService.storeImage(imgVerso, "certificado-verso");
             eventoOriginal.setCertificadoTemplateVerso(novoVerso);
         }
 
@@ -188,7 +190,7 @@ public class EventoService {
             sessaoManha.setNome(diaSemana + " - Manhã");
             sessaoManha.setDataHoraInicio(LocalDateTime.of(dataAtual, LocalTime.of(8, 0, 0)));
             sessaoManha.setDataHoraFim(LocalDateTime.of(dataAtual, LocalTime.of(12, 0, 0)));
-            sessaoManha.setQrCodeToken("M_" + evento.getId() + "_" + UUID.randomUUID().toString().substring(0, 8));
+            sessaoManha.setQrCodeToken("M_" + evento.getId() + "_" + UUID.randomUUID());
             sessaoRepository.save(sessaoManha);
 
             // 🌇 Turno Tarde (14:00 às 18:00)
@@ -197,7 +199,7 @@ public class EventoService {
             sessaoTarde.setNome(diaSemana + " - Tarde");
             sessaoTarde.setDataHoraInicio(LocalDateTime.of(dataAtual, LocalTime.of(14, 0, 0)));
             sessaoTarde.setDataHoraFim(LocalDateTime.of(dataAtual, LocalTime.of(18, 0, 0)));
-            sessaoTarde.setQrCodeToken("T_" + evento.getId() + "_" + UUID.randomUUID().toString().substring(0, 8));
+            sessaoTarde.setQrCodeToken("T_" + evento.getId() + "_" + UUID.randomUUID());
             sessaoRepository.save(sessaoTarde);
 
             dataAtual = dataAtual.plusDays(1); // Avança o ponteiro do calendário
@@ -216,41 +218,35 @@ public class EventoService {
         };
     }
 
+    private void validarUrlGoogleMaps(String value) {
+        if (value == null || value.isBlank()) return;
+        try {
+            URI uri = URI.create(value.trim());
+            if (!"https".equalsIgnoreCase(uri.getScheme()) || uri.getHost() == null || uri.getUserInfo() != null) {
+                throw new IllegalArgumentException();
+            }
+        } catch (IllegalArgumentException e) {
+            throw new NegocioException("O link do mapa precisa ser uma URL HTTPS válida.");
+        }
+    }
+
     // --- Mantenha o restante dos métodos privados e auxiliares originais inalterados daqui para baixo ---
     @Transactional
     public void atualizarArteCertificado(Long eventoId, MultipartFile arquivo, String emailOrganizador) {
         Evento evento = buscarPorId(eventoId);
         if (!evento.getOrganizador().getEmail().equalsIgnoreCase(emailOrganizador)) {
-            throw new NegocioException("Ação não autorizada. Você não é o organizador deste evento.");
+            throw new org.springframework.security.access.AccessDeniedException("Você não tem acesso a este evento.");
         }
         if (arquivo == null || arquivo.isEmpty()) {
             throw new NegocioException("Por favor, selecione um arquivo válido de imagem do Canva.");
         }
-        if (evento.getCertificadoTemplate() != null) {
-            try {
-                Files.deleteIfExists(Paths.get(DIRETORIO_UPLOADS).resolve(evento.getCertificadoTemplate()));
-            } catch (IOException e) {
-                System.err.println("[STORAGE WARNING] Falha ao remover arte antiga: " + e.getMessage());
-            }
-        }
-        String nomeArquivoPersistido = realizarUpload(arquivo, "certificado");
+        String arteAntiga = evento.getCertificadoTemplate();
+        String nomeArquivoPersistido = fileStorageService.storeImage(arquivo, "certificado");
         evento.setCertificadoTemplate(nomeArquivoPersistido);
         eventoRepository.save(evento);
-    }
-
-    private String realizarUpload(MultipartFile arquivo, String tipo) {
-        try {
-            Path pastaDestino = Paths.get(DIRETORIO_UPLOADS);
-            if (!Files.exists(pastaDestino)) {
-                Files.createDirectories(pastaDestino);
-            }
-            String nomeLimpo = arquivo.getOriginalFilename().replaceAll("\\s+", "_");
-            String nomeUnico = System.currentTimeMillis() + "_" + tipo + "_" + nomeLimpo;
-            Path caminhoCompleto = pastaDestino.resolve(nomeUnico);
-            Files.copy(arquivo.getInputStream(), caminhoCompleto, StandardCopyOption.REPLACE_EXISTING);
-            return nomeUnico;
-        } catch (IOException e) {
-            throw new NegocioException("Não foi possível processar o upload do arquivo. Tente novamente.");
+        if (arteAntiga != null && !arteAntiga.equals(nomeArquivoPersistido)) {
+            try { fileStorageService.deleteStoredImage(arteAntiga); }
+            catch (IOException e) { log.warn("Não foi possível remover uma arte antiga de certificado.", e); }
         }
     }
 
@@ -282,64 +278,26 @@ public class EventoService {
         Evento evento = eventoRepository.findById(id)
                 .orElseThrow(() -> new NegocioException("Evento não encontrado com o ID informado."));
         if (!evento.getOrganizador().getEmail().equalsIgnoreCase(usernameLogado)) {
-            throw new NegocioException("Ação não autorizada. Você só pode excluir eventos criados por você.");
+            throw new org.springframework.security.access.AccessDeniedException("Você não tem acesso a este evento.");
         }
         if (evento.getBannerUrl() != null && !evento.getBannerUrl().trim().isEmpty()) {
             try {
-                Files.deleteIfExists(Paths.get(DIRETORIO_UPLOADS).resolve(evento.getBannerUrl()));
-            } catch (Exception e) {
-                System.err.println("[STORAGE WARNING] Falha ao remover banner: " + e.getMessage());
+                fileStorageService.deleteStoredImage(evento.getBannerUrl());
+            } catch (IOException e) {
+                log.warn("Não foi possível remover o banner do evento {}.", id, e);
             }
         }
         String template = evento.getCertificadoTemplate();
         if (template != null && !template.trim().isEmpty() && !template.trim().startsWith("<")) {
             try {
-                Files.deleteIfExists(Paths.get(DIRETORIO_UPLOADS).resolve(template));
-            } catch (Exception e) {
-                System.err.println("[STORAGE WARNING] Falha ao remover arte do certificado: " + e.getMessage());
+                fileStorageService.deleteStoredImage(template);
+            } catch (IOException e) {
+                log.warn("Não foi possível remover uma arte de certificado do evento {}.", id, e);
             }
         }
+        try { fileStorageService.deleteStoredImage(evento.getCertificadoTemplateVerso()); }
+        catch (IOException e) { log.warn("Não foi possível remover o verso do certificado do evento {}.", id, e); }
         eventoRepository.delete(evento);
-    }
-
-    private String armazenarArquivo(MultipartFile arquivo) {
-        try {
-            String nomeOriginal = arquivo.getOriginalFilename();
-            String extensao = nomeOriginal.substring(nomeOriginal.lastIndexOf("."));
-            String nomeUnico = UUID.randomUUID().toString() + extensao;
-            Path caminhoDiretorio = Paths.get(DIRETORIO_UPLOADS).toAbsolutePath().normalize();
-            if (!Files.exists(caminhoDiretorio)) {
-                Files.createDirectories(caminhoDiretorio);
-            }
-            Path caminhoDestinoFinal = caminhoDiretorio.resolve(nomeUnico);
-            Files.copy(arquivo.getInputStream(), caminhoDestinoFinal, StandardCopyOption.REPLACE_EXISTING);
-            return nomeUnico;
-        } catch (IOException e) {
-            throw new RuntimeException("Falha crítica ao salvar o arquivo físico no servidor: " + e.getMessage(), e);
-        }
-    }
-
-    private String armazenarArquivoFisico(MultipartFile arquivo) {
-        if (arquivo == null || arquivo.isEmpty()) {
-            throw new NegocioException("O arquivo enviado está vazio ou é inválido.");
-        }
-        try {
-            Path diretorioBase = Paths.get(DIRETORIO_UPLOADS).toAbsolutePath().normalize();
-            if (!Files.exists(diretorioBase)) {
-                Files.createDirectories(diretorioBase);
-            }
-            String extensao = "";
-            String nomeOriginal = arquivo.getOriginalFilename();
-            if (nomeOriginal != null && nomeOriginal.contains(".")) {
-                extensao = nomeOriginal.substring(nomeOriginal.lastIndexOf("."));
-            }
-            String nomeUnicoDoArquivo = UUID.randomUUID().toString() + extensao;
-            Path caminhoDestino = diretorioBase.resolve(nomeUnicoDoArquivo);
-            Files.copy(arquivo.getInputStream(), caminhoDestino, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            return nomeUnicoDoArquivo;
-        } catch (IOException e) {
-            throw new NegocioException("Falha de I/O ao salvar o arquivo no servidor: " + e.getMessage(), e);
-        }
     }
 
     @Transactional(readOnly = true)

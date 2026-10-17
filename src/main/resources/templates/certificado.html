@@ -33,6 +33,20 @@
             height: 210mm;
             z-index: 1;
         }
+        .preview-watermark {
+            position: absolute;
+            top: 82mm;
+            left: 18mm;
+            width: 260mm;
+            transform: rotate(-18deg);
+            border: 2mm solid rgba(166, 35, 45, .72);
+            color: rgba(166, 35, 45, .78);
+            font-size: 34pt;
+            font-weight: bold;
+            letter-spacing: 3mm;
+            text-align: center;
+            z-index: 20;
+        }
         /* Bloco de conteúdo alinhado à esquerda no espaço em branco */
         .conteudo {
             position: absolute;
@@ -198,6 +212,7 @@
 <div class="certificado-container">
 
     <img th:src="${imagemFundoBase64}" class="background-fundo" alt="Fundo Certificado" />
+    <div class="preview-watermark" th:if="${isPreview}">PRÉ-VISUALIZAÇÃO — NÃO VÁLIDO</div>
 
     <div class="conteudo">
         <div class="nome-aluno" th:text="${usuario.nome}">Nome do Participante</div>
@@ -217,6 +232,7 @@
 <div class="certificado-container-verso">
 
     <img th:src="${imagemVersoBase64}" class="background-fundo" alt="Fundo Verso Certificado" />
+    <div class="preview-watermark" th:if="${isPreview}">PRÉ-VISUALIZAÇÃO — NÃO VÁLIDO</div>
 
     <div class="conteudo-verso-restrito">
 
@@ -232,11 +248,7 @@
                         </div>
 
                         <div class="modulo-box" th:if="${evento.disciplinas == null or #lists.isEmpty(evento.disciplinas)}">
-                            <div class="modulo-titulo">Módulo 1: Fundamentos Avançados</div>
-                            <div class="modulo-itens">
-                                • Boas práticas de arquitetura, Clean Code e padrões de projeto.<br />
-                                • Análise de requisitos, modelagem estrutural e regras de negócio complexas.
-                            </div>
+                            <div class="modulo-titulo">Conteúdo programático não informado</div>
                         </div>
                     </td>
 
@@ -247,11 +259,7 @@
                         </div>
 
                         <div class="modulo-box" th:if="${evento.disciplinas == null or #lists.isEmpty(evento.disciplinas)}">
-                            <div class="modulo-titulo">Módulo 2: Performance e Resiliência</div>
-                            <div class="modulo-itens">
-                                • Mecanismos de segurança da informação, autenticação e auditoria.<br />
-                                • Otimização de concorrência, infraestrutura em nuvem e deploy distribuído.
-                            </div>
+                            <div class="modulo-titulo"> </div>
                         </div>
                     </td>
                 </tr>

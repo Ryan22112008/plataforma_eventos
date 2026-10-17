@@ -1,8 +1,11 @@
 package sistema.eventos.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.util.UriComponentsBuilder;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.xhtmlrenderer.pdf.ITextRenderer;
@@ -22,6 +25,7 @@ import java.nio.file.Paths;
 import java.util.Base64;
 
 @Service
+@Slf4j
 public class CertificadoService {
 
     private final TemplateEngine templateEngine;
@@ -29,15 +33,17 @@ public class CertificadoService {
     @Value("${app.upload.dir:uploads}")
     private String diretorioUploadsConfigurado;
 
+    @Value("${app.public-url:}")
+    private String urlPublicaConfigurada;
+
     public CertificadoService(TemplateEngine templateEngine) {
         this.templateEngine = templateEngine;
     }
 
     @Transactional(readOnly = true)
     public byte[] gerarCertificadoPdf(Inscricao inscricao) {
-        if (inscricao.getStatus() != StatusInscricao.UTILIZADO &&
-                inscricao.getStatus() != StatusInscricao.ATIVO) {
-            throw new NegocioException("O participante não possui uma inscrição válida para emitir o certificado.");
+        if (inscricao.getStatus() != StatusInscricao.UTILIZADO) {
+            throw new NegocioException("O certificado só pode ser emitido após a confirmação de presença.");
         }
 
         // CORREÇÃO 1: Buscando os campos corretos da Frente e do Verso na Entidade
@@ -53,32 +59,35 @@ public class CertificadoService {
 
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
-            // RESOLUÇÃO DE CAMINHO SÊNIOR: Unifica a raiz e evita caminhos colados sem barra
-            Path diretorioBase = Paths.get(diretorioUploadsConfigurado).toAbsolutePath().normalize();
-
             // 1. Processa a Imagem de Fundo da FRENTE
-            Path caminhoFrente = diretorioBase.resolve(nomeArteFrente);
-            if (!Files.exists(caminhoFrente)) {
+            Path caminhoFrente = resolverImagemCertificado(nomeArteFrente);
+            if (!Files.exists(caminhoFrente) || Files.size(caminhoFrente) > 10L * 1024 * 1024) {
                 throw new NegocioException("A imagem de frente do certificado não foi encontrada no servidor.");
             }
             byte[] bytesFrente = Files.readAllBytes(caminhoFrente);
             String extFrente = nomeArteFrente.substring(nomeArteFrente.lastIndexOf(".") + 1).toLowerCase();
+            validarExtensaoImagem(extFrente);
             if (extFrente.equals("jpg")) extFrente = "jpeg";
             String base64Frente = "data:image/" + extFrente + ";base64," + Base64.getEncoder().encodeToString(bytesFrente);
 
             // 2. Processa a Imagem de Fundo do VERSO
-            Path caminhoVerso = diretorioBase.resolve(nomeArteVerso);
-            if (!Files.exists(caminhoVerso)) {
+            Path caminhoVerso = resolverImagemCertificado(nomeArteVerso);
+            if (!Files.exists(caminhoVerso) || Files.size(caminhoVerso) > 10L * 1024 * 1024) {
                 throw new NegocioException("A imagem do verso do certificado não foi encontrada no servidor.");
             }
             byte[] bytesVerso = Files.readAllBytes(caminhoVerso);
             String extVerso = nomeArteVerso.substring(nomeArteVerso.lastIndexOf(".") + 1).toLowerCase();
+            validarExtensaoImagem(extVerso);
             if (extVerso.equals("jpg")) extVerso = "jpeg";
             String base64Verso = "data:image/" + extVerso + ";base64," + Base64.getEncoder().encodeToString(bytesVerso);
 
             // 3. Gera dinamicamente o QR Code do Verso
             String tokenValidacao = "EV3-" + inscricao.getTokenIngresso();
-            String urlValidacao = "https://seusistema.com/validar?code=" + tokenValidacao;
+            UriComponentsBuilder urlBase = urlPublicaConfigurada == null || urlPublicaConfigurada.isBlank()
+                    ? ServletUriComponentsBuilder.fromCurrentContextPath()
+                    : UriComponentsBuilder.fromUriString(urlPublicaConfigurada.trim().replaceAll("/+$", ""));
+            String urlValidacao = urlBase.path("/certificados/validar")
+                    .queryParam("codigo", tokenValidacao).build().encode().toUriString();
             String base64QRCode = gerarQRCodeBase64(urlValidacao);
 
             // 4. Monta o Contexto de variáveis do Thymeleaf
@@ -104,7 +113,8 @@ public class CertificadoService {
         } catch (NegocioException ne) {
             throw ne;
         } catch (Exception e) {
-            throw new NegocioException("Erro de infraestrutura ao processar o motor Thymeleaf/Flying-Saucer: " + e.getMessage(), e);
+            log.error("Falha interna ao renderizar o certificado da inscrição {}.", inscricao.getId(), e);
+            throw new NegocioException("Não foi possível gerar o certificado no momento.");
         }
     }
 
@@ -116,6 +126,22 @@ public class CertificadoService {
             MatrixToImageWriter.writeToStream(bitMatrix, "PNG", pngOut);
             byte[] qrBytes = pngOut.toByteArray();
             return "data:image/png;base64," + Base64.getEncoder().encodeToString(qrBytes);
+        }
+    }
+
+    private Path resolverImagemCertificado(String filename) {
+        if (filename == null || !filename.matches("[A-Za-z0-9._-]{1,255}") || filename.contains("..")) {
+            throw new NegocioException("Arquivo de certificado inválido.");
+        }
+        Path base = Paths.get(diretorioUploadsConfigurado).toAbsolutePath().normalize();
+        Path path = base.resolve(filename).normalize();
+        if (!path.startsWith(base) || !base.equals(path.getParent())) throw new NegocioException("Arquivo de certificado inválido.");
+        return path;
+    }
+
+    private void validarExtensaoImagem(String extension) {
+        if (!extension.equals("png") && !extension.equals("jpg") && !extension.equals("jpeg")) {
+            throw new NegocioException("O template do certificado precisa ser uma imagem PNG ou JPEG.");
         }
     }
 }

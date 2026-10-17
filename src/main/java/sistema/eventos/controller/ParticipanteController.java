@@ -17,6 +17,8 @@ import sistema.eventos.exception.NegocioException;
 import sistema.eventos.model.Inscricao;
 import sistema.eventos.model.Usuario;
 import sistema.eventos.repository.InscricaoRepository;
+import sistema.eventos.repository.SessaoRepository;
+import sistema.eventos.service.PresencaService;
 import sistema.eventos.service.InscricaoService;
 import sistema.eventos.service.TrabalhoService;
 import sistema.eventos.service.UsuarioService;
@@ -33,13 +35,17 @@ public class ParticipanteController {
     private final UsuarioService usuarioService;
     private final TrabalhoService trabalhoService;
     private final CertificadoService certificadoService; // ADICIONADO
+    private final PresencaService presencaService;
+    private final SessaoRepository sessaoRepository;
 
-    public ParticipanteController(InscricaoService inscricaoService, InscricaoRepository inscricaoRepository, UsuarioService usuarioService, TrabalhoService trabalhoService, CertificadoService certificadoService) {
+    public ParticipanteController(InscricaoService inscricaoService, InscricaoRepository inscricaoRepository, UsuarioService usuarioService, TrabalhoService trabalhoService, CertificadoService certificadoService, PresencaService presencaService, SessaoRepository sessaoRepository) {
         this.inscricaoService = inscricaoService;
         this.inscricaoRepository = inscricaoRepository;
         this.usuarioService = usuarioService;
         this.trabalhoService = trabalhoService;
         this.certificadoService = certificadoService;
+        this.presencaService = presencaService;
+        this.sessaoRepository = sessaoRepository;
     }
 
     @GetMapping("/meus-ingressos")
@@ -50,8 +56,10 @@ public class ParticipanteController {
     }
 
     @GetMapping("/inscricoes/{id}/submeter")
-    public String telaSubmissao(@PathVariable Long id, Model model) {
-        Inscricao inscricao = inscricaoService.buscarPorId(id);
+    public String telaSubmissao(@PathVariable Long id,
+                                @AuthenticationPrincipal UserDetails userDetails,
+                                Model model) {
+        Inscricao inscricao = buscarInscricaoDoUsuario(id, userDetails.getUsername());
         model.addAttribute("inscricao", inscricao);
         return "submeter-trabalho";
     }
@@ -59,8 +67,9 @@ public class ParticipanteController {
     @PostMapping("/inscricoes/{id}/submeter")
     public String processarSubmissao(@PathVariable Long id,
                                      @RequestParam("titulo") String titulo,
-                                     @RequestParam("file") MultipartFile file) {
-        Inscricao inscricao = inscricaoService.buscarPorId(id);
+                                     @RequestParam("file") MultipartFile file,
+                                     @AuthenticationPrincipal UserDetails userDetails) {
+        Inscricao inscricao = buscarInscricaoDoUsuario(id, userDetails.getUsername());
         trabalhoService.salvarTrabalhoFisico(titulo, file, inscricao);
         return "redirect:/participante/meus-ingressos?sucesso=Seu+artigo+foi+submetido+com+sucesso!";
     }
@@ -77,13 +86,20 @@ public class ParticipanteController {
     // Rota final: /participante/inscricoes/{id}/certificado
     // Rota final: /participante/inscricoes/{id}/certificado
     @GetMapping("/inscricoes/{id}/certificado")
-    public ResponseEntity<byte[]> visualizarCertificadoInline(@PathVariable("id") Long id) {
+    public ResponseEntity<byte[]> visualizarCertificadoInline(@PathVariable("id") Long id,
+                                                               @AuthenticationPrincipal UserDetails userDetails) {
         // Deixe as exceções subirem livremente. O GlobalExceptionHandler cuida delas.
         Inscricao inscricao = inscricaoService.buscarPorId(id);
+        if (!inscricao.getParticipante().getEmail().equalsIgnoreCase(userDetails.getUsername())) {
+            throw new org.springframework.security.access.AccessDeniedException("Este certificado não pertence à sua conta.");
+        }
         byte[] pdfBytes = certificadoService.gerarCertificadoPdf(inscricao);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setCacheControl("private, no-store, max-age=0");
+        headers.set("X-Content-Type-Options", "nosniff");
+        headers.set("Referrer-Policy", "no-referrer");
 
         // Força a abertura do PDF nativo dentro da aba do navegador
         headers.setContentDisposition(ContentDisposition.inline()
@@ -118,34 +134,34 @@ public class ParticipanteController {
         }
     }
 
-    // 🎯 CORRIGIDO TAMBÉM (Caso tenha colocado o check-in aqui):
-    @GetMapping("/eventos/{id}/checkin")
-    public String realizarCheckinAutonomo(@PathVariable("id") Long eventoId, Authentication authentication, RedirectAttributes attributes) {
+    @GetMapping("/presencas/checkin")
+    public String confirmarPresenca(@RequestParam("token") String token, Model model) {
+        var sessao = sessaoRepository.findByQrCodeToken(token)
+                .orElseThrow(() -> new sistema.eventos.exception.NegocioException("QR Code inválido ou inexistente."));
+        model.addAttribute("sessao", sessao);
+        model.addAttribute("token", token);
+        return "presenca-checkin";
+    }
+
+    @PostMapping("/presencas/checkin")
+    public String registrarPresenca(@RequestParam("token") String token,
+                                    @AuthenticationPrincipal UserDetails userDetails,
+                                    RedirectAttributes attributes) {
         try {
-            if (authentication == null) {
-                return "redirect:/login";
-            }
-
-            String emailLogado = authentication.getName();
-            Usuario aluno = usuarioService.buscarPorEmail(emailLogado);
-
-            Inscricao inscricao = inscricaoRepository.findByParticipanteIdAndEventoIdComEvento(aluno.getId(), eventoId)
-                    .orElseThrow(() -> new sistema.eventos.exception.NegocioException("Você não possui uma inscrição ativa para este evento."));
-
-            if (inscricao.getEvento().isPresencaFinalizada()) {
-                attributes.addFlashAttribute("mensagemErro", "A lista de presença deste evento já foi encerrada pelo professor.");
-                return "redirect:/dashboard";
-            }
-
-            inscricao.setStatus(sistema.eventos.model.StatusInscricao.UTILIZADO);
-            inscricaoRepository.save(inscricao);
-
-            attributes.addFlashAttribute("mensagemSucesso", "Presença confirmada com sucesso!");
-            return "redirect:/participante/meus-certificados"; // Redireciona para a sua tela oficial
-
-        } catch (Exception e) {
-            attributes.addFlashAttribute("mensagemErro", "Erro ao computar presença: " + e.getMessage());
-            return "redirect:/dashboard";
+            Usuario participante = usuarioService.buscarPorEmail(userDetails.getUsername());
+            presencaService.registrarPresenca(participante.getId(), token);
+            attributes.addFlashAttribute("mensagemSucesso", "Presença registrada para esta sessão.");
+        } catch (IllegalArgumentException | IllegalStateException | SecurityException e) {
+            attributes.addFlashAttribute("mensagemErro", e.getMessage());
         }
+        return "redirect:/participante/presencas/checkin?token=" + org.springframework.web.util.UriUtils.encodeQueryParam(token, java.nio.charset.StandardCharsets.UTF_8);
+    }
+
+    private Inscricao buscarInscricaoDoUsuario(Long id, String email) {
+        Inscricao inscricao = inscricaoService.buscarPorId(id);
+        if (!inscricao.getParticipante().getEmail().equalsIgnoreCase(email)) {
+            throw new org.springframework.security.access.AccessDeniedException("Esta inscrição não pertence à sua conta.");
+        }
+        return inscricao;
     }
 }

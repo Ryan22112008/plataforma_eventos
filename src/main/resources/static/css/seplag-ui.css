@@ -1,0 +1,203 @@
+/* SEPLAG Eventos — shared institutional design system. */
+:root {
+  color-scheme: dark;
+  --seplag-navy: #0b1d32;
+  --seplag-blue: #173a5d;
+  --seplag-blue-light: #245780;
+  --surface: #122943;
+  --surface-raised: #18344f;
+  --canvas: #0d2138;
+  --ink: #f1f6fb;
+  --ink-soft: #c0cedb;
+  --muted: #91a6bb;
+  --line: rgba(177, 201, 224, .15);
+  --accent: #68a9df;
+  --radius-card: 16px;
+  --shadow-card: 0 14px 36px rgba(2, 12, 24, .22);
+}
+
+html { scroll-behavior: smooth; }
+body {
+  color: var(--ink) !important;
+  background: radial-gradient(ellipse at 50% -20%, #193a5a 0, var(--canvas) 55%, #09192b 100%) !important;
+  font-family: Inter, "Segoe UI", sans-serif;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+::selection { color: #fff; background: #276b9f; }
+a { text-underline-offset: 3px; transition: color .18s ease, background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 3px solid rgba(104, 169, 223, .75) !important; outline-offset: 3px;
+}
+button, [type=button], [type=submit] { transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+button:hover, [type=submit]:hover { filter: brightness(1.08); }
+
+/* Common surfaces used across all Thymeleaf pages. */
+.bg-white, [class~="bg-white"] { background-color: var(--surface) !important; }
+.bg-gray-50, .bg-gray-100, .bg-\[\#F4F6F9\], .bg-\[\#f4f6f9\] { background-color: var(--canvas) !important; }
+.bg-gray-200 { background-color: var(--surface-raised) !important; }
+.border-gray-100, .border-gray-200, .border-gray-300, .divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: var(--line) !important; }
+.text-gray-900, .text-gray-800, .text-gray-700, .text-gray-600, .text-gray-500, .text-gray-400,
+.text-\[\#333333\], .text-\[\#333\] { color: var(--ink-soft) !important; }
+.text-gray-900, .text-gray-800, .text-\[\#333333\] { color: var(--ink) !important; }
+.text-gray-500, .text-gray-400 { color: var(--muted) !important; }
+.text-\[\#00457C\], .text-\[\#00335c\], .text-\[\#002d54\], .text-\[\#082f57\],
+.text-\[\#0b4d7e\] { color: #9bcaf0 !important; }
+.text-\[\#008A4B\], .text-\[\#07844c\], .text-\[\#006637\],
+.text-green-600, .text-green-700, .text-green-800, .text-emerald-600, .text-emerald-700, .text-emerald-800 {
+  color: #8be0b5 !important;
+}
+.text-amber-500, .text-amber-600, .text-amber-700, .text-amber-800, .text-yellow-700 {
+  color: #f4cf78 !important;
+}
+.text-red-500, .text-red-600, .text-red-700, .text-red-800, .text-rose-700, .text-rose-800 {
+  color: #ff9da6 !important;
+}
+.text-blue-700, .text-blue-800, .text-blue-900 { color: #a7d3f5 !important; }
+.placeholder-gray-400::placeholder { color: #8499ae !important; }
+
+header, body > nav {
+  background-color: rgba(11, 29, 50, .96) !important;
+  border-color: var(--line) !important;
+  box-shadow: 0 8px 24px rgba(2, 12, 24, .16);
+  backdrop-filter: blur(12px);
+}
+header a, header span, header button { color: #e8f1f8; }
+header nav a { border-radius: 8px; }
+header nav a:hover { color: #9fd1f7 !important; }
+body > header img, body > nav img { max-height: 48px; }
+img[src$="logo-seplag-branco.png"] { border-radius: 8px; }
+
+main { padding-top: clamp(1.75rem, 4vw, 3.25rem) !important; padding-bottom: clamp(2rem, 4vw, 3.5rem) !important; }
+main > div[class*="bg-white"], main section[class*="bg-white"],
+main .bg-white, main [class*="rounded-xl"][class*="border"] {
+  border-color: var(--line) !important;
+  border-radius: var(--radius-card) !important;
+  box-shadow: var(--shadow-card);
+}
+main h1, main h2, main h3, main h4 { color: var(--ink); letter-spacing: -.025em; }
+main p { color: var(--ink-soft); }
+main table { border-collapse: separate; border-spacing: 0; }
+main thead th { color: #a9bbcc !important; font-size: .72rem !important; letter-spacing: .07em; background: #18344f !important; }
+main tbody tr { background-color: var(--surface) !important; }
+main tbody tr:hover { background-color: var(--surface-raised) !important; }
+main tbody tr:last-child td { border-bottom: 0; }
+main td, main th { vertical-align: middle; border-color: var(--line) !important; }
+.overflow-x-auto { border-radius: 12px; }
+
+input:not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea {
+  min-height: 44px; padding: 10px 14px; color: var(--ink) !important; background: #0c2035 !important;
+  border: 1px solid rgba(177, 201, 224, .22) !important; border-radius: 10px !important;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.12);
+}
+input::placeholder, textarea::placeholder { color: #8297ab !important; }
+input:focus, select:focus, textarea:focus { border-color: #68a9df !important; box-shadow: 0 0 0 3px rgba(104,169,223,.15) !important; }
+option { color: var(--ink); background: var(--surface); }
+label { color: #dbe6ef !important; font-weight: 600 !important; }
+input[type=checkbox], input[type=radio] { accent-color: #4389bf; }
+
+/* Public landing hero and calls to action. */
+body > section[class*="bg-gradient"] {
+  background: linear-gradient(118deg, #153c60 0%, #102d4a 57%, #0e263f 100%) !important;
+  border-bottom: 1px solid var(--line);
+}
+body > section h1 { color: #f6f9fc; letter-spacing: -.04em; }
+body > section p { color: #c0d0df !important; }
+body > section form { background: #f6f9fc !important; box-shadow: 0 18px 48px rgba(0,0,0,.22) !important; }
+body > section form input { padding: 10px 14px !important; color: #18324a !important; background: transparent !important; border: 0 !important; box-shadow: none !important; }
+body > section form button { background: #1d6498 !important; }
+footer { color: #b7c8d8; background-color: #091a2c !important; border-color: var(--line) !important; line-height: 1.7; }
+
+/* Participant events and certificates page. */
+.certificados-main { padding-top: clamp(2.5rem, 6vw, 4.5rem) !important; }
+.certificado-card {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 20px;
+  padding: 22px 24px; color: var(--ink); background: linear-gradient(115deg, #142f4a, #122943 75%);
+  border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow-card);
+  transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.certificado-card:hover { border-color: rgba(104,169,223,.42); transform: translateY(-2px); box-shadow: 0 18px 40px rgba(2,12,24,.3); }
+.certificado-icon, .certificados-empty-icon {
+  display: grid; place-items: center; color: #9bcaf0; background: rgba(104,169,223,.12);
+  border: 1px solid rgba(104,169,223,.18); border-radius: 13px;
+}
+.certificado-icon { width: 52px; height: 52px; font-size: 1.25rem; }
+.certificado-info { min-width: 0; }
+.certificado-info h2 { margin: 0; color: #f1f6fb; font-size: 1.15rem; font-weight: 700; line-height: 1.4; overflow-wrap: anywhere; }
+.certificado-carga { margin: 8px 0 0; color: #b6c8d9; font-size: .9rem; }
+.certificado-link {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px;
+  padding: 0 16px; color: #f6faff !important; background: #1d6498; border: 1px solid rgba(159,209,247,.15);
+  border-radius: 10px; font-size: .875rem; font-weight: 650; text-decoration: none; white-space: nowrap;
+}
+.certificado-link:hover { background: #2879b1; box-shadow: 0 8px 20px rgba(5,30,53,.28); }
+.certificados-empty {
+  display: flex; flex-direction: column; align-items: center; padding: clamp(32px, 7vw, 64px) 20px;
+  color: var(--ink-soft); background: rgba(18,41,67,.72); border: 1px dashed rgba(177,201,224,.24); border-radius: 16px; text-align: center;
+}
+.certificados-empty-icon { width: 56px; height: 56px; margin-bottom: 18px; font-size: 1.35rem; }
+.certificados-empty h2 { margin: 0; color: var(--ink); font-size: 1.2rem; font-weight: 700; }
+.certificados-empty p { margin: 8px 0 0; color: var(--muted); font-size: .925rem; }
+.validacao-certificado {
+  display: flex; flex-direction: column; align-items: center; margin: clamp(28px, 7vh, 64px) auto 0; padding: clamp(26px, 5vw, 44px);
+  color: var(--ink); background: linear-gradient(145deg, #142f4a, #10253d); border: 1px solid var(--line);
+  border-radius: 18px; box-shadow: var(--shadow-card); text-align: center;
+}
+.validacao-icone { display: grid; place-items: center; width: 64px; height: 64px; margin-bottom: 20px; border-radius: 50%; font-size: 1.65rem; }
+.validacao-certificado--valido .validacao-icone { color: #8be0b5; background: rgba(16,112,79,.2); }
+.validacao-certificado--invalido .validacao-icone { color: #ff9da6; background: rgba(145,43,56,.22); }
+.validacao-dados { overflow: hidden; border: 1px solid var(--line); border-radius: 12px; }
+.validacao-dados > div { display: grid; grid-template-columns: minmax(130px,.7fr) minmax(0,1.3fr); gap: 16px; padding: 13px 16px; border-bottom: 1px solid var(--line); }
+.validacao-dados > div:last-child { border-bottom: 0; }
+.validacao-dados dt { color: var(--muted); font-size: .85rem; }
+.validacao-dados dd { margin: 0; color: var(--ink); font-size: .9rem; font-weight: 600; }
+
+/* Auth and focused workflows retain the same visual language. */
+body:has(form[action$="/login"]), body:has(form[action$="/cadastro"]) {
+  background: radial-gradient(ellipse at 50% 0%, #1b3a58 0, #0d2138 58%, #09192b 100%) !important;
+}
+body:has(form[action$="/login"]) > div, body:has(form[action$="/cadastro"]) > div { max-width: 500px; }
+body:has(form[action$="/login"]) > div > div:last-child > div,
+body:has(form[action$="/cadastro"]) > div > div:last-child > div {
+  color: var(--ink); background: var(--surface) !important; border: 1px solid var(--line);
+  border-radius: 18px !important; box-shadow: 0 22px 60px rgba(2,12,24,.3) !important;
+}
+body:has(form[action$="/login"]) img[alt*="SEPLAG"], body:has(form[action$="/cadastro"]) img[alt*="SEPLAG"] { border-radius: 10px; }
+body:has(form[action$="/login"]) button[type=submit], body:has(form[action$="/cadastro"]) button[type=submit] { min-height: 48px; border-radius: 10px !important; }
+
+/* Keep status messages legible while preserving their familiar semantics. */
+[class*="bg-green-50"], [class*="bg-green-100"], [class*="bg-emerald-50"], [class*="bg-emerald-100"] {
+  background: rgba(16, 112, 79, .2) !important; color: #b5f1d6 !important;
+}
+[class*="bg-red-50"], [class*="bg-red-100"], [class*="bg-rose-100"] {
+  background: rgba(145, 43, 56, .22) !important; color: #ffd0d3 !important;
+}
+[class*="bg-amber-50"], [class*="bg-amber-100"], [class*="bg-yellow-50"], [class*="bg-blue-50"], [class*="bg-blue-100"] {
+  background: rgba(40, 91, 132, .28) !important; color: #d3eaff !important;
+}
+[class*="border-l-4"] { border-radius: 10px; }
+
+@media (max-width: 700px) {
+  body > header .max-w-7xl { min-height: 68px; height: auto !important; padding-top: 10px; padding-bottom: 10px; gap: 10px; flex-wrap: wrap; }
+  body > header nav { gap: 12px; }
+  body > header nav.hidden { display: flex !important; width: 100%; order: 3; overflow-x: auto; white-space: nowrap; padding: 8px 2px 2px; scrollbar-width: thin; }
+  body > header nav a { flex: 0 0 auto; }
+  main { padding-left: 16px !important; padding-right: 16px !important; }
+  main .overflow-x-auto { overscroll-behavior-inline: contain; border-radius: 12px; }
+  main table { min-width: 620px; }
+  body:has(form[action$="/cadastro"]) { padding-top: 20px !important; padding-bottom: 20px !important; }
+  body:has(form[action$="/cadastro"]) > div { padding-left: 16px; padding-right: 16px; }
+  body:has(form[action$="/cadastro"]) > div > div:last-child { margin-top: 22px !important; }
+  body:has(form[action$="/cadastro"]) > div > div:last-child > div,
+  body:has(form[action$="/login"]) > div > div:last-child > div { padding: 24px 20px !important; }
+  body:has(form[action$="/login"]) { padding-top: 24px !important; padding-bottom: 24px !important; }
+  .certificado-card { grid-template-columns: auto minmax(0,1fr); gap: 14px; padding: 18px; }
+  .certificado-icon { width: 44px; height: 44px; font-size: 1.05rem; }
+  .certificado-info h2 { font-size: 1rem; }
+  .certificado-link { grid-column: 1 / -1; width: 100%; }
+  .validacao-dados > div { grid-template-columns: 1fr; gap: 4px; }
+  h1 { overflow-wrap: anywhere; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}

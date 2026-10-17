@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Validar certificado | SEPLAG-MT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/seplag-ui.css}">
+</head>
+<body class="min-h-screen flex flex-col">
+<header>
+    <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 min-h-[76px] flex items-center">
+        <a th:href="@{/}" aria-label="Página inicial">
+            <img th:src="@{/images/logo-seplag-branco.png}" alt="Logo SEPLAG-MT" class="h-11 w-auto object-contain">
+        </a>
+    </div>
+</header>
+<main class="w-full max-w-2xl mx-auto px-4 sm:px-6 flex-grow">
+    <section class="validacao-certificado" th:classappend="${valido} ? ' validacao-certificado--valido' : ' validacao-certificado--invalido'">
+        <div class="validacao-icone" aria-hidden="true">
+            <i th:class="${valido} ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark'"></i>
+        </div>
+        <p class="text-xs font-bold uppercase tracking-[.16em] text-sky-300">Verificação de autenticidade</p>
+        <h1 th:if="${valido}" class="mt-2 text-3xl font-bold">Certificado válido</h1>
+        <h1 th:if="${!valido and !#strings.isEmpty(codigo)}" class="mt-2 text-3xl font-bold">Não foi possível validar</h1>
+        <h1 th:if="${#strings.isEmpty(codigo)}" class="mt-2 text-3xl font-bold">Validar certificado</h1>
+
+        <form th:if="${#strings.isEmpty(codigo)}" th:action="@{/certificados/validar}" method="get" class="mt-6 flex w-full flex-col gap-3 sm:flex-row">
+            <label for="codigo" class="sr-only">Código de verificação</label>
+            <input id="codigo" name="codigo" type="text" maxlength="140" required autocomplete="off" placeholder="EV3-código de verificação" class="min-w-0 flex-1">
+            <button type="submit" class="rounded-lg bg-[#1d6498] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#2879b1]">Verificar</button>
+        </form>
+
+        <div th:if="${valido}" class="mt-7 w-full text-left">
+            <dl class="validacao-dados">
+                <div><dt>Participante</dt><dd th:text="${participante}">Nome</dd></div>
+                <div><dt>Evento</dt><dd th:text="${evento}">Evento</dd></div>
+                <div><dt>Carga horária</dt><dd><span th:text="${cargaHoraria}">0</span> horas</dd></div>
+                <div><dt>Presença confirmada em</dt><dd th:text="${dataCheckIn != null ? #temporals.format(dataCheckIn, 'dd/MM/yyyy HH:mm') : 'Data não registrada'}">Data</dd></div>
+                <div><dt>Código de verificação</dt><dd class="break-all" th:text="${codigo}">EV3-token</dd></div>
+            </dl>
+        </div>
+        <p th:if="${!valido and !#strings.isEmpty(codigo)}" class="mt-4 max-w-md text-sm text-slate-300">
+            O código informado é inválido ou não corresponde a um certificado com presença confirmada. Confira o QR Code ou o código impresso no documento.
+        </p>
+        <a th:href="@{/}" class="mt-7 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#1d6498] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#2879b1]">
+            <i class="fa-solid fa-house" aria-hidden="true"></i> Ir para a plataforma
+        </a>
+    </section>
+</main>
+<footer class="mt-10 px-4 py-5 text-center text-xs">&copy; 2026 SEPLAG-MT — Plataforma de Eventos.</footer>
+</body>
+</html>

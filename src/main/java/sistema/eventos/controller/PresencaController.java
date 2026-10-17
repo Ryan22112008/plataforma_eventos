@@ -3,6 +3,7 @@ package sistema.eventos.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +13,7 @@ import sistema.eventos.repository.EventoRepository;
 import sistema.eventos.repository.InscricaoRepository;
 import sistema.eventos.repository.PresencaRepository;
 import sistema.eventos.repository.SessaoRepository;
+import sistema.eventos.repository.UsuarioRepository;
 import sistema.eventos.service.PresencaService;
 
 import java.util.Map;
@@ -27,11 +29,14 @@ public class PresencaController {
     private final InscricaoRepository inscricaoRepository;
     private final SessaoRepository sessaoRepository;
     private final PresencaRepository presencaRepository;
+    private final UsuarioRepository usuarioRepository;
 
      @PostMapping("/checkin")
     public ResponseEntity<String> registrarCheckin(@RequestParam String token,
-                                                   @AuthenticationPrincipal Usuario usuario) {
+                                                   @AuthenticationPrincipal UserDetails userDetails) {
         try {
+            Usuario usuario = usuarioRepository.findByEmailIgnoreCase(userDetails.getUsername())
+                    .orElseThrow(() -> new SecurityException("Usuário não autorizado."));
             presencaService.registrarPresenca(usuario.getId(), token);
             return ResponseEntity.ok("Presença registrada com sucesso!");
         } catch (IllegalArgumentException | IllegalStateException e) {
@@ -45,14 +50,16 @@ public class PresencaController {
     @PutMapping("/{presencaId}/status")
     public ResponseEntity<Void> atualizarStatus(@PathVariable Long presencaId,
                                                 @RequestParam StatusPresenca novoStatus,
-                                                @AuthenticationPrincipal Usuario professor) {
-        presencaService.atualizarStatusPresenca(presencaId, novoStatus, professor.getNome());
+                                                @AuthenticationPrincipal UserDetails professor) {
+        presencaService.atualizarStatusPresenca(presencaId, novoStatus, professor.getUsername());
         return ResponseEntity.noContent().build();
     }
 
     // 3. Visualização da grade para o professor
     @GetMapping("/evento/{eventoId}/grade")
-    public String exibirGradePresenca(@PathVariable Long eventoId, Model model) {
+    public String exibirGradePresenca(@PathVariable Long eventoId, Model model,
+                                      org.springframework.security.core.Authentication authentication) {
+        validarAcessoAoEvento(eventoId, authentication);
         // Aqui você buscaria os dados para o Thymeleaf
         // model.addAttribute("grade", presencaService.buscarGradeCompleta(eventoId));
         return "eventos/grade-presenca";
@@ -78,8 +85,8 @@ public class PresencaController {
     }
     @GetMapping("/{eventoId}/frequencia")
     public String exibirGradeFrequencia(@PathVariable Long eventoId, Model model) {
-        var evento = eventoRepository.findById(eventoId)
-                .orElseThrow(() -> new IllegalArgumentException("Evento não encontrado"));
+        var autenticado = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        var evento = validarAcessoAoEvento(eventoId, autenticado);
         var inscritos = inscricaoRepository.findByEventoId(eventoId);
         var sessoes = sessaoRepository.findByEventoIdOrderByDataHoraInicioAsc(eventoId);
 
@@ -106,5 +113,19 @@ public class PresencaController {
         model.addAttribute("percentualGlobal", String.format("%.0f", percentualGlobal));
 
         return "frequencia-aluno";
+    }
+
+    private sistema.eventos.model.Evento validarAcessoAoEvento(Long eventoId,
+                                                               org.springframework.security.core.Authentication authentication) {
+        var evento = eventoRepository.findByIdComOrganizador(eventoId)
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND));
+        boolean admin = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+        if (!admin && (authentication == null || evento.getOrganizador() == null
+                || !evento.getOrganizador().getEmail().equalsIgnoreCase(authentication.getName()))) {
+            throw new org.springframework.security.access.AccessDeniedException("Você não tem acesso a este evento.");
+        }
+        return evento;
     }
 }

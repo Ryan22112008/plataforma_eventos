@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sistema.eventos.model.*;
 import sistema.eventos.repository.*;
+import sistema.eventos.exception.NegocioException;
 
 import java.time.LocalDateTime;
 
@@ -21,7 +22,7 @@ public class PresencaService {
 
     @Transactional
     public void registrarPresenca(Long alunoId, String qrCodeToken) {
-        log.info("Iniciando registro de presença para aluno ID: {} com token: {}", alunoId, qrCodeToken);
+        log.info("Iniciando registro de presença para aluno ID: {}", alunoId);
 
         // 1. Busca sessão pelo Token
         Sessao sessao = sessaoRepository.findByQrCodeToken(qrCodeToken)
@@ -33,7 +34,8 @@ public class PresencaService {
         }
 
         // 3. Validação de Inscrição (O aluno tem direito a estar aqui?)
-        if (!inscricaoRepository.existsByParticipanteIdAndEventoId(alunoId, sessao.getEvento().getId())) {
+        if (!inscricaoRepository.existsByParticipanteIdAndEventoIdAndStatusNot(
+                alunoId, sessao.getEvento().getId(), StatusInscricao.CANCELADO)) {
             throw new SecurityException("Aluno não possui inscrição válida neste evento.");
         }
 
@@ -61,6 +63,7 @@ public class PresencaService {
 
         log.info("Professor {} alterando status da presença {} de {} para {}",
                 professorLogin, presencaId, presenca.getStatus(), novoStatus);
+        validarAcessoAoEvento(presenca.getSessao().getEvento(), professorLogin);
 
         presenca.setStatus(novoStatus);
         presenca.setAlteradoPor(professorLogin);
@@ -81,13 +84,17 @@ public class PresencaService {
     public void atualizarStatusPresencaManual(Long alunoId, Long sessaoId, StatusPresenca novoStatus, String professorNome) {
         log.info("Professor {} alterando status manualmente para aluno {} na sessão {}", professorNome, alunoId, sessaoId);
 
+        Sessao sessao = sessaoRepository.findById(sessaoId)
+                .orElseThrow(() -> new NegocioException("Sessão não encontrada."));
+        validarAcessoAoEvento(sessao.getEvento(), professorNome);
+
         // 1. Busca um registro existente ou cria um novo se não existir (o "upsert")
         Presenca presenca = presencaRepository.findByAlunoIdAndSessaoId(alunoId, sessaoId)
                 .orElseGet(() -> {
                     // Se não existe, criamos uma nova instância
                     Presenca p = new Presenca();
                     p.setAluno(usuarioRepository.getReferenceById(alunoId));
-                    p.setSessao(sessaoRepository.getReferenceById(sessaoId));
+                    p.setSessao(sessao);
                     return p;
                 });
 
@@ -99,5 +106,15 @@ public class PresencaService {
         presencaRepository.save(presenca);
 
         log.info("Status da presença {} atualizado com sucesso.", presenca.getId());
+    }
+
+    private void validarAcessoAoEvento(Evento evento, String login) {
+        Usuario usuario = usuarioRepository.findByEmailIgnoreCase(login)
+                .orElseThrow(() -> new SecurityException("Usuário não autorizado."));
+        if (usuario.getPerfil() != Perfil.ROLE_ADMIN
+                && (evento.getOrganizador() == null
+                || !evento.getOrganizador().getEmail().equalsIgnoreCase(usuario.getEmail()))) {
+            throw new org.springframework.security.access.AccessDeniedException("Você não tem acesso a este evento.");
+        }
     }
 }

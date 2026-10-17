@@ -1,10 +1,19 @@
 package sistema.eventos.dto;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public class EventoConfigDTO {
+    @NotBlank
+    @Size(max = 150)
     private String tituloEvento;
+    @NotNull
+    @Min(1)
     private Integer cargaHorariaTotal;
+    @Size(max = 100)
     private List<DisciplinaDTO> disciplinas;
 
     // Getters e Setters
