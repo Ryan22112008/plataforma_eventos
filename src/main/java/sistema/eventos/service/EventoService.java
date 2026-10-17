@@ -335,6 +335,9 @@ public class EventoService {
         dto.setLocal(evento.getLocal());
         dto.setLatitude(evento.getLatitude());
         dto.setLongitude(evento.getLongitude());
+        dto.setBannerAtual(evento.getBannerUrl());
+        dto.setImagemFrenteAtual(evento.getCertificadoTemplate());
+        dto.setImagemVersoAtual(evento.getCertificadoTemplateVerso());
         if (evento.getNicho() != null) {
             dto.setNicho(evento.getNicho().name());
         }

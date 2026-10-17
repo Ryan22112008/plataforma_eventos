@@ -62,11 +62,14 @@ public class RequestEventoDto {
 
     // --- NOVOS CAMPOS SÊNIOR ADICIONADOS PARA COMPATIBILIDADE COM O CANVA E FORMULÁRIO ---
 
-    @NotNull(message = "A imagem da frente do certificado é obrigatória.")
     private MultipartFile imagemFrente;
 
-    @NotNull(message = "A imagem do verso do certificado é obrigatória.")
     private MultipartFile imagemVerso;
+
+    // Nomes das artes já salvas; usados somente para exibir a imagem atual no formulário.
+    private String bannerAtual;
+    private String imagemFrenteAtual;
+    private String imagemVersoAtual;
 
     @Builder.Default // Proteção para o Lombok não quebrar a inicialização da lista em cenários de teste
     private List<DisciplinaDTO> disciplinas = new ArrayList<>();

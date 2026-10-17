@@ -32,6 +32,7 @@ import sistema.eventos.service.CertificadoService;
 import java.io.ByteArrayOutputStream;
 import java.util.Base64;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Controller
@@ -212,8 +213,14 @@ public class EventoController {
             Authentication authentication) {
 
         exigirAcessoAoEvento(id, authentication);
+        // A URL identifica a edição; preserva o ID se o formulário precisar ser exibido novamente.
+        dto.setId(id);
 
         if (result.hasErrors()) {
+            preservarArtesAtuais(dto, id);
+            model.addAttribute("erroNegocio", result.getFieldErrors().stream()
+                    .map(error -> error.getDefaultMessage())
+                    .collect(Collectors.joining(" ")));
             return "criar-evento";
         }
 
@@ -222,10 +229,19 @@ public class EventoController {
             eventoService.atualizarEvento(id, dto, banner, imagemFrente, imagemVerso);
             return "redirect:/organizador/painel?sucesso=true";
         } catch (NegocioException e) {
+            preservarArtesAtuais(dto, id);
             model.addAttribute("erroNegocio", e.getMessage());
             return "criar-evento";
         }
     }
+
+    private void preservarArtesAtuais(RequestEventoDto dto, Long id) {
+        RequestEventoDto atual = eventoService.buscarPorIdParaEdicao(id);
+        dto.setBannerAtual(atual.getBannerAtual());
+        dto.setImagemFrenteAtual(atual.getImagemFrenteAtual());
+        dto.setImagemVersoAtual(atual.getImagemVersoAtual());
+    }
+
     @PostMapping("/eventos/{id}/consolidar-presencas")
     public String consolidarDiarioPresencas(
             @PathVariable("id") Long id,
