@@ -4,7 +4,7 @@ O repositório já inclui um `Dockerfile` multi-stage para compilar a aplicaçã
 
 1. No Render, crie um **Web Service** conectado ao repositório e selecione **Docker** como runtime. O Render detectará o `Dockerfile` na raiz.
 2. Para preservar o banco H2 e os arquivos enviados entre reinicializações e novos deploys, adicione um Persistent Disk montado em `/var/data`.
-3. Configure `DATA_DIR=/var/data`, `UPLOAD_DIR=/var/data/uploads` e `PRIVATE_UPLOAD_DIR=/var/data/private_uploads/trabalhos`. Templates e banners aceitam somente imagens PNG/JPEG reprocessadas pelo servidor; submissões PDF ficam em diretório privado.
+3. Configure `DATA_DIR=/var/data` e `UPLOAD_DIR=/var/data/uploads`. Artes de certificados e banners aceitam somente imagens PNG/JPEG reprocessadas pelo servidor.
 4. Configure `DB_PASSWORD` com uma senha forte como secret antes da primeira inicialização do banco persistente. Se já existir um banco H2 no disco, preserve a senha com que ele foi criado ou faça uma migração controlada antes de alterá-la.
 5. Cadastre `APP_BOOTSTRAP_ADMIN_NAME`, `APP_BOOTSTRAP_ADMIN_EMAIL` e `APP_BOOTSTRAP_ADMIN_PASSWORD` como secrets. A senha inicial precisa ter pelo menos 16 caracteres; essa conta só é criada quando o e-mail ainda não existe.
 6. Configure `APP_PUBLIC_URL` com a URL HTTPS pública do serviço (por exemplo, `https://seu-servico.onrender.com`) para que os QR codes dos certificados abram a validação no domínio correto.
@@ -21,5 +21,5 @@ Para executar localmente:
 
 ```sh
 docker build -t eventos-seplag .
-docker run --rm -p 8080:8080 -e PORT=8080 -e APP_PUBLIC_URL=http://localhost:8080 -v eventos-data:/app/dados -v eventos-uploads:/app/uploads -v eventos-private:/app/private_uploads/trabalhos eventos-seplag
+docker run --rm -p 8080:8080 -e PORT=8080 -e APP_PUBLIC_URL=http://localhost:8080 -v eventos-data:/app/dados -v eventos-uploads:/app/uploads eventos-seplag
 ```

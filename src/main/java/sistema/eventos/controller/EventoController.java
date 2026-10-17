@@ -98,12 +98,6 @@ public class EventoController {
         }
     }
 
-    @GetMapping("/eventos/{id}/trabalhos")
-    public String listarTrabalhosParaAvaliar(@PathVariable Long id, Model model, Authentication authentication) {
-        model.addAttribute("evento", exigirAcessoAoEvento(id, authentication));
-        return "trabalhos";
-    }
-
     @PostMapping("/evento/{id}/excluir")
     public String excluirEvento(@PathVariable("id") Long id,
                                 java.security.Principal principal,

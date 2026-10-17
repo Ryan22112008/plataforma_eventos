@@ -67,7 +67,7 @@
             </div>
         </div>
 
-        <!-- Formulário de Submissão Global -->
+        <!-- Consolidação das presenças para liberar certificados -->
         <form th:action="@{/organizador/eventos/{id}/consolidar-presencas(id=${evento.id})}" method="POST">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
@@ -167,7 +167,7 @@
                 </table>
             </div>
 
-            <!-- Rodapé com o botão de submissão SEMPRE VISÍVEL -->
+            <!-- Ação de confirmação final das presenças -->
             <div class="mt-4 flex justify-between items-center px-6 py-4 bg-gray-50 border-t border-gray-200">
                 <div class="text-xs text-gray-500">
                     <i class="fa-solid fa-circle-info mr-1"></i> Marque os alunos presentes. Quem ficar desmarcado receberá falta.

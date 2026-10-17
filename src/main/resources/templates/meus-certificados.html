@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Meus Eventos | SEPLAG-MT</title>
+    <title>Meus Certificados | SEPLAG-MT</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/seplag-ui.css}">
@@ -24,8 +24,8 @@
 <main class="certificados-main w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex-grow">
     <section class="mb-8 sm:mb-10">
         <p class="mb-2 text-xs font-bold uppercase tracking-[.16em] text-sky-300">Área do participante</p>
-        <h1 class="text-3xl sm:text-4xl font-bold tracking-tight">Meus eventos e cursos</h1>
-        <p class="mt-3 max-w-2xl text-base text-slate-300">Consulte os eventos em que sua presença foi confirmada e acesse os detalhes da inscrição.</p>
+        <h1 class="text-3xl sm:text-4xl font-bold tracking-tight">Meus certificados</h1>
+        <p class="mt-3 max-w-2xl text-base text-slate-300">Acesse e baixe os certificados dos cursos em que sua presença foi confirmada.</p>
     </section>
 
     <section th:if="${not #lists.isEmpty(certificados)}" class="space-y-4" aria-label="Eventos com presença confirmada">
@@ -38,18 +38,18 @@
                 <h2 th:text="${inscricao.evento.titulo}">Nome do Curso/Evento</h2>
                 <p class="certificado-carga"><i class="fa-regular fa-clock mr-2" aria-hidden="true"></i>Carga horária: <span th:text="${inscricao.evento.cargaHoraria}">0</span> horas</p>
             </div>
-            <a th:href="@{/participante/inscricoes/{id}/detalhes(id=${inscricao.id})}" class="certificado-link">
-                <span>Ver detalhes</span>
-                <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            <a th:href="@{/participante/inscricoes/{id}/certificado(id=${inscricao.id})}" class="certificado-link" target="_blank" rel="noopener">
+                <span>Baixar certificado</span>
+                <i class="fa-solid fa-download" aria-hidden="true"></i>
             </a>
         </article>
     </section>
 
     <section th:if="${#lists.isEmpty(certificados)}" class="certificados-empty" role="status">
         <span class="certificados-empty-icon" aria-hidden="true"><i class="fa-regular fa-calendar-check"></i></span>
-        <h2>Nenhum evento por aqui ainda</h2>
-        <p>Os eventos com presença confirmada aparecerão nesta página.</p>
-        <a th:href="@{/}" class="certificado-link mt-5">Explorar eventos <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+        <h2>Nenhum certificado disponível</h2>
+        <p>Depois que sua presença for confirmada, o certificado ficará disponível aqui.</p>
+        <a th:href="@{/}" class="certificado-link mt-5">Explorar cursos <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
     </section>
 </main>
 

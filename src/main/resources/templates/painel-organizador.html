@@ -50,7 +50,7 @@
 
             <div>
                 <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">Seus Eventos Gerenciados</h2>
-                <p class="text-sm text-gray-500 mt-1">Crie novos workshops, gerencie submissões e acompanhe os resultados da SEPLAG-MT.</p>
+                <p class="text-sm text-gray-500 mt-1">Crie cursos, acompanhe inscrições e libere certificados após confirmar a presença.</p>
             </div>
         </div>
 
@@ -86,10 +86,6 @@
                     <a th:href="@{/organizador/eventos/{id}/inscritos(id=${evento.id})}" class="text-[#00457C] hover:text-[#002d54] hover:underline font-medium inline-flex items-center">
                         <i class="fa-solid fa-users mr-1.5"></i> Ver Inscritos
                     </a>
-                    <a th:href="@{/organizador/eventos/{id}/trabalhos(id=${evento.id})}" class="text-[#008A4B] hover:text-[#006637] hover:underline font-medium inline-flex items-center">
-                        <i class="fa-solid fa-file-lines mr-1.5"></i> Avaliar Trabalhos
-                    </a>
-
                     <a th:href="@{/organizador/evento/editar/{id}(id=${evento.id})}" class="text-amber-600 hover:text-amber-700 hover:underline font-medium inline-flex items-center">
                         <i class="fa-solid fa-pen-to-square mr-1.5"></i> Editar Evento
                     </a>
