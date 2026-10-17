@@ -3,6 +3,7 @@ package sistema.eventos.controller;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,7 +11,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import sistema.eventos.model.Evento;
 import sistema.eventos.model.StatusEvento;
+import sistema.eventos.model.StatusSolicitacao;
 import sistema.eventos.repository.EventoRepository;
+import sistema.eventos.repository.SolicitacaoRepository;
 
 import java.util.List;
 
@@ -19,12 +22,19 @@ import java.util.List;
 public class HomeController {
 
     private final EventoRepository eventoRepository;
+    private final SolicitacaoRepository solicitacaoRepository;
 
     @GetMapping({"/", "/eventos"})
     public String index(@RequestParam(value = "busca", required = false) String busca,
                         @RequestParam(value = "nicho", required = false) String nicho,
                         @RequestParam(value = "modalidade", required = false) String modalidade,
+                        Authentication authentication,
                         Model model) {
+
+        boolean solicitacaoPendente = authentication != null && authentication.isAuthenticated()
+                && solicitacaoRepository.existsByUsuario_EmailIgnoreCaseAndStatus(
+                        authentication.getName(), StatusSolicitacao.PENDENTE);
+        model.addAttribute("solicitacaoOrganizadorPendente", solicitacaoPendente);
 
         // 1. Traz a listagem padrão de ativos (Sempre começa com dados válidos)
         List<Evento> eventos = eventoRepository.buscarEventosDisponiveis(StatusEvento.PUBLICADO);

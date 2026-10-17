@@ -50,6 +50,18 @@ public class ParticipanteController {
         return "meus-certificados";
     }
 
+    @PostMapping("/solicitar-organizador")
+    public String solicitarAcessoOrganizador(@AuthenticationPrincipal UserDetails userDetails,
+                                            RedirectAttributes attributes) {
+        try {
+            usuarioService.solicitarAcessoOrganizador(userDetails.getUsername());
+            attributes.addFlashAttribute("solicitacaoOrganizadorEnviada", true);
+        } catch (NegocioException e) {
+            attributes.addFlashAttribute("erroSolicitacaoOrganizador", e.getMessage());
+        }
+        return "redirect:/eventos";
+    }
+
     // --- ADICIONADO: O motor de visualização do PDF na aba do navegador ---
     // Rota final: /participante/inscricoes/{id}/certificado
     // Rota final: /participante/inscricoes/{id}/certificado

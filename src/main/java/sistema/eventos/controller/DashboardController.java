@@ -7,6 +7,8 @@ import org.springframework.ui.Model; // ADICIONADO: Necessário para passar dado
 import org.springframework.web.bind.annotation.GetMapping;
 import sistema.eventos.model.Evento;
 import sistema.eventos.model.Usuario;
+import sistema.eventos.model.StatusSolicitacao;
+import sistema.eventos.repository.SolicitacaoRepository;
 import sistema.eventos.service.EventoService; // ADICIONADO: Injeção do serviço de eventos
 import sistema.eventos.service.UsuarioService; // ADICIONADO: Injeção do serviço de usuários
 
@@ -18,11 +20,14 @@ public class DashboardController {
 
     private final EventoService eventoService;
     private final UsuarioService usuarioService;
+    private final SolicitacaoRepository solicitacaoRepository;
 
     // Injeção de dependências via construtor (Melhor prática de arquitetura)
-    public DashboardController(EventoService eventoService, UsuarioService usuarioService) {
+    public DashboardController(EventoService eventoService, UsuarioService usuarioService,
+                               SolicitacaoRepository solicitacaoRepository) {
         this.eventoService = eventoService;
         this.usuarioService = usuarioService;
+        this.solicitacaoRepository = solicitacaoRepository;
     }
 
     @GetMapping("/dashboard")
@@ -52,7 +57,10 @@ public class DashboardController {
             return "painel-organizador";
 
         } else if (roles.contains("ROLE_PARTICIPANTE")) {
-            // Redireciona o participante para a listagem pública de eventos
+            if (solicitacaoRepository.existsByUsuario_EmailIgnoreCaseAndStatus(
+                    authentication.getName(), StatusSolicitacao.PENDENTE)) {
+                return "redirect:/eventos";
+            }
             return "redirect:/eventos";
         }
 

@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import sistema.eventos.dto.CadastroUsuarioDto;
 import sistema.eventos.dto.RequestUsuarioDto;
 import sistema.eventos.exception.NegocioException;
 import sistema.eventos.model.Perfil;
@@ -14,6 +13,7 @@ import sistema.eventos.model.Usuario;
 import sistema.eventos.repository.SolicitacaoRepository;
 import sistema.eventos.repository.UsuarioRepository;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.Locale;
 
 @Service
@@ -46,33 +46,15 @@ public class UsuarioService {
             throw new NegocioException("Este e-mail já está cadastrado no sistema.");
         }
 
-        // 🔒 ALTERAÇÃO CRÍTICA DE SEGURANÇA: Todo usuário nasce como PARTICIPANTE.
-        // Ele não ganha o cargo de Organizador direto de forma autônoma.
-        Perfil perfilInicial = Perfil.ROLE_PARTICIPANTE;
-
         Usuario novoUsuario = Usuario.builder()
                 .nome(dto.getNome().trim())
                 .email(email)
                 .senha(passwordEncoder.encode(dto.getSenha()))
-                .perfil(perfilInicial) // Força o perfil básico de ouvinte/autor
+                .perfil(Perfil.ROLE_PARTICIPANTE)
                 .ativo(true)
                 .build();
 
-        // Salva o usuário para persistir no banco e gerar o ID (obrigatório para a FK da solicitação)
-        Usuario usuarioSalvo = usuarioRepository.save(novoUsuario);
-
-        // 🎯 GATILHO INSTITUCIONAL: Se ele selecionou que quer ser Organizador...
-        if ("ROLE_ORGANIZADOR".equalsIgnoreCase(dto.getRole())) {
-
-            // Cria a solicitação pendente amarrada ao usuário que acabou de ser salvo
-            SolicitacaoOrganizador solicitacao = new SolicitacaoOrganizador();
-            solicitacao.setUsuario(usuarioSalvo);
-            solicitacao.setStatus(StatusSolicitacao.PENDENTE);
-            solicitacaoRepository.save(solicitacao);
-
-            // Dispara a notificação por e-mail para a equipe de TI/Admin da SEPLAG
-            emailService.enviarSolicitacaoParaAdmin(usuarioSalvo);
-        }
+        usuarioRepository.save(novoUsuario);
     }
 
     /**
@@ -98,33 +80,26 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
     @Transactional
-    public void cadastrarUsuario(CadastroUsuarioDto dto) {
-        String email = dto.getEmail().trim().toLowerCase(Locale.ROOT);
-        if (usuarioRepository.existsByEmailIgnoreCase(email)) {
-            throw new NegocioException("Este e-mail já está cadastrado no sistema.");
+    public void solicitarAcessoOrganizador(String email) {
+        Usuario usuario = buscarPorEmail(email);
+        if (usuario.getPerfil() != Perfil.ROLE_PARTICIPANTE) {
+            throw new NegocioException("Esta conta já possui acesso de organizador ou administrador.");
         }
-        int senhaBytes = dto.getSenha().getBytes(StandardCharsets.UTF_8).length;
-        if (senhaBytes < 12 || senhaBytes > 72) {
-            throw new NegocioException("A senha deve ter ao menos 12 bytes e não exceder 72 bytes UTF-8.");
+
+        var solicitacaoExistente = solicitacaoRepository.findByUsuarioId(usuario.getId());
+        if (solicitacaoExistente.isPresent()
+                && solicitacaoExistente.get().getStatus() == StatusSolicitacao.PENDENTE) {
+            throw new NegocioException("Sua solicitação já está aguardando aprovação da administração.");
         }
-        Usuario usuario = new Usuario();
-        usuario.setNome(dto.getNome().trim());
-        usuario.setEmail(email);
-        usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
 
-        // 🔒 Todo mundo nasce como ALuno/Participante comum por segurança
-        usuario.setPerfil(Perfil.ROLE_PARTICIPANTE);
-        usuarioRepository.save(usuario);
-
-        // 🎯 Se ele marcou que quer ser professor, entra o fluxo de análise
-        if (dto.isQuerSerProfessor()) {
-            SolicitacaoOrganizador solicitacao = new SolicitacaoOrganizador();
-            solicitacao.setUsuario(usuario);
-            solicitacao.setStatus(StatusSolicitacao.PENDENTE);
-            solicitacaoRepository.save(solicitacao);
-
-            // Dispara o e-mail em background para o administrador
-            emailService.enviarSolicitacaoParaAdmin(usuario);
-        }
+        SolicitacaoOrganizador solicitacao = solicitacaoExistente.orElseGet(() -> {
+            SolicitacaoOrganizador nova = new SolicitacaoOrganizador();
+            nova.setUsuario(usuario);
+            return nova;
+        });
+        solicitacao.setStatus(StatusSolicitacao.PENDENTE);
+        solicitacao.setDataSolicitacao(LocalDateTime.now());
+        solicitacaoRepository.save(solicitacao);
+        emailService.enviarSolicitacaoParaAdmin(usuario);
     }
 }

@@ -31,7 +31,4 @@ public class RequestUsuarioDto {
     @Size(max = 72, message = "A confirmação de senha não pode exceder 72 caracteres.")
     private String confirmacaoSenha;
 
-    // --- ADICIONE ESTA LINHA AQUI: ---
-    @NotBlank(message = "O tipo de perfil é obrigatório.")
-    private String role;
 }
