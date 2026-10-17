@@ -150,9 +150,10 @@
                 <img th:if="${evento.bannerUrl != null}"
                      th:src="@{|/imagens-eventos/${evento.bannerUrl}|}"
                      alt="Capa do Evento"
+                     onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden')"
                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
 
-                <div th:if="${evento.bannerUrl == null}" class="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                <div th:class="${evento.bannerUrl == null} ? 'w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center' : 'hidden w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center'">
                     <i class="fa-solid fa-building-columns text-4xl text-gray-300 group-hover:scale-110 transition-transform duration-200"></i>
                 </div>
 
