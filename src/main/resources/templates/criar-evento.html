@@ -84,10 +84,10 @@
                         <div class="flex text-sm text-gray-600 justify-center">
                             <label for="bannerInput" class="relative cursor-pointer bg-white rounded-md font-semibold text-[#00457C] hover:text-[#00335c] focus-within:outline-none">
                                 <span>Faça upload do banner</span>
-                                <input id="bannerInput" name="banner" type="file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" class="sr-only" onchange="exibirNomeArquivo(this)">
+                                <input id="bannerInput" name="banner" type="file" accept="image/*" class="sr-only" onchange="exibirNomeArquivo(this)">
                             </label>
                         </div>
-                        <p class="text-xs text-gray-500">PNG, JPG ou JPEG · até 10 MB · recomendado: 1600 × 600 px</p>
+                        <p class="text-xs text-gray-500">PNG, JPG ou foto baixada (conversão automática) · até 10 MB · recomendado: 1600 × 600 px</p>
                         <p id="erroBanner" class="hidden text-xs font-semibold text-red-600 mt-2" role="alert"></p>
                         <p id="labelNomeArquivo" class="text-xs font-semibold text-[#008A4B] mt-2 hidden">
                             <i class="fa-solid fa-circle-check mr-1"></i> <span id="textoNomeArquivo"></span>
@@ -109,7 +109,8 @@
                                     <input id="certificadoFrenteInput" name="imagemFrente" type="file" accept="image/*" class="sr-only" onchange="exibirNomeCertificadoFrente(this)">
                                 </label>
                             </div>
-                            <p class="text-[11px] text-gray-400">Pág. 1 · paisagem · recomendado: 3508 × 2480 px (A4, 300 DPI)</p>
+                            <p class="text-[11px] text-gray-400">Pág. 1 · imagem até 10 MB · recomendado: 3508 × 2480 px (A4, 300 DPI)</p>
+                            <p id="erroCertificadoFrente" class="hidden text-xs font-semibold text-red-600 mt-2" role="alert"></p>
                             <p id="labelNomeCertificadoFrente" class="text-xs font-semibold text-[#008A4B] mt-2 hidden">
                                 <i class="fa-solid fa-circle-check mr-1"></i> <span id="textoNomeCertificadoFrente"></span>
                             </p>
@@ -128,7 +129,8 @@
                                     <input id="certificadoVersoInput" name="imagemVerso" type="file" accept="image/*" class="sr-only" onchange="exibirNomeCertificadoVerso(this)">
                                 </label>
                             </div>
-                            <p class="text-[11px] text-gray-400">Pág. 2 · paisagem · recomendado: 3508 × 2480 px (A4, 300 DPI)</p>
+                            <p class="text-[11px] text-gray-400">Pág. 2 · imagem até 10 MB · recomendado: 3508 × 2480 px (A4, 300 DPI)</p>
+                            <p id="erroCertificadoVerso" class="hidden text-xs font-semibold text-red-600 mt-2" role="alert"></p>
                             <p id="labelNomeCertificadoVerso" class="text-xs font-semibold text-[#008A4B] mt-2 hidden">
                                 <i class="fa-solid fa-circle-check mr-1"></i> <span id="textoNomeCertificadoVerso"></span>
                             </p>
@@ -328,62 +330,97 @@
         }
     ];
 
+    const conversoesImagensPendentes = new Set();
+
+    async function converterOuValidarImagem(input, labelId, textId, errorId, nomeCampo) {
+        const label = document.getElementById(labelId);
+        const text = document.getElementById(textId);
+        const error = document.getElementById(errorId);
+        const file = input.files && input.files[0];
+        label.classList.add('hidden');
+        error.classList.add('hidden');
+        error.textContent = '';
+        if (!file) return;
+
+        const mostrarErro = (mensagem) => {
+            error.textContent = mensagem;
+            error.classList.remove('hidden');
+            input.value = '';
+        };
+        if (!file.type.startsWith('image/')) {
+            mostrarErro('Selecione um arquivo de imagem.');
+            return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+            mostrarErro('A imagem deve ter no máximo 10 MB.');
+            return;
+        }
+
+        if (file.type === 'image/png' || file.type === 'image/jpeg') {
+            text.textContent = file.name;
+            label.classList.remove('hidden');
+            return;
+        }
+
+        try {
+            const bitmap = await createImageBitmap(file);
+            if (bitmap.width < 1 || bitmap.height < 1 || bitmap.width > 6000 || bitmap.height > 6000
+                    || bitmap.width * bitmap.height > 16_000_000) {
+                bitmap.close();
+                mostrarErro('A imagem excede as dimensões permitidas.');
+                return;
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = bitmap.width;
+            canvas.height = bitmap.height;
+            canvas.getContext('2d').drawImage(bitmap, 0, 0);
+            bitmap.close();
+            const png = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            if (!png || png.size > 10 * 1024 * 1024) {
+                mostrarErro('A imagem convertida ultrapassa 10 MB. Reduza o tamanho e tente novamente.');
+                return;
+            }
+            const baseName = file.name.replace(/\\.[^.]+$/, '');
+            const converted = new File([png], `${baseName || nomeCampo}.png`, { type: 'image/png' });
+            const transfer = new DataTransfer();
+            transfer.items.add(converted);
+            input.files = transfer.files;
+            text.textContent = `${file.name} (convertida para PNG)`;
+            label.classList.remove('hidden');
+        } catch (e) {
+            mostrarErro('Não foi possível abrir esta imagem. Tente salvar ou exportar como PNG ou JPG.');
+        }
+    }
+
+    function prepararImagem(input, labelId, textId, errorId, nomeCampo) {
+        const conversao = converterOuValidarImagem(input, labelId, textId, errorId, nomeCampo);
+        conversoesImagensPendentes.add(conversao);
+        conversao.finally(() => conversoesImagensPendentes.delete(conversao));
+        return conversao;
+    }
+
     function exibirNomeArquivo(input) {
-        const labelContainer = document.getElementById('labelNomeArquivo');
-        const textoNome = document.getElementById('textoNomeArquivo');
-        const erroBanner = document.getElementById('erroBanner');
-        const arquivo = input.files && input.files[0];
-
-        erroBanner.textContent = '';
-        erroBanner.classList.add('hidden');
-        labelContainer.classList.add('hidden');
-
-        if (arquivo && !['image/png', 'image/jpeg'].includes(arquivo.type)) {
-            erroBanner.textContent = 'Formato não aceito. Selecione uma imagem PNG ou JPG.';
-            erroBanner.classList.remove('hidden');
-            input.value = '';
-            return;
-        }
-        if (arquivo && arquivo.size > 10 * 1024 * 1024) {
-            erroBanner.textContent = 'O banner deve ter no máximo 10 MB.';
-            erroBanner.classList.remove('hidden');
-            input.value = '';
-            return;
-        }
-
-        if (arquivo) {
-            textoNome.textContent = arquivo.name;
-            labelContainer.classList.remove('hidden');
-        } else {
-            textoNome.textContent = '';
-            labelContainer.classList.add('hidden');
-        }
+        return prepararImagem(input, 'labelNomeArquivo', 'textoNomeArquivo', 'erroBanner', 'banner');
     }
     function exibirNomeCertificadoFrente(input) {
-        const labelContainer = document.getElementById('labelNomeCertificadoFrente');
-        const textoNome = document.getElementById('textoNomeCertificadoFrente');
-
-        if (input.files && input.files.length > 0) {
-            textoNome.textContent = input.files[0].name;
-            labelContainer.classList.remove('hidden');
-        } else {
-            textoNome.textContent = '';
-            labelContainer.classList.add('hidden');
-        }
+        return prepararImagem(input, 'labelNomeCertificadoFrente', 'textoNomeCertificadoFrente', 'erroCertificadoFrente', 'certificado-frente');
     }
-
     function exibirNomeCertificadoVerso(input) {
-        const labelContainer = document.getElementById('labelNomeCertificadoVerso');
-        const textoNome = document.getElementById('textoNomeCertificadoVerso');
-
-        if (input.files && input.files.length > 0) {
-            textoNome.textContent = input.files[0].name;
-            labelContainer.classList.remove('hidden');
-        } else {
-            textoNome.textContent = '';
-            labelContainer.classList.add('hidden');
-        }
+        return prepararImagem(input, 'labelNomeCertificadoVerso', 'textoNomeCertificadoVerso', 'erroCertificadoVerso', 'certificado-verso');
     }
+
+    document.querySelector('form[enctype="multipart/form-data"]')?.addEventListener('submit', async function(event) {
+        if (conversoesImagensPendentes.size > 0) {
+            event.preventDefault();
+            await Promise.all([...conversoesImagensPendentes]);
+            if (['erroBanner', 'erroCertificadoFrente', 'erroCertificadoVerso']
+                    .some(id => !document.getElementById(id).classList.contains('hidden'))) return;
+            this.requestSubmit(event.submitter);
+        } else if (['erroBanner', 'erroCertificadoFrente', 'erroCertificadoVerso']
+                .some(id => !document.getElementById(id).classList.contains('hidden'))) {
+            event.preventDefault();
+        }
+    });
 
     let indiceDisciplina = parseInt(document.getElementById('totalDisciplinasSalvas').value) || 0;
 
