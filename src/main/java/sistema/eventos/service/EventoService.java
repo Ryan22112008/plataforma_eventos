@@ -18,6 +18,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.text.Normalizer;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -65,7 +67,7 @@ public class EventoService {
         evento.setLocal(dto.getLocal());
         evento.setModalidade(dto.getModalidade());
         if (dto.getNicho() != null && !dto.getNicho().trim().isEmpty()) {
-            evento.setNicho(NichoEvento.valueOf(dto.getNicho().trim()));
+            evento.setNicho(converterNicho(dto.getNicho()));
         }
         evento.setUrlGoogleMaps(dto.getUrlGoogleMaps());
         evento.setLatitude(dto.getLatitude());
@@ -126,7 +128,7 @@ public class EventoService {
         eventoOriginal.setDataInicio(dto.getDataInicio());
         eventoOriginal.setDataTermino(dto.getDataTermino());
         eventoOriginal.setModalidade(dto.getModalidade());
-        eventoOriginal.setNicho(NichoEvento.valueOf(dto.getNicho()));
+        eventoOriginal.setNicho(converterNicho(dto.getNicho()));
         eventoOriginal.setCargaHoraria(dto.getCargaHoraria());
         eventoOriginal.setVagasTotais(dto.getVagasTotais());
         eventoOriginal.setLocal(dto.getLocal());
@@ -167,6 +169,23 @@ public class EventoService {
         if (!dataInicioAntiga.equals(dto.getDataInicio()) || !dataFimAntiga.equals(dto.getDataTermino())) {
             sessaoRepository.deleteByEventoId(eventoOriginal.getId());
             gerarSessoesAutomaticas(eventoOriginal);
+        }
+    }
+
+    private NichoEvento converterNicho(String valor) {
+        String normalizado = Normalizer.normalize(valor == null ? "" : valor.trim(), Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toUpperCase(Locale.ROOT)
+                .replaceAll("[^A-Z0-9]+", "_")
+                .replaceAll("^_+|_+$", "");
+
+        if ("TECNOLOGIA_TI".equals(normalizado)) {
+            return NichoEvento.TECNOLOGIA;
+        }
+        try {
+            return NichoEvento.valueOf(normalizado);
+        } catch (IllegalArgumentException exception) {
+            throw new NegocioException("Área inválida. Use Tecnologia, Tecnologia e Inovação, Gestão Pública, Saúde ou Outros.");
         }
     }
 
