@@ -39,8 +39,8 @@ public class DataInitializer implements CommandLineRunner {
             logger.info("Nenhum administrador inicial configurado; nenhum usuário padrão será criado.");
             return;
         }
-        if (adminPassword.length() < 16) {
-            throw new IllegalStateException("APP_BOOTSTRAP_ADMIN_PASSWORD precisa ter pelo menos 16 caracteres.");
+        if (adminPassword.length() < 12) {
+            throw new IllegalStateException("APP_BOOTSTRAP_ADMIN_PASSWORD precisa ter pelo menos 12 caracteres.");
         }
         if (adminPassword.getBytes(StandardCharsets.UTF_8).length > 72) {
             throw new IllegalStateException("APP_BOOTSTRAP_ADMIN_PASSWORD não pode exceder 72 bytes UTF-8.");
