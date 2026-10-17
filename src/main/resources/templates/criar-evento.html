@@ -84,10 +84,11 @@
                         <div class="flex text-sm text-gray-600 justify-center">
                             <label for="bannerInput" class="relative cursor-pointer bg-white rounded-md font-semibold text-[#00457C] hover:text-[#00335c] focus-within:outline-none">
                                 <span>Faça upload do banner</span>
-                                <input id="bannerInput" name="banner" type="file" accept="image/*" class="sr-only" onchange="exibirNomeArquivo(this)">
+                                <input id="bannerInput" name="banner" type="file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" class="sr-only" onchange="exibirNomeArquivo(this)">
                             </label>
                         </div>
-                        <p class="text-xs text-gray-500">PNG, JPG ou JPEG · recomendado: 1600 × 600 px</p>
+                        <p class="text-xs text-gray-500">PNG, JPG ou JPEG · até 10 MB · recomendado: 1600 × 600 px</p>
+                        <p id="erroBanner" class="hidden text-xs font-semibold text-red-600 mt-2" role="alert"></p>
                         <p id="labelNomeArquivo" class="text-xs font-semibold text-[#008A4B] mt-2 hidden">
                             <i class="fa-solid fa-circle-check mr-1"></i> <span id="textoNomeArquivo"></span>
                         </p>
@@ -330,9 +331,28 @@
     function exibirNomeArquivo(input) {
         const labelContainer = document.getElementById('labelNomeArquivo');
         const textoNome = document.getElementById('textoNomeArquivo');
+        const erroBanner = document.getElementById('erroBanner');
+        const arquivo = input.files && input.files[0];
 
-        if (input.files && input.files.length > 0) {
-            textoNome.textContent = input.files[0].name;
+        erroBanner.textContent = '';
+        erroBanner.classList.add('hidden');
+        labelContainer.classList.add('hidden');
+
+        if (arquivo && !['image/png', 'image/jpeg'].includes(arquivo.type)) {
+            erroBanner.textContent = 'Formato não aceito. Selecione uma imagem PNG ou JPG.';
+            erroBanner.classList.remove('hidden');
+            input.value = '';
+            return;
+        }
+        if (arquivo && arquivo.size > 10 * 1024 * 1024) {
+            erroBanner.textContent = 'O banner deve ter no máximo 10 MB.';
+            erroBanner.classList.remove('hidden');
+            input.value = '';
+            return;
+        }
+
+        if (arquivo) {
+            textoNome.textContent = arquivo.name;
             labelContainer.classList.remove('hidden');
         } else {
             textoNome.textContent = '';
