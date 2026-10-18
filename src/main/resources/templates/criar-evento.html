@@ -189,9 +189,20 @@
 
                 <div>
                     <label for="nicho" class="block text-sm font-medium text-gray-700">Área / Nicho</label>
-                    <input type="text" th:field="*{nicho}" id="nicho" placeholder="Ex: Tecnologia (TI)"
-                           th:classappend="${#fields.hasErrors('nicho')} ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-[#00457C] focus:border-[#00457C]'"
-                           class="mt-1 block w-full rounded-md border px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1">
+                    <div class="niche-picker mt-1" id="nichePicker">
+                        <input type="text" th:field="*{nicho}" id="nicho" placeholder="Selecione uma área"
+                               autocomplete="off" readonly required aria-haspopup="listbox" aria-expanded="false" aria-controls="nichoOptions"
+                               th:classappend="${#fields.hasErrors('nicho')} ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-[#00457C] focus:border-[#00457C]'"
+                               class="block w-full rounded-md border px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1">
+                        <i class="fa-solid fa-chevron-down niche-picker-chevron" aria-hidden="true"></i>
+                        <div class="niche-picker-options" id="nichoOptions" role="listbox" aria-label="Áreas disponíveis" hidden>
+                            <button type="button" class="niche-picker-option" role="option" data-value="TECNOLOGIA" data-label="Tecnologia">Tecnologia</button>
+                            <button type="button" class="niche-picker-option" role="option" data-value="TECNOLOGIA_E_INOVACAO" data-label="Tecnologia e Inovação">Tecnologia e Inovação</button>
+                            <button type="button" class="niche-picker-option" role="option" data-value="GESTAO_PUBLICA" data-label="Gestão Pública">Gestão Pública</button>
+                            <button type="button" class="niche-picker-option" role="option" data-value="SAUDE" data-label="Saúde">Saúde</button>
+                            <button type="button" class="niche-picker-option" role="option" data-value="OUTROS" data-label="Outros">Outros</button>
+                        </div>
+                    </div>
                     <p th:if="${#fields.hasErrors('nicho')}" th:errors="*{nicho}" class="mt-1 text-xs text-red-600 font-medium"></p>
                 </div>
 
@@ -681,6 +692,57 @@
             }
             btnModal.style.display = 'block';
         }
+    }
+
+    const nichePicker = document.getElementById('nichePicker');
+    if (nichePicker) {
+        const nicheInput = document.getElementById('nicho');
+        const nicheOptions = document.getElementById('nichoOptions');
+        const options = Array.from(nicheOptions.querySelectorAll('.niche-picker-option'));
+        const labelsByValue = Object.fromEntries(options.map(option => [option.dataset.value, option.dataset.label]));
+
+        function showNicheOptions() {
+            nicheOptions.hidden = false;
+            nicheInput.setAttribute('aria-expanded', 'true');
+        }
+        function hideNicheOptions() {
+            nicheOptions.hidden = true;
+            nicheInput.setAttribute('aria-expanded', 'false');
+        }
+        function chooseNiche(option) {
+            nicheInput.value = option.dataset.label;
+            options.forEach(item => item.setAttribute('aria-selected', item === option ? 'true' : 'false'));
+            hideNicheOptions();
+            nicheInput.focus();
+        }
+
+        nicheInput.value = labelsByValue[nicheInput.value] || nicheInput.value;
+        nicheInput.addEventListener('focus', showNicheOptions);
+        nicheInput.addEventListener('click', showNicheOptions);
+        nicheInput.addEventListener('keydown', event => {
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                showNicheOptions();
+                options[0]?.focus();
+            } else if (event.key === 'Escape') {
+                hideNicheOptions();
+            }
+        });
+        options.forEach((option, index) => {
+            option.addEventListener('click', () => chooseNiche(option));
+            option.addEventListener('keydown', event => {
+                if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    options[(index + (event.key === 'ArrowDown' ? 1 : options.length - 1)) % options.length].focus();
+                } else if (event.key === 'Escape') {
+                    hideNicheOptions();
+                    nicheInput.focus();
+                }
+            });
+        });
+        document.addEventListener('click', event => {
+            if (!nichePicker.contains(event.target)) hideNicheOptions();
+        });
     }
 
     window.onload = toggleMapsInput;

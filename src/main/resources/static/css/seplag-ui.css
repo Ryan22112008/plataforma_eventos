@@ -85,6 +85,21 @@ main tbody tr:last-child td { border-bottom: 0; }
 main td, main th { vertical-align: middle; border-color: var(--line) !important; }
 .overflow-x-auto { border-radius: 12px; }
 
+/* Predefined event area selector. */
+.niche-picker { position: relative; z-index: 5; }
+.niche-picker input[readonly] { padding-right: 44px !important; cursor: pointer; }
+.niche-picker-chevron { position: absolute; top: 50%; right: 16px; color: #9bb4ca; font-size: .8rem; pointer-events: none; transform: translateY(-50%); transition: transform .18s ease; }
+.niche-picker input[aria-expanded="true"] + .niche-picker-chevron { transform: translateY(-50%) rotate(180deg); }
+.niche-picker-options {
+  position: absolute; top: calc(100% + 8px); right: 0; left: 0; z-index: 30; padding: 6px;
+  background: #122943; border: 1px solid rgba(151,190,222,.25); border-radius: 12px;
+  box-shadow: 0 16px 38px rgba(2,12,24,.42); animation: niche-menu-enter .14s ease-out;
+}
+.niche-picker-options[hidden] { display: none; }
+.niche-picker-option { display: block; width: 100%; padding: 11px 13px; color: #e8f1f8; background: transparent; border: 0; border-radius: 8px; text-align: left; font-size: .92rem; cursor: pointer; }
+.niche-picker-option:hover, .niche-picker-option:focus-visible, .niche-picker-option[aria-selected="true"] { color: #fff; background: #1d4f78; outline: none; }
+@keyframes niche-menu-enter { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
 /* Session QR selection and presentation overlay. */
 .presence-qr-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
 .presence-qr-card {
