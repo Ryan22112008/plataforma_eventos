@@ -35,15 +35,81 @@
         <p class="mt-1 text-sm text-gray-600">As sessões e seus QR codes aparecerão aqui quando estiverem configurados.</p>
     </div>
 
-    <div th:if="${codigosSessoes != null and !codigosSessoes.isEmpty()}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        <article th:each="codigo : ${codigosSessoes}" class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm flex flex-col items-center text-center">
+    <p th:if="${codigosSessoes != null and !codigosSessoes.isEmpty()}" class="mb-4 text-sm text-blue-100">
+        Selecione uma sessão para destacar o QR Code na tela de projeção.
+    </p>
+    <div th:if="${codigosSessoes != null and !codigosSessoes.isEmpty()}" class="presence-qr-grid">
+        <article th:each="codigo : ${codigosSessoes}" class="presence-qr-card">
             <h2 class="font-bold text-[#082f57]" th:text="${codigo.sessao.nome}">Sessão</h2>
             <p class="text-sm text-gray-600 mt-1" th:text="${#temporals.format(codigo.sessao.dataHoraInicio, 'dd/MM/yyyy HH:mm')}">Data e hora</p>
-            <img th:src="${codigo.qrCodeBase64}" th:alt="|QR Code de presença para ${codigo.sessao.nome}|"
-                 class="mt-4 w-56 h-56 rounded-lg border border-gray-100 p-2" width="224" height="224">
-            <a th:href="${codigo.url}" class="mt-3 text-xs text-[#0b4d7e] underline break-all" th:text="${codigo.url}">Link</a>
+            <button type="button" class="presence-qr-select" aria-haspopup="dialog"
+                    th:attr="aria-label=|Projetar QR Code da sessão ${codigo.sessao.nome}|,
+                             data-qr-src=${codigo.qrCodeBase64},
+                             data-qr-alt=|QR Code de presença para ${codigo.sessao.nome}|,
+                             data-session-name=${codigo.sessao.nome},
+                             data-session-date=${#temporals.format(codigo.sessao.dataHoraInicio, 'dd/MM/yyyy HH:mm')},
+                             data-session-url=${codigo.url}">
+                <img th:src="${codigo.qrCodeBase64}" th:alt="|QR Code de presença para ${codigo.sessao.nome}|"
+                     class="presence-qr-image" width="224" height="224">
+                <span class="presence-qr-hint"><i class="fa-solid fa-up-right-and-down-left-from-center" aria-hidden="true"></i> Projetar esta sessão</span>
+            </button>
+            <a th:href="${codigo.url}" class="presence-qr-url" th:text="${codigo.url}">Link</a>
         </article>
     </div>
 </main>
+<div class="presence-projector" id="presenceProjector" aria-hidden="true">
+    <div class="presence-projector-backdrop" data-close-projector></div>
+    <section class="presence-projector-panel" role="dialog" aria-modal="true" aria-labelledby="projectorTitle" tabindex="-1">
+        <button type="button" class="presence-projector-close" aria-label="Fechar projeção" data-close-projector>
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+        <p class="presence-projector-eyebrow">Check-in de presença</p>
+        <h2 id="projectorTitle"></h2>
+        <p class="presence-projector-date" id="projectorDate"></p>
+        <img id="projectorQr" class="presence-projector-image" alt="QR Code da sessão selecionada">
+        <a id="projectorUrl" class="presence-projector-url" target="_blank" rel="noopener noreferrer"></a>
+        <p class="presence-projector-tip"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Pressione Esc para sair da projeção</p>
+    </section>
+</div>
+<script>
+(() => {
+    const overlay = document.getElementById('presenceProjector');
+    if (!overlay) return;
+    const panel = overlay.querySelector('.presence-projector-panel');
+    const title = document.getElementById('projectorTitle');
+    const date = document.getElementById('projectorDate');
+    const qr = document.getElementById('projectorQr');
+    const url = document.getElementById('projectorUrl');
+    let previousFocus;
+
+    function closeProjector() {
+        if (!overlay.classList.contains('is-open')) return;
+        overlay.classList.remove('is-open');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('presence-projector-open');
+        if (previousFocus) previousFocus.focus();
+    }
+
+    document.querySelectorAll('.presence-qr-select').forEach((button) => {
+        button.addEventListener('click', () => {
+            previousFocus = button;
+            title.textContent = button.dataset.sessionName || 'Sessão';
+            date.textContent = button.dataset.sessionDate || '';
+            qr.src = button.dataset.qrSrc;
+            qr.alt = button.dataset.qrAlt || 'QR Code da sessão selecionada';
+            url.href = button.dataset.sessionUrl;
+            url.textContent = button.dataset.sessionUrl;
+            overlay.classList.add('is-open');
+            overlay.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('presence-projector-open');
+            panel.focus();
+        });
+    });
+    overlay.querySelectorAll('[data-close-projector]').forEach((element) => element.addEventListener('click', closeProjector));
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeProjector();
+    });
+})();
+</script>
 </body>
 </html>
