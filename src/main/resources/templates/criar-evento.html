@@ -161,14 +161,16 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label for="dataInicio" class="block text-sm font-medium text-gray-700">Data de Início</label>
-                    <input type="date" th:field="*{dataInicio}" id="dataInicio"
+                    <input type="date" name="dataInicio" id="dataInicio" required
+                           th:value="${eventoDto.dataInicio != null ? #temporals.format(eventoDto.dataInicio, 'yyyy-MM-dd') : ''}"
                            th:classappend="${#fields.hasErrors('dataInicio')} ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-[#00457C] focus:border-[#00457C]'"
                            class="mt-1 block w-full rounded-md border px-3 py-2 text-sm bg-transparent">
                     <p th:if="${#fields.hasErrors('dataInicio')}" th:errors="*{dataInicio}" class="mt-1 text-xs text-red-600 font-medium"></p>
                 </div>
                 <div>
                     <label for="dataTermino" class="block text-sm font-medium text-gray-700">Data de Término</label>
-                    <input type="date" th:field="*{dataTermino}" id="dataTermino"
+                    <input type="date" name="dataTermino" id="dataTermino" required
+                           th:value="${eventoDto.dataTermino != null ? #temporals.format(eventoDto.dataTermino, 'yyyy-MM-dd') : ''}"
                            th:classappend="${#fields.hasErrors('dataTermino')} ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-[#00457C] focus:border-[#00457C]'"
                            class="mt-1 block w-full rounded-md border px-3 py-2 text-sm bg-transparent">
                     <p th:if="${#fields.hasErrors('dataTermino')}" th:errors="*{dataTermino}" class="mt-1 text-xs text-red-600 font-medium"></p>

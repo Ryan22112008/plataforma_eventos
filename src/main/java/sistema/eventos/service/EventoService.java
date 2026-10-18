@@ -20,6 +20,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.text.Normalizer;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -166,7 +167,8 @@ public class EventoService {
         eventoRepository.save(eventoOriginal);
 
         // 🎯 SE AS DATAS MUDARAM NA EDIÇÃO, O DIÁRIO REFAZ AS SESSÕES AUTOMATICAMENTE
-        if (!dataInicioAntiga.equals(dto.getDataInicio()) || !dataFimAntiga.equals(dto.getDataTermino())) {
+        if (!Objects.equals(dataInicioAntiga, dto.getDataInicio())
+                || !Objects.equals(dataFimAntiga, dto.getDataTermino())) {
             sessaoRepository.deleteByEventoId(eventoOriginal.getId());
             gerarSessoesAutomaticas(eventoOriginal);
         }
