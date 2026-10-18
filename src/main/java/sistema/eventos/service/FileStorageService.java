@@ -39,13 +39,26 @@ public class FileStorageService {
 
     public FileStorageService(@Value("${CLOUDINARY_URL:}") String cloudinaryUrl,
                               @Value("${REQUIRE_EXTERNAL_STORAGE:false}") boolean requireExternalStorage,
-                              @Value("${RENDER_SERVICE_ID:}") String renderServiceId) {
+                              @Value("${RENDER_SERVICE_ID:}") String renderServiceId,
+                              @Value("${CLOUDINARY_CLOUD_NAME:}") String cloudName,
+                              @Value("${CLOUDINARY_API_KEY:}") String apiKey,
+                              @Value("${CLOUDINARY_API_SECRET:}") String apiSecret) {
         Cloudinary configuredCloudinary = null;
         if (cloudinaryUrl != null && !cloudinaryUrl.isBlank()) {
             try {
                 configuredCloudinary = new Cloudinary(cloudinaryUrl.trim());
             } catch (RuntimeException e) {
                 LOGGER.log(System.Logger.Level.ERROR, "CLOUDINARY_URL está configurada em formato inválido; uploads ficarão bloqueados.", e);
+            }
+        } else if (notBlank(cloudName) && notBlank(apiKey) && notBlank(apiSecret)) {
+            try {
+                configuredCloudinary = new Cloudinary(ObjectUtils.asMap(
+                        "cloud_name", cloudName.trim(),
+                        "api_key", apiKey.trim(),
+                        "api_secret", apiSecret.trim(),
+                        "secure", true));
+            } catch (RuntimeException e) {
+                LOGGER.log(System.Logger.Level.ERROR, "Credenciais separadas do Cloudinary inválidas; uploads ficarão bloqueados.", e);
             }
         }
         this.cloudinary = configuredCloudinary;
@@ -116,6 +129,10 @@ public class FileStorageService {
         } catch (IOException e) {
             throw new NegocioException("Não foi possível processar a imagem enviada.", e);
         }
+    }
+
+    private boolean notBlank(String value) {
+        return value != null && !value.isBlank();
     }
 
     public Path uploadRoot() {
