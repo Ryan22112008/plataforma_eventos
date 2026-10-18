@@ -36,10 +36,12 @@ public class FileStorageService {
     private final Cloudinary cloudinary;
 
     public FileStorageService(@Value("${CLOUDINARY_URL:}") String cloudinaryUrl,
-                              @Value("${REQUIRE_EXTERNAL_STORAGE:false}") boolean requireExternalStorage) {
+                              @Value("${REQUIRE_EXTERNAL_STORAGE:false}") boolean requireExternalStorage,
+                              @Value("${RENDER_SERVICE_ID:}") String renderServiceId) {
         this.cloudinary = cloudinaryUrl == null || cloudinaryUrl.isBlank() ? null : new Cloudinary(cloudinaryUrl.trim());
-        if (requireExternalStorage && this.cloudinary == null) {
-            throw new IllegalStateException("CLOUDINARY_URL é obrigatório quando REQUIRE_EXTERNAL_STORAGE=true.");
+        boolean runningOnRender = renderServiceId != null && !renderServiceId.isBlank();
+        if ((requireExternalStorage || runningOnRender) && this.cloudinary == null) {
+            throw new IllegalStateException("Configure CLOUDINARY_URL para usar armazenamento persistente de imagens no Render.");
         }
     }
 
