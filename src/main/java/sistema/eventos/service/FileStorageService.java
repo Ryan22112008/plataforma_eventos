@@ -27,6 +27,7 @@ import java.util.UUID;
 @Service
 public class FileStorageService {
 
+    private static final System.Logger LOGGER = System.getLogger(FileStorageService.class.getName());
     private static final long MAX_IMAGE_BYTES = 10L * 1024 * 1024;
     private static final long MAX_IMAGE_PIXELS = 16_000_000L;
 
@@ -34,15 +35,22 @@ public class FileStorageService {
     private String uploadDirectory;
 
     private final Cloudinary cloudinary;
+    private final boolean externalStorageRequired;
 
     public FileStorageService(@Value("${CLOUDINARY_URL:}") String cloudinaryUrl,
                               @Value("${REQUIRE_EXTERNAL_STORAGE:false}") boolean requireExternalStorage,
                               @Value("${RENDER_SERVICE_ID:}") String renderServiceId) {
-        this.cloudinary = cloudinaryUrl == null || cloudinaryUrl.isBlank() ? null : new Cloudinary(cloudinaryUrl.trim());
-        boolean runningOnRender = renderServiceId != null && !renderServiceId.isBlank();
-        if ((requireExternalStorage || runningOnRender) && this.cloudinary == null) {
-            throw new IllegalStateException("Configure CLOUDINARY_URL para usar armazenamento persistente de imagens no Render.");
+        Cloudinary configuredCloudinary = null;
+        if (cloudinaryUrl != null && !cloudinaryUrl.isBlank()) {
+            try {
+                configuredCloudinary = new Cloudinary(cloudinaryUrl.trim());
+            } catch (RuntimeException e) {
+                LOGGER.log(System.Logger.Level.ERROR, "CLOUDINARY_URL está configurada em formato inválido; uploads ficarão bloqueados.", e);
+            }
         }
+        this.cloudinary = configuredCloudinary;
+        boolean runningOnRender = renderServiceId != null && !renderServiceId.isBlank();
+        this.externalStorageRequired = requireExternalStorage || runningOnRender;
     }
 
     public String storeImage(MultipartFile file, String purpose) {
@@ -77,6 +85,9 @@ public class FileStorageService {
                     String safePurpose = purpose == null ? "imagem" : purpose.replaceAll("[^a-zA-Z0-9_-]", "");
                     String filename = UUID.randomUUID() + "_" + safePurpose;
                     byte[] imageBytes = sanitized.toByteArray();
+                    if (cloudinary == null && externalStorageRequired) {
+                        throw new NegocioException("Configure o armazenamento de imagens no ambiente antes de enviar arquivos.");
+                    }
                     if (cloudinary != null) {
                         Map<?, ?> result = cloudinary.uploader().upload(imageBytes, ObjectUtils.asMap(
                                 "folder", "eventos-seplag",
