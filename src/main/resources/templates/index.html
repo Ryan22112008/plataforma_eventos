@@ -148,7 +148,7 @@
             <div class="h-40 bg-gray-100 relative overflow-hidden shrink-0 border-b border-gray-100 flex items-center justify-center">
 
                 <img th:if="${evento.bannerUrl != null}"
-                     th:src="@{|/imagens-eventos/${evento.bannerUrl}|}"
+                     th:src="${#strings.startsWith(evento.bannerUrl, 'https://res.cloudinary.com/') ? evento.bannerUrl : '/imagens-eventos/' + evento.bannerUrl}"
                      alt="Capa do Evento"
                      onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden')"
                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">

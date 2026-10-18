@@ -19,9 +19,6 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
 import java.io.ByteArrayOutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Base64;
 
 @Service
@@ -29,15 +26,14 @@ import java.util.Base64;
 public class CertificadoService {
 
     private final TemplateEngine templateEngine;
-
-    @Value("${app.upload.dir:uploads}")
-    private String diretorioUploadsConfigurado;
+    private final FileStorageService fileStorageService;
 
     @Value("${app.public-url:}")
     private String urlPublicaConfigurada;
 
-    public CertificadoService(TemplateEngine templateEngine) {
+    public CertificadoService(TemplateEngine templateEngine, FileStorageService fileStorageService) {
         this.templateEngine = templateEngine;
+        this.fileStorageService = fileStorageService;
     }
 
     @Transactional(readOnly = true)
@@ -60,23 +56,15 @@ public class CertificadoService {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
             // 1. Processa a Imagem de Fundo da FRENTE
-            Path caminhoFrente = resolverImagemCertificado(nomeArteFrente);
-            if (!Files.exists(caminhoFrente) || Files.size(caminhoFrente) > 10L * 1024 * 1024) {
-                throw new NegocioException("A imagem de frente do certificado não foi encontrada no servidor.");
-            }
-            byte[] bytesFrente = Files.readAllBytes(caminhoFrente);
-            String extFrente = nomeArteFrente.substring(nomeArteFrente.lastIndexOf(".") + 1).toLowerCase();
+            byte[] bytesFrente = fileStorageService.readImage(nomeArteFrente);
+            String extFrente = extensionOf(nomeArteFrente);
             validarExtensaoImagem(extFrente);
             if (extFrente.equals("jpg")) extFrente = "jpeg";
             String base64Frente = "data:image/" + extFrente + ";base64," + Base64.getEncoder().encodeToString(bytesFrente);
 
             // 2. Processa a Imagem de Fundo do VERSO
-            Path caminhoVerso = resolverImagemCertificado(nomeArteVerso);
-            if (!Files.exists(caminhoVerso) || Files.size(caminhoVerso) > 10L * 1024 * 1024) {
-                throw new NegocioException("A imagem do verso do certificado não foi encontrada no servidor.");
-            }
-            byte[] bytesVerso = Files.readAllBytes(caminhoVerso);
-            String extVerso = nomeArteVerso.substring(nomeArteVerso.lastIndexOf(".") + 1).toLowerCase();
+            byte[] bytesVerso = fileStorageService.readImage(nomeArteVerso);
+            String extVerso = extensionOf(nomeArteVerso);
             validarExtensaoImagem(extVerso);
             if (extVerso.equals("jpg")) extVerso = "jpeg";
             String base64Verso = "data:image/" + extVerso + ";base64," + Base64.getEncoder().encodeToString(bytesVerso);
@@ -129,14 +117,16 @@ public class CertificadoService {
         }
     }
 
-    private Path resolverImagemCertificado(String filename) {
-        if (filename == null || !filename.matches("[A-Za-z0-9._-]{1,255}") || filename.contains("..")) {
+    private String extensionOf(String reference) {
+        String path = reference;
+        int queryIndex = path.indexOf('?');
+        if (queryIndex >= 0) path = path.substring(0, queryIndex);
+        int slashIndex = path.lastIndexOf('/');
+        int dotIndex = path.lastIndexOf('.');
+        if (dotIndex <= slashIndex || dotIndex == path.length() - 1) {
             throw new NegocioException("Arquivo de certificado inválido.");
         }
-        Path base = Paths.get(diretorioUploadsConfigurado).toAbsolutePath().normalize();
-        Path path = base.resolve(filename).normalize();
-        if (!path.startsWith(base) || !base.equals(path.getParent())) throw new NegocioException("Arquivo de certificado inválido.");
-        return path;
+        return path.substring(dotIndex + 1).toLowerCase();
     }
 
     private void validarExtensaoImagem(String extension) {

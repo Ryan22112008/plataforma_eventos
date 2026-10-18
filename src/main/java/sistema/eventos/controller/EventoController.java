@@ -275,8 +275,8 @@ public class EventoController {
         String versoNome = evento.getCertificadoTemplateVerso();
 
         // 3. Converte os caminhos para o formato web público (/imagens-eventos/...)
-        String frenteUrl = (frenteNome != null && !frenteNome.startsWith("/")) ? "/imagens-eventos/" + frenteNome : frenteNome;
-        String versoUrl = (versoNome != null && !versoNome.startsWith("/")) ? "/imagens-eventos/" + versoNome : versoNome;
+        String frenteUrl = urlPublicaImagem(frenteNome);
+        String versoUrl = urlPublicaImagem(versoNome);
 
         // 4. 🎯 CORREÇÃO CRÍTICA: injeta as variáveis EXATAS que o seu HTML espera
         // Mesmo que o nome termine em "Base64", passar a URL pública funciona perfeitamente no navegador!
@@ -301,6 +301,12 @@ public class EventoController {
         model.addAttribute("isPreview", true);
 
         return "certificado";
+    }
+
+    private String urlPublicaImagem(String reference) {
+        if (reference == null || reference.isBlank()) return reference;
+        if (reference.startsWith("https://res.cloudinary.com/")) return reference;
+        return reference.startsWith("/") ? reference : "/imagens-eventos/" + reference;
     }
 
     @GetMapping("/inscricoes/{inscricaoId}/certificado")

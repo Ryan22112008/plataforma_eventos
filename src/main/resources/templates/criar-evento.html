@@ -79,9 +79,9 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700">Banner de Identidade Visual</label>
                 <div th:if="${eventoDto.bannerAtual != null}" class="current-image-preview">
-                    <img th:src="@{|/imagens-eventos/${eventoDto.bannerAtual}|}" alt="Banner atualmente salvo"
+                    <img th:src="${#strings.startsWith(eventoDto.bannerAtual, 'https://res.cloudinary.com/') ? eventoDto.bannerAtual : '/imagens-eventos/' + eventoDto.bannerAtual}" alt="Banner atualmente salvo"
                          onerror="this.hidden=true; this.nextElementSibling.classList.remove('hidden')">
-                    <p class="hidden current-image-missing">O arquivo atual não está disponível neste servidor. Envie o banner novamente.</p>
+                    <p class="hidden current-image-missing">O arquivo atual não está disponível no armazenamento. Envie o banner novamente.</p>
                     <p>Banner atual. Selecione outro somente para substituí-lo.</p>
                 </div>
                 <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-[#00457C] transition-colors bg-white">
@@ -107,9 +107,9 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Layout do Certificado (Frente)</label>
                     <div th:if="${eventoDto.imagemFrenteAtual != null and !eventoDto.imagemFrenteAtual.startsWith('default-')}" class="current-image-preview">
-                        <img th:src="@{|/imagens-eventos/${eventoDto.imagemFrenteAtual}|}" alt="Frente do certificado atualmente salva"
+                        <img th:src="${#strings.startsWith(eventoDto.imagemFrenteAtual, 'https://res.cloudinary.com/') ? eventoDto.imagemFrenteAtual : '/imagens-eventos/' + eventoDto.imagemFrenteAtual}" alt="Frente do certificado atualmente salva"
                              onerror="this.hidden=true; this.nextElementSibling.classList.remove('hidden')">
-                        <p class="hidden current-image-missing">A arte atual não está disponível neste servidor. Envie-a novamente.</p>
+                        <p class="hidden current-image-missing">A arte atual não está disponível no armazenamento. Envie-a novamente.</p>
                         <p>Arte atual. Selecione outra somente para substituí-la.</p>
                     </div>
                     <div class="mt-1 flex justify-center px-4 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-[#00457C] transition-colors bg-white">
@@ -133,9 +133,9 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Layout do Certificado (Verso)</label>
                     <div th:if="${eventoDto.imagemVersoAtual != null and !eventoDto.imagemVersoAtual.startsWith('default-')}" class="current-image-preview">
-                        <img th:src="@{|/imagens-eventos/${eventoDto.imagemVersoAtual}|}" alt="Verso do certificado atualmente salvo"
+                        <img th:src="${#strings.startsWith(eventoDto.imagemVersoAtual, 'https://res.cloudinary.com/') ? eventoDto.imagemVersoAtual : '/imagens-eventos/' + eventoDto.imagemVersoAtual}" alt="Verso do certificado atualmente salvo"
                              onerror="this.hidden=true; this.nextElementSibling.classList.remove('hidden')">
-                        <p class="hidden current-image-missing">A arte atual não está disponível neste servidor. Envie-a novamente.</p>
+                        <p class="hidden current-image-missing">A arte atual não está disponível no armazenamento. Envie-a novamente.</p>
                         <p>Arte atual. Selecione outra somente para substituí-la.</p>
                     </div>
                     <div class="mt-1 flex justify-center px-4 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-[#00457C] transition-colors bg-white">
