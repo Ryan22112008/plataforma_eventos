@@ -66,10 +66,27 @@
         <p class="text-gray-200 text-sm md:text-base max-w-2xl mx-auto mb-8 font-light">Encontre um curso, faça sua inscrição e acesse seu certificado após a confirmação da participação.</p>
 
         <form th:action="@{/}" method="get" class="bg-white p-2 rounded-xl shadow-xl max-w-2xl mx-auto flex flex-col sm:flex-row items-center gap-2">
-            <div class="w-full flex items-center px-3 py-2 text-gray-500">
+            <div class="w-full flex items-center px-3 py-2 text-gray-500 sm:w-auto">
                 <i class="fa-solid fa-magnifying-glass mr-3 text-lg text-gray-400"></i>
                 <input type="text" name="busca" th:value="${param.busca}" placeholder="Buscar cursos..." class="w-full text-sm text-[#333333] placeholder-gray-400 focus:outline-none bg-transparent">
             </div>
+
+            <!-- Filtro Área / Nicho -->
+            <div class="w-full sm:w-auto flex items-center gap-2">
+                <label for="nicho" class="text-xs font-medium text-gray-500 whitespace-nowrap">Área / Nicho</label>
+                <select name="nicho" id="nicho" class="text-sm bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00457C] text-[#333333]">
+                    <option value="" th:selected="${param.nicho == null}">Todos</option>
+                    <option value="TECNOLOGIA" th:selected="${param.nicho == 'TECNOLOGIA'}">Tecnologia</option>
+                    <option value="TECNOLOGIA_E_INOVACAO" th:selected="${param.nicho == 'TECNOLOGIA_E_INOVACAO'}">Tecnologia e Inovação</option>
+                    <option value="GESTAO_PUBLICA" th:selected="${param.nicho == 'GESTAO_PUBLICA'}">Gestão Pública</option>
+                    <option value="SAUDE" th:selected="${param.nicho == 'SAUDE'}">Saúde</option>
+                    <option value="OUTROS" th:selected="${param.nicho == 'OUTROS'}">Outros</option>
+                </select>
+            </div>
+
+            <!-- Preservar parâmetro modalidade quando existente -->
+            <input type="hidden" name="modalidade" th:value="${param.modalidade}">
+
             <button type="submit" class="w-full sm:w-auto bg-[#008A4B] hover:bg-[#00703c] text-white text-sm font-semibold px-6 py-3 rounded-lg transition-colors shadow shrink-0">
                 <span>Pesquisar</span>
             </button>
