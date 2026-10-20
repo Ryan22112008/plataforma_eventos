@@ -47,4 +47,16 @@ public class SolicitacaoOrganizador {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusSolicitacao status = StatusSolicitacao.PENDENTE;
+
+    /**
+     * Identifica registros legados (criados antes da Etapa 3) que não possuem
+     * os quatro campos obrigatórios preenchidos. Não remove nemrelaxa as validações
+     * @NotBlank; apenas permite detectar quem precisa de backfill/correção antes da aprovação.
+     */
+    public boolean isDadosIncompletos() {
+        return nomeCompleto == null || nomeCompleto.isBlank()
+                || matricula == null || matricula.isBlank()
+                || emailInstitucional == null || emailInstitucional.isBlank()
+                || justificativa == null || justificativa.isBlank();
+    }
 }
