@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import sistema.eventos.dto.RequestSolicitacaoOrganizadorDto;
 import sistema.eventos.dto.RequestUsuarioDto;
 import sistema.eventos.exception.NegocioException;
 import sistema.eventos.model.Perfil;
@@ -80,7 +81,7 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
     @Transactional
-    public void solicitarAcessoOrganizador(String email) {
+    public void solicitarAcessoOrganizador(String email, RequestSolicitacaoOrganizadorDto dto) {
         Usuario usuario = buscarPorEmail(email);
         if (usuario.getPerfil() != Perfil.ROLE_PARTICIPANTE) {
             throw new NegocioException("Esta conta já possui acesso de organizador ou administrador.");
@@ -97,6 +98,10 @@ public class UsuarioService {
             nova.setUsuario(usuario);
             return nova;
         });
+        solicitacao.setNomeCompleto(dto.getNomeCompleto().trim());
+        solicitacao.setMatricula(dto.getMatricula().trim());
+        solicitacao.setEmailInstitucional(dto.getEmailInstitucional().trim().toLowerCase(Locale.ROOT));
+        solicitacao.setJustificativa(dto.getJustificativa().trim());
         solicitacao.setStatus(StatusSolicitacao.PENDENTE);
         solicitacao.setDataSolicitacao(LocalDateTime.now());
         solicitacaoRepository.save(solicitacao);

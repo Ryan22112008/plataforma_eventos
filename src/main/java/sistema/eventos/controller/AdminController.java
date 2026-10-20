@@ -12,6 +12,7 @@ import sistema.eventos.model.SolicitacaoOrganizador;
 import sistema.eventos.model.Perfil;
 import sistema.eventos.repository.SolicitacaoRepository;
 import sistema.eventos.repository.UsuarioRepository;
+import sistema.eventos.service.EmailService;
 
 @Controller
 @RequestMapping("/admin/solicitacoes")
@@ -21,12 +22,15 @@ public class AdminController {
 
     private final SolicitacaoRepository solicitacaoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final EmailService emailService;
 
     @GetMapping
     public String listarSolicitacoes(Model model,
-                                     @RequestParam(value = "sucesso", required = false) String sucesso) {
+                                     @RequestParam(value = "sucesso", required = false) String sucesso,
+                                     @RequestParam(value = "erro", required = false) String erro) {
         model.addAttribute("solicitacoes", solicitacaoRepository.findByStatus(StatusSolicitacao.PENDENTE));
         model.addAttribute("sucesso", sucesso != null);
+        model.addAttribute("erro", erro);
         return "admin-solicitacoes";
     }
 
@@ -45,12 +49,35 @@ public class AdminController {
         solicitacao.setStatus(StatusSolicitacao.APROVADO);
         solicitacaoRepository.save(solicitacao);
 
-        // 2. 🌟 PROMOVE O USUÁRIO A ORGANIZADOR
+        // 2. PROMOVE O USUÁRIO A ORGANIZADOR
         var usuario = solicitacao.getUsuario();
         usuario.setPerfil(Perfil.ROLE_ORGANIZADOR);
         usuarioRepository.save(usuario);
 
-        // (Opcional) Você poderia disparar um e-mail aqui pro aluno avisando: "Parabéns, agora você é um organizador!"
+        // 3. Notifica o usuário por e-mail
+        emailService.enviarSolicitacaoAprovada(usuario);
+
+        attributes.addAttribute("sucesso", "true");
+        return "redirect:/admin/solicitacoes";
+    }
+
+    @PostMapping("/{id}/rejeitar")
+    @Transactional
+    public String rejeitarSolicitacao(@PathVariable Long id, RedirectAttributes attributes) {
+        SolicitacaoOrganizador solicitacao = solicitacaoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Solicitação não encontrada"));
+
+        if (solicitacao.getStatus() != StatusSolicitacao.PENDENTE) {
+            attributes.addFlashAttribute("erro", "Esta solicitação já foi processada.");
+            return "redirect:/admin/solicitacoes";
+        }
+
+        // 1. Atualiza o status para REJEITADO (NÃO altera o perfil do usuário)
+        solicitacao.setStatus(StatusSolicitacao.REJEITADO);
+        solicitacaoRepository.save(solicitacao);
+
+        // 2. Notifica o usuário por e-mail
+        emailService.enviarSolicitacaoRejeitada(solicitacao.getUsuario());
 
         attributes.addAttribute("sucesso", "true");
         return "redirect:/admin/solicitacoes";

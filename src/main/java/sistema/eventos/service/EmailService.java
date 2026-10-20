@@ -46,4 +46,54 @@ public class EmailService {
             logger.warn("Falha ao enviar notificação de solicitação de organizador.", e);
         }
     }
+
+    public void enviarSolicitacaoAprovada(Usuario usuario) {
+        if (usuario.getEmail() == null || usuario.getEmail().isBlank()) {
+            logger.info("Notificação de aprovação não enviada: e-mail do usuário não informado.");
+            return;
+        }
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(usuario.getEmail());
+        message.setSubject("✅ SEPLAG - Solicitação de Organizador Aprovada");
+
+        String corpoEmail = "Olá " + usuario.getNome() + ",\n\n"
+                + "Sua solicitação de acesso de Organizador foi APROVADA.\n\n"
+                + "Você agora possui acesso ao painel de organizador da plataforma.\n\n"
+                + "Atenciosamente,\n"
+                + "Sistema de Eventos SEPLAG";
+        message.setText(corpoEmail);
+
+        try {
+            mailSender.send(message);
+            logger.info("Notificação de aprovação de organizador enviada para {}.", usuario.getEmail());
+
+        } catch (Exception e) {
+            logger.warn("Falha ao enviar notificação de aprovação de organizador.", e);
+        }
+    }
+
+    public void enviarSolicitacaoRejeitada(Usuario usuario) {
+        if (usuario.getEmail() == null || usuario.getEmail().isBlank()) {
+            logger.info("Notificação de rejeição não enviada: e-mail do usuário não informado.");
+            return;
+        }
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(usuario.getEmail());
+        message.setSubject("❌ SEPLAG - Solicitação de Organizador Rejeitada");
+
+        String corpoEmail = "Olá " + usuario.getNome() + ",\n\n"
+                + "Sua solicitação de acesso de Organizador foi REJEITADA.\n\n"
+                + "Você continua com o perfil de PARTICIPANTE na plataforma.\n\n"
+                + "Atenciosamente,\n"
+                + "Sistema de Eventos SEPLAG";
+        message.setText(corpoEmail);
+
+        try {
+            mailSender.send(message);
+            logger.info("Notificação de rejeição de organizador enviada para {}.", usuario.getEmail());
+
+        } catch (Exception e) {
+            logger.warn("Falha ao enviar notificação de rejeição de organizador.", e);
+        }
+    }
 }

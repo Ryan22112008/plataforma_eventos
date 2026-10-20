@@ -48,6 +48,12 @@
 
             <div sec:authorize="isAuthenticated()" class="flex items-center space-x-4">
                 <span class="text-xs text-gray-600">Olá, <strong class="text-[#00457C]" sec:authentication="name">Usuário</strong></span>
+                <a sec:authorize="hasRole('PARTICIPANTE')"
+                   th:href="@{/participante/solicitar-organizador}"
+                   th:if="${solicitacaoOrganizadorPendente == false}"
+                   class="text-sm font-medium bg-[#008A4B] hover:bg-[#00703c] text-white px-4 py-2 rounded shadow transition-all focus-ring">
+                    <i class="fa-solid fa-user-plus mr-1"></i> Solicitar Organizador
+                </a>
                 <form th:action="@{/logout}" method="post" class="inline">
                     <button type="submit" class="text-sm text-red-600 hover:text-red-800 font-medium transition-colors" title="Sair do Sistema">
                         <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import sistema.eventos.dto.RequestSolicitacaoOrganizadorDto;
 import sistema.eventos.exception.NegocioException;
 import sistema.eventos.model.Inscricao;
 import sistema.eventos.model.Usuario;
@@ -50,11 +51,23 @@ public class ParticipanteController {
         return "meus-certificados";
     }
 
+    @GetMapping("/solicitar-organizador")
+    public String telaSolicitarAcessoOrganizador(Model model) {
+        model.addAttribute("solicitacaoDto", new RequestSolicitacaoOrganizadorDto());
+        return "solicitar-organizador";
+    }
+
     @PostMapping("/solicitar-organizador")
     public String solicitarAcessoOrganizador(@AuthenticationPrincipal UserDetails userDetails,
+                                            @jakarta.validation.Valid RequestSolicitacaoOrganizadorDto dto,
+                                            org.springframework.validation.BindingResult result,
                                             RedirectAttributes attributes) {
+        if (result.hasErrors()) {
+            attributes.addFlashAttribute("erroSolicitacaoOrganizador", "Preencha todos os campos obrigatórios corretamente.");
+            return "redirect:/participante/solicitar-organizador";
+        }
         try {
-            usuarioService.solicitarAcessoOrganizador(userDetails.getUsername());
+            usuarioService.solicitarAcessoOrganizador(userDetails.getUsername(), dto);
             attributes.addFlashAttribute("solicitacaoOrganizadorEnviada", true);
         } catch (NegocioException e) {
             attributes.addFlashAttribute("erroSolicitacaoOrganizador", e.getMessage());
