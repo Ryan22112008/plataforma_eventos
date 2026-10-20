@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import sistema.eventos.dto.RequestSolicitacaoOrganizadorDto;
 import sistema.eventos.dto.RequestUsuarioDto;
 import sistema.eventos.exception.NegocioException;
@@ -80,6 +82,102 @@ public class UsuarioService {
     public Usuario salvar(Usuario usuario) {
         return usuarioRepository.save(usuario);
     }
+
+    /**
+     * Lista usuários com paginação e filtros opcionais para a área do Super Admin.
+     *
+     * @param nome   filtro parcial por nome (ignorado se nulo/vazio)
+     * @param email  filtro parcial por e-mail (ignorado se nulo/vazio)
+     * @param perfil filtro exato por perfil (ignorado se null)
+     * @param ativo  filtro exato por status ativo/inativo (ignorado se null)
+     * @param pageable paginação e ordenação
+     * @return página de usuários já filtrada e ordenada
+     */
+    @Transactional(readOnly = true)
+    public Page<Usuario> listarUsuarios(
+            String nome, String email, Perfil perfil, Boolean ativo, Pageable pageable) {
+        return usuarioRepository.findFiltros(nome, email, perfil, ativo, pageable);
+    }
+
+    /**
+     * Conta usuários por perfil para exibição no resumo da página.
+     */
+    @Transactional(readOnly = true)
+    public long contarPorPerfil(Perfil perfil) {
+        return usuarioRepository.countByPerfil(perfil);
+    }
+
+    /**
+     * Conta usuários por status ativo/inativo para exibição no resumo da página.
+     */
+    @Transactional(readOnly = true)
+    public long contarPorAtivo(boolean ativo) {
+        return usuarioRepository.countByAtivo(ativo);
+    }
+    /**
+     * Desativa um usuário (ativo = false).
+     * Não exclui o registro do banco; preserva histórico e relacionamentos.
+     *
+     * @param id              ID do usuário a ser desativado
+     * @param idSolicitante   ID do SUPER_ADMIN que está executando a ação
+     * @throws NegocioException se o usuário não existir, já estiver inativo, ou for o próprio solicitante
+     */
+    @Transactional
+    public void desativarUsuario(Long id, Long idSolicitante) {
+        if (id.equals(idSolicitante)) {
+            throw new NegocioException("Você não pode desativar a própria conta.");
+        }
+
+        Usuario usuario = buscarPorId(id);
+        if (!usuario.isAtivo()) {
+            throw new NegocioException("Este usuário já está inativo.");
+        }
+
+        usuario.setAtivo(false);
+        usuarioRepository.save(usuario);
+    }
+
+    /**
+     * Reativa um usuário inativo (ativo = true).
+     * Preserva perfil e dados existentes.
+     *
+     * @param id ID do usuário a ser reativado
+     * @throws NegocioException se o usuário não existir ou já estiver ativo
+     */
+    @Transactional
+    public void reativarUsuario(Long id) {
+        Usuario usuario = buscarPorId(id);
+        if (usuario.isAtivo()) {
+            throw new NegocioException("Este usuário já está ativo.");
+        }
+
+        usuario.setAtivo(true);
+        usuarioRepository.save(usuario);
+    }
+
+    /**
+     * Remove o acesso de organizador, alterando o perfil de ROLE_ORGANIZADOR para ROLE_PARTICIPANTE.
+     * Não exclui o usuário nem apaga eventos, inscrições ou qualquer relacionamento.
+     *
+     * @param id              ID do usuário a ter o acesso de organizador removido
+     * @param idSolicitante   ID do SUPER_ADMIN que está executando a ação
+     * @throws NegocioException se o usuário não existir, não for ORGANIZADOR, ou for o próprio solicitante
+     */
+    @Transactional
+    public void removerAcessoOrganizador(Long id, Long idSolicitante) {
+        if (id.equals(idSolicitante)) {
+            throw new NegocioException("Você não pode alterar o próprio perfil.");
+        }
+
+        Usuario usuario = buscarPorId(id);
+        if (usuario.getPerfil() != Perfil.ROLE_ORGANIZADOR) {
+            throw new NegocioException("Este usuário não possui perfil de organizador.");
+        }
+
+        usuario.setPerfil(Perfil.ROLE_PARTICIPANTE);
+        usuarioRepository.save(usuario);
+    }
+
     @Transactional
     public void solicitarAcessoOrganizador(String email, RequestSolicitacaoOrganizadorDto dto) {
         Usuario usuario = buscarPorEmail(email);

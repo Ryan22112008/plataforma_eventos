@@ -37,6 +37,7 @@ public class SecurityConfig {
 
                         // Proteção estrita de escopo baseado nas roles
                         .requestMatchers("/organizador/**").hasAnyRole("ORGANIZADOR", "ADMIN")
+                        .requestMatchers("/super-admin/**").hasRole("SUPER_ADMIN")
                         .anyRequest().authenticated()
                 )
                 .csrf(org.springframework.security.config.Customizer.withDefaults())
