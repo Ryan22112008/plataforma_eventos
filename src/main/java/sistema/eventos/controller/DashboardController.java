@@ -64,6 +64,8 @@ public class DashboardController {
                 return "redirect:/eventos";
             }
             return "redirect:/eventos";
+        } else if (roles.contains("ROLE_SUPER_ADMIN")) {
+            return "redirect:/super-admin/usuarios";
         }
 
         // Caso caia em um limbo sem role definida, força o retorno para a home de segurança
