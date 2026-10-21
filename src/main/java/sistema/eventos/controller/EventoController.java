@@ -428,7 +428,7 @@ public class EventoController {
     private Evento exigirAcessoAoEvento(Long eventoId, Authentication authentication) {
         Evento evento = eventoService.buscarPorId(eventoId);
         boolean admin = authentication != null && authentication.getAuthorities().stream()
-                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+                .anyMatch(authority -> "ROLE_SUPER_ADMIN".equals(authority.getAuthority()));
         if (admin) return evento;
         if (authentication == null || evento.getOrganizador() == null
                 || !evento.getOrganizador().getEmail().equalsIgnoreCase(authentication.getName())) {

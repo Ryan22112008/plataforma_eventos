@@ -111,7 +111,7 @@ public class PresencaService {
     private void validarAcessoAoEvento(Evento evento, String login) {
         Usuario usuario = usuarioRepository.findByEmailIgnoreCase(login)
                 .orElseThrow(() -> new SecurityException("Usuário não autorizado."));
-        if (usuario.getPerfil() != Perfil.ROLE_ADMIN
+        if (usuario.getPerfil() != Perfil.ROLE_SUPER_ADMIN
                 && (evento.getOrganizador() == null
                 || !evento.getOrganizador().getEmail().equalsIgnoreCase(usuario.getEmail()))) {
             throw new org.springframework.security.access.AccessDeniedException("Você não tem acesso a este evento.");

@@ -7,13 +7,13 @@ O repositório já inclui um `Dockerfile` multi-stage para compilar a aplicaçã
 3. Em Environment, cadastre `DATABASE_URL` como secret no formato `mysql://USUARIO:SENHA@HOST:PORTA/NOME_DO_BANCO`, usando o host e a porta alcançáveis pelo serviço no Render. Não inclua aspas no valor. Se a senha tiver caracteres especiais, codifique-os para URL.
 4. Configure também `REQUIRE_EXTERNAL_DATABASE=true` no ambiente do Web Service. Assim o serviço não inicia usando o H2 local se `DATABASE_URL` estiver ausente ou incorreta.
 5. Banners e artes de certificado são enviados ao Cloudinary. No Render, configure como secrets a variável completa `CLOUDINARY_URL` (API Environment variable em Cloudinary → Settings → API Keys) ou as três variáveis `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` e `CLOUDINARY_API_SECRET`. No Render, o site inicia sem essas variáveis, mas bloqueia uploads enquanto o Cloudinary não estiver configurado, evitando gravar arquivos no disco temporário. `REQUIRE_EXTERNAL_STORAGE=true` aplica essa proteção também em outros ambientes. Sem Cloudinary configurado localmente, a execução continua usando a pasta `uploads/`.
-6. Cadastre `APP_BOOTSTRAP_ADMIN_NAME`, `APP_BOOTSTRAP_ADMIN_EMAIL` e `APP_BOOTSTRAP_ADMIN_PASSWORD` como secrets. A senha inicial precisa ter pelo menos 12 caracteres; essa conta só é criada quando o e-mail ainda não existe no MySQL.
+6. Cadastre `APP_BOOTSTRAP_SUPER_ADMIN_NAME`, `APP_BOOTSTRAP_SUPER_ADMIN_EMAIL` e `APP_BOOTSTRAP_SUPER_ADMIN_PASSWORD` como secrets. A senha inicial precisa ter pelo menos 12 caracteres; essa conta só é criada quando o e-mail ainda não existe no MySQL.
 7. Configure `APP_PUBLIC_URL` com a URL HTTPS pública do serviço (por exemplo, `https://seu-servico.onrender.com`) para que os QR codes dos certificados abram a validação no domínio correto.
-8. Se as notificações forem necessárias, configure `ADMIN_NOTIFICATION_EMAIL`, `MAIL_USERNAME` e `MAIL_PASSWORD` com endereços e credenciais sob seu controle. Não reutilize credenciais que tenham sido usadas em versões anteriores do projeto.
+8. Se as notificações forem necessárias, configure `MAIL_USERNAME` e `MAIL_PASSWORD` com endereços e credenciais sob seu controle. Não reutilize credenciais que tenham sido usadas em versões anteriores do projeto.
 9. Configure `SESSION_COOKIE_SECURE=true` para que o cookie de sessão só trafegue por HTTPS.
 10. Faça o deploy. O processo inicializa o servidor na porta indicada por `PORT`.
 
-Depois de entrar com a conta inicial, a fila de pedidos de acesso de organizador fica em `/admin/solicitacoes`.
+Depois de entrar com a conta inicial, a fila de pedidos de acesso de organizador fica em `/super-admin/solicitacoes`.
 
 Depois de configurar o Cloudinary e fazer o deploy, envie novamente imagens antigas que já desapareceram do disco efêmero do Render. O banco conserva os registros e nomes, mas não contém os bytes das imagens; o deploy não consegue recuperá-las sozinho.
 

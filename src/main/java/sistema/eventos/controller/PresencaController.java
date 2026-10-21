@@ -121,7 +121,7 @@ public class PresencaController {
                 .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
                         org.springframework.http.HttpStatus.NOT_FOUND));
         boolean admin = authentication != null && authentication.getAuthorities().stream()
-                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+                .anyMatch(authority -> "ROLE_SUPER_ADMIN".equals(authority.getAuthority()));
         if (!admin && (authentication == null || evento.getOrganizador() == null
                 || !evento.getOrganizador().getEmail().equalsIgnoreCase(authentication.getName()))) {
             throw new org.springframework.security.access.AccessDeniedException("Você não tem acesso a este evento.");

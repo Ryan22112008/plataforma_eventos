@@ -53,17 +53,19 @@ class DashboardControllerTest {
     }
 
     @Test
-    void adminDeveSerRedirecionadoParaAdminSolicitacoes() {
-        // Given: usuário autenticado com ROLE_ADMIN
+    void superAdminNaoDeveMaisSerRedirecionadoParaAdminSolicitacoes() {
+        // Given: usuário autenticado com ROLE_SUPER_ADMIN (antigo ADMIN)
         Authentication auth = mock(Authentication.class);
         when(auth.isAuthenticated()).thenReturn(true);
-        when(auth.getAuthorities()).thenReturn((java.util.Collection) AuthorityUtils.createAuthorityList("ROLE_ADMIN"));
+        when(auth.getAuthorities()).thenReturn((java.util.Collection) AuthorityUtils.createAuthorityList("ROLE_SUPER_ADMIN"));
 
         // When
         String view = dashboardController.abrirDashboard(auth, null);
 
-        // Then
-        assertEquals("redirect:/admin/solicitacoes", view);
+        // Then: não deve mais ir para /admin/solicitacoes (rota inexistente)
+        // deve ir para /super-admin/usuarios
+        assertEquals("redirect:/super-admin/usuarios", view);
+        assertNotEquals("redirect:/admin/solicitacoes", view);
     }
 
     @Test

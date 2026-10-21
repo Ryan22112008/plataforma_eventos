@@ -19,15 +19,6 @@ public class DataInitializer implements CommandLineRunner {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${APP_BOOTSTRAP_ADMIN_NAME:}")
-    private String adminName;
-
-    @Value("${APP_BOOTSTRAP_ADMIN_EMAIL:}")
-    private String adminEmail;
-
-    @Value("${APP_BOOTSTRAP_ADMIN_PASSWORD:}")
-    private String adminPassword;
-
     @Value("${APP_BOOTSTRAP_SUPER_ADMIN_NAME:}")
     private String superAdminName;
 
@@ -44,38 +35,7 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // --- Administrador inicial (mantido exatamente como estava) ---
-        if (!adminName.isBlank() || !adminEmail.isBlank() || !adminPassword.isBlank()) {
-            if (adminName.isBlank() || adminEmail.isBlank() || adminPassword.isBlank()) {
-                throw new IllegalStateException("APP_BOOTSTRAP_ADMIN_NAME, APP_BOOTSTRAP_ADMIN_EMAIL e APP_BOOTSTRAP_ADMIN_PASSWORD devem ser informados juntos.");
-            }
-            if (adminPassword.length() < 12) {
-                throw new IllegalStateException("APP_BOOTSTRAP_ADMIN_PASSWORD precisa ter pelo menos 12 caracteres.");
-            }
-            if (adminPassword.getBytes(StandardCharsets.UTF_8).length > 72) {
-                throw new IllegalStateException("APP_BOOTSTRAP_ADMIN_PASSWORD não pode exceder 72 bytes UTF-8.");
-            }
-
-            adminEmail = adminEmail.trim().toLowerCase(Locale.ROOT);
-            adminName = adminName.trim();
-            if (!usuarioRepository.existsByEmailIgnoreCase(adminEmail)) {
-                Usuario admin = Usuario.builder()
-                        .nome(adminName)
-                        .email(adminEmail)
-                        .senha(passwordEncoder.encode(adminPassword))
-                        .perfil(Perfil.ROLE_ADMIN)
-                        .ativo(true)
-                        .build();
-                usuarioRepository.save(admin);
-                logger.info("Administrador inicial criado a partir das variáveis de ambiente.");
-            } else {
-                logger.info("Administrador inicial já existe; senha e permissões existentes foram preservadas.");
-            }
-        } else {
-            logger.info("Nenhum administrador inicial configurado; nenhum usuário padrão será criado.");
-        }
-
-        // --- Super Admin inicial (novo) ---
+        // --- Super Admin inicial ---
         if (!superAdminName.isBlank() || !superAdminEmail.isBlank() || !superAdminPassword.isBlank()) {
             if (superAdminName.isBlank() || superAdminEmail.isBlank() || superAdminPassword.isBlank()) {
                 throw new IllegalStateException("APP_BOOTSTRAP_SUPER_ADMIN_NAME, APP_BOOTSTRAP_SUPER_ADMIN_EMAIL e APP_BOOTSTRAP_SUPER_ADMIN_PASSWORD devem ser informados juntos.");

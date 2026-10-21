@@ -64,7 +64,7 @@
             </div>
             <div>
                 <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Perfil atual</p>
-                <span th:class="|inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${usuario.perfil == 'ROLE_SUPER_ADMIN' ? 'bg-[#082f57]/10 text-[#082f57]' : usuario.perfil == 'ROLE_ADMIN' ? 'bg-red-100 text-red-700' : usuario.perfil == 'ROLE_ORGANIZADOR' ? 'bg-amber-100 text-amber-700' : usuario.perfil == 'ROLE_AVALIADOR' ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-700'}|"
+                <span th:class="|inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${usuario.perfil == 'ROLE_SUPER_ADMIN' ? 'bg-[#082f57]/10 text-[#082f57]' : usuario.perfil == 'ROLE_ORGANIZADOR' ? 'bg-amber-100 text-amber-700' : usuario.perfil == 'ROLE_AVALIADOR' ? 'bg-purple-100 text-purple-700' : 'bg-emerald-100 text-emerald-700'}|"
                       th:text="${usuario.perfil}">PARTICIPANTE</span>
             </div>
             <div>

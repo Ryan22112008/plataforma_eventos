@@ -30,14 +30,13 @@ public class SecurityConfig {
                         // LINHA ATUALIZADA: Liberando explicitamente a pasta das imagens estáticas do sistema
                         .requestMatchers(HttpMethod.POST, "/eventos/*/inscrever").authenticated()
                         .requestMatchers("/", "/login", "/cadastro", "/error", "/erro/**", "/eventos/**", "/imagens-eventos/**", "/certificados/validar").permitAll()
-                        .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/super-admin/**").hasRole("SUPER_ADMIN")
                         .requestMatchers("/presencas/checkin").hasRole("PARTICIPANTE")
-                        .requestMatchers("/presencas/**").hasAnyRole("ORGANIZADOR", "ADMIN")
+                        .requestMatchers("/presencas/**").hasAnyRole("ORGANIZADOR", "SUPER_ADMIN")
                         .requestMatchers("/participante/**").hasRole("PARTICIPANTE")
 
                         // Proteção estrita de escopo baseado nas roles
-                        .requestMatchers("/organizador/**").hasAnyRole("ORGANIZADOR", "ADMIN")
-                        .requestMatchers("/super-admin/**").hasRole("SUPER_ADMIN")
+                        .requestMatchers("/organizador/**").hasAnyRole("ORGANIZADOR", "SUPER_ADMIN")
                         .anyRequest().authenticated()
                 )
                 .csrf(org.springframework.security.config.Customizer.withDefaults())

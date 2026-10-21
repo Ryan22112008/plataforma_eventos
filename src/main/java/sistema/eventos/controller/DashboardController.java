@@ -39,8 +39,8 @@ public class DashboardController {
         Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities());
 
         // Roteamento inteligente baseado no perfil de acesso (Roles)
-        if (roles.contains("ROLE_ADMIN")) {
-            return "redirect:/admin/solicitacoes";
+        if (roles.contains("ROLE_SUPER_ADMIN")) {
+            return "redirect:/super-admin/usuarios";
         } else if (roles.contains("ROLE_ORGANIZADOR")) {
 
             // --- RECHEIO DO MODEL (O QUE ESTAVA FALTANDO) ---

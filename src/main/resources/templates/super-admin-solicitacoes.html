@@ -9,11 +9,11 @@
     <link rel="stylesheet" th:href="@{/css/seplag-ui.css}">
 </head>
 <body class="min-h-screen flex flex-col">
-<header class="bg-[#082f57] text-white border-b-4 border-[#FDB813]">
+<header class="bg-[#00457C] text-white border-b-4 border-[#FDB813]">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
         <a th:href="@{/}" class="flex items-center gap-3 rounded focus-visible:outline-white">
             <img th:src="@{/images/logo-seplag-branco.png}" alt="SEPLAG-MT" class="h-11 w-auto object-contain">
-            <span class="font-semibold">Administração</span>
+            <span class="font-semibold">Super Administrador</span>
         </a>
         <form th:action="@{/logout}" method="post">
             <button type="submit" class="rounded-lg bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/20">Sair</button>
@@ -22,8 +22,8 @@
 </header>
 <main class="max-w-6xl w-full mx-auto px-4 sm:px-6">
     <div class="mb-7">
-        <p class="text-sm font-semibold uppercase tracking-wider text-[#07844c]">Acesso administrativo</p>
-        <h1 class="mt-1 text-3xl font-bold text-[#082f57]">Solicitações de organizador</h1>
+        <p class="text-sm font-semibold uppercase tracking-wider text-[#07844c]">Acesso de super administração</p>
+        <h1 class="mt-1 text-3xl font-bold text-[#00457C]">Solicitações de organizador</h1>
         <p class="mt-2 text-gray-600">Revise os dados da conta antes de aprovar o acesso ao painel de eventos.</p>
     </div>
     <div th:if="${sucesso}" role="status" class="mb-5 rounded-lg bg-emerald-50 p-4 text-sm text-emerald-800">A solicitação foi processada.</div>
@@ -50,19 +50,19 @@
             </div>
             <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-1/4 sm:justify-end">
                 <div th:if="${solicitacao.isDadosIncompletos()}">
-                    <a th:href="@{/admin/solicitacoes/{id}/editar(id=${solicitacao.id})}"
+                    <a th:href="@{/super-admin/solicitacoes/{id}/editar(id=${solicitacao.id})}"
                        class="w-full rounded-lg bg-amber-100 px-5 py-3 text-sm font-semibold text-amber-800 hover:bg-amber-200 sm:w-auto text-center">
                         <i class="fa-solid fa-pen mr-2" aria-hidden="true"></i>Editar dados
                     </a>
                 </div>
                 <div th:unless="${solicitacao.isDadosIncompletos()}">
-                    <form th:action="@{/admin/solicitacoes/{id}/aprovar(id=${solicitacao.id})}" method="post">
+                    <form th:action="@{/super-admin/solicitacoes/{id}/aprovar(id=${solicitacao.id})}" method="post">
                         <button type="submit" class="w-full rounded-lg bg-[#07844c] px-5 py-3 text-sm font-semibold text-white hover:bg-[#066c3e] sm:w-auto">
                             <i class="fa-solid fa-user-check mr-2" aria-hidden="true"></i>Aprovar
                         </button>
                     </form>
                 </div>
-                <form th:action="@{/admin/solicitacoes/{id}/rejeitar(id=${solicitacao.id})}" method="post">
+                <form th:action="@{/super-admin/solicitacoes/{id}/rejeitar(id=${solicitacao.id})}" method="post">
                     <button type="submit" class="w-full rounded-lg bg-[#dc2626] px-5 py-3 text-sm font-semibold text-white hover:bg-[#b91c1c] sm:w-auto">
                         <i class="fa-solid fa-ban mr-2" aria-hidden="true"></i>Rejeitar
                     </button>

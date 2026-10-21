@@ -22,7 +22,7 @@ import sistema.eventos.service.FileStorageService;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/admin/eventos")
+@RequestMapping("/api/super-admin/eventos")
 @RequiredArgsConstructor
 public class EventoAdminController {
 

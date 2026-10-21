@@ -70,7 +70,7 @@ public class InscricaoController {
                                   RedirectAttributes redirectAttributes) {
         try {
             boolean admin = authentication.getAuthorities().stream()
-                    .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+                    .anyMatch(authority -> "ROLE_SUPER_ADMIN".equals(authority.getAuthority()));
             inscricaoService.realizarCheckIn(tokenIngresso, userDetails.getUsername(), admin);
             redirectAttributes.addFlashAttribute("sucesso", "Check-in realizado com sucesso!");
 

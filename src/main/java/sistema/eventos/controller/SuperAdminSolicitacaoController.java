@@ -16,10 +16,10 @@ import sistema.eventos.service.EmailService;
 import java.util.Locale;
 
 @Controller
-@RequestMapping("/admin/solicitacoes")
+@RequestMapping("/super-admin/solicitacoes")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')") // Apenas o administrador do sistema acessa essa rota
-public class AdminController {
+@PreAuthorize("hasRole('SUPER_ADMIN')")
+public class SuperAdminSolicitacaoController {
 
     private final SolicitacaoRepository solicitacaoRepository;
     private final UsuarioRepository usuarioRepository;
@@ -32,7 +32,7 @@ public class AdminController {
         model.addAttribute("solicitacoes", solicitacaoRepository.findByStatus(StatusSolicitacao.PENDENTE));
         model.addAttribute("sucesso", sucesso != null);
         model.addAttribute("erro", erro);
-        return "admin-solicitacoes";
+        return "super-admin-solicitacoes";
     }
 
     @PostMapping("/{id}/aprovar")
@@ -43,33 +43,28 @@ public class AdminController {
 
         if (solicitacao.getStatus() != StatusSolicitacao.PENDENTE) {
             attributes.addFlashAttribute("erro", "Esta solicitação já foi processada.");
-            return "redirect:/admin/solicitacoes";
+            return "redirect:/super-admin/solicitacoes";
         }
 
-        // Bloqueia aprovação de registros legados com dados obrigatórios incompletos.
-        // Evita ConstraintViolationException (@NotBlank) no commit do Hibernate.
         if (solicitacao.isDadosIncompletos()) {
             attributes.addFlashAttribute("erro",
                     "Não é possível aprovar: esta solicitação possui dados obrigatórios incompletos "
                             + "(nome completo, matrícula, e-mail institucional e justificativa). "
                             + "Edite a solicitação antes de aprovar.");
-            return "redirect:/admin/solicitacoes";
+            return "redirect:/super-admin/solicitacoes";
         }
 
-        // 1. Atualiza o status da solicitação
         solicitacao.setStatus(StatusSolicitacao.APROVADO);
         solicitacaoRepository.save(solicitacao);
 
-        // 2. PROMOVE O USUÁRIO A ORGANIZADOR
         var usuario = solicitacao.getUsuario();
         usuario.setPerfil(Perfil.ROLE_ORGANIZADOR);
         usuarioRepository.save(usuario);
 
-        // 3. Notifica o usuário por e-mail
         emailService.enviarSolicitacaoAprovada(usuario);
 
         attributes.addAttribute("sucesso", "true");
-        return "redirect:/admin/solicitacoes";
+        return "redirect:/super-admin/solicitacoes";
     }
 
     @PostMapping("/{id}/rejeitar")
@@ -80,18 +75,16 @@ public class AdminController {
 
         if (solicitacao.getStatus() != StatusSolicitacao.PENDENTE) {
             attributes.addFlashAttribute("erro", "Esta solicitação já foi processada.");
-            return "redirect:/admin/solicitacoes";
+            return "redirect:/super-admin/solicitacoes";
         }
 
-        // 1. Atualiza o status para REJEITADO (NÃO altera o perfil do usuário)
         solicitacao.setStatus(StatusSolicitacao.REJEITADO);
         solicitacaoRepository.save(solicitacao);
 
-        // 2. Notifica o usuário por e-mail
         emailService.enviarSolicitacaoRejeitada(solicitacao.getUsuario());
 
         attributes.addAttribute("sucesso", "true");
-        return "redirect:/admin/solicitacoes";
+        return "redirect:/super-admin/solicitacoes";
     }
 
     @GetMapping("/{id}/editar")
@@ -99,7 +92,7 @@ public class AdminController {
         SolicitacaoOrganizador solicitacao = solicitacaoRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Solicitação não encontrada"));
         model.addAttribute("solicitacao", solicitacao);
-        return "editar-solicitacao";
+        return "super-admin-editar-solicitacao";
     }
 
     @PostMapping("/{id}/editar")
@@ -120,6 +113,6 @@ public class AdminController {
         solicitacaoRepository.save(solicitacao);
 
         attributes.addFlashAttribute("sucesso", "Dados da solicitação atualizados com sucesso.");
-        return "redirect:/admin/solicitacoes";
+        return "redirect:/super-admin/solicitacoes";
     }
 }
