@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import sistema.eventos.model.Perfil;
 import sistema.eventos.model.Usuario;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -39,6 +40,21 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
              @Param("perfil") Perfil perfil,
              @Param("ativo") Boolean ativo,
              Pageable pageable);
+
+     // Consulta sem paginação para exportação (mesmos filtros da listagem)
+     @Query("""
+         SELECT u FROM Usuario u
+         WHERE (:nome IS NULL OR :nome = '' OR LOWER(u.nome) LIKE LOWER(CONCAT('%', :nome, '%')))
+           AND (:email IS NULL OR :email = '' OR LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%')))
+           AND (:perfil IS NULL OR u.perfil = :perfil)
+           AND (:ativo IS NULL OR u.ativo = :ativo)
+         ORDER BY u.dataCriacao DESC
+         """)
+     List<Usuario> findFiltrosSemPaginacao(
+             @Param("nome") String nome,
+             @Param("email") String email,
+             @Param("perfil") Perfil perfil,
+             @Param("ativo") Boolean ativo);
 
      // Contagens para o resumo da página
      @Query("SELECT COUNT(u) FROM Usuario u WHERE u.perfil = :perfil")

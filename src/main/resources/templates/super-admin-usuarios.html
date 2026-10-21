@@ -105,6 +105,10 @@
                 <a th:href="@{/super-admin/usuarios}" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2.5 rounded-md text-sm font-medium transition-colors text-center">
                     <i class="fa-solid fa-eraser mr-2"></i>Limpar
                 </a>
+                <a th:href="@{/super-admin/usuarios/exportar(nome=${filtroNome}, email=${filtroEmail}, perfil=${filtroPerfil}, ativo=${filtroAtivo})}"
+                   class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-md text-sm font-medium transition-colors text-center">
+                    <i class="fa-solid fa-file-excel mr-2"></i>Exportar Excel
+                </a>
             </div>
         </form>
     </div>

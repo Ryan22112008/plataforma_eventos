@@ -4,6 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,8 +20,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import sistema.eventos.model.Perfil;
 import sistema.eventos.model.Usuario;
+import sistema.eventos.service.UsuarioExportService;
 import sistema.eventos.service.UsuarioService;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 @Controller
@@ -30,6 +36,7 @@ public class SuperAdminController {
     private static final int TAMANHO_PAGINA = 20;
 
     private final UsuarioService usuarioService;
+    private final UsuarioExportService usuarioExportService;
 
     private Long idDoUsuarioLogado() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -82,6 +89,24 @@ public class SuperAdminController {
         model.addAttribute("perfis", Perfil.values());
 
         return "super-admin-usuarios";
+    }
+
+    @GetMapping("/usuarios/exportar")
+    public ResponseEntity<byte[]> exportarUsuarios(
+            @RequestParam(value = "nome", required = false) String nome,
+            @RequestParam(value = "email", required = false) String email,
+            @RequestParam(value = "perfil", required = false) Perfil perfil,
+            @RequestParam(value = "ativo", required = false) Boolean ativo) {
+
+        byte[] excel = usuarioExportService.exportarUsuarios(nome, email, perfil, ativo);
+
+        String data = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        String nomeArquivo = "usuarios-super-admin-" + data + ".xlsx";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nomeArquivo + "\"")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(excel);
     }
 
     @GetMapping("/usuarios/{id}/detalhes")
