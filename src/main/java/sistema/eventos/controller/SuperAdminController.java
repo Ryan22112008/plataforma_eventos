@@ -18,14 +18,22 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import sistema.eventos.exception.NegocioException;
+import sistema.eventos.model.Inscricao;
 import sistema.eventos.model.Perfil;
 import sistema.eventos.model.Usuario;
+import sistema.eventos.service.CertificadoService;
+import sistema.eventos.service.InscricaoService;
 import sistema.eventos.service.UsuarioExportService;
 import sistema.eventos.service.UsuarioService;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.transaction.annotation.Transactional;
 
 @Controller
 @RequestMapping("/super-admin")
@@ -37,6 +45,8 @@ public class SuperAdminController {
 
     private final UsuarioService usuarioService;
     private final UsuarioExportService usuarioExportService;
+    private final InscricaoService inscricaoService;
+    private final CertificadoService certificadoService;
 
     private Long idDoUsuarioLogado() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -116,7 +126,41 @@ public class SuperAdminController {
 
         Usuario usuario = usuarioService.buscarPorId(id);
         model.addAttribute("usuario", usuario);
+        model.addAttribute("historico", usuarioService.listarHistoricoParticipacao(id));
+        model.addAttribute("eventosOrganizados", usuarioService.listarEventosOrganizados(id));
         return "super-admin-detalhes-usuario";
+    }
+
+    @Transactional(readOnly = true)
+    @GetMapping("/usuarios/{usuarioId}/inscricoes/{inscricaoId}/certificado")
+    public void baixarCertificadoParticipante(
+            @PathVariable Long usuarioId,
+            @PathVariable Long inscricaoId,
+            HttpServletResponse response) {
+
+        Inscricao inscricao = inscricaoService.buscarPorId(inscricaoId);
+
+        if (!inscricao.getParticipante().getId().equals(usuarioId)) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Este certificado não pertence ao usuário informado.");
+        }
+
+        byte[] pdfBytes = certificadoService.gerarCertificadoPdf(inscricao);
+
+        String nomeArquivo = "certificado-evento-" + inscricaoId + ".pdf";
+
+        response.setContentType(MediaType.APPLICATION_PDF_VALUE);
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nomeArquivo + "\"");
+        response.setHeader("Cache-Control", "private, no-store, max-age=0");
+        response.setHeader("X-Content-Type-Options", "nosniff");
+        response.setContentLength(pdfBytes.length);
+
+        try (var os = response.getOutputStream()) {
+            os.write(pdfBytes);
+            os.flush();
+        } catch (IOException e) {
+            throw new NegocioException("Não foi possível escrever o certificado na resposta.");
+        }
     }
 
     @PostMapping("/usuarios/{id}/desativar")

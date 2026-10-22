@@ -6,17 +6,27 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import sistema.eventos.dto.HistoricoEventosOrganizadosDto;
+import sistema.eventos.dto.HistoricoParticipacaoDto;
 import sistema.eventos.dto.RequestSolicitacaoOrganizadorDto;
 import sistema.eventos.dto.RequestUsuarioDto;
 import sistema.eventos.exception.NegocioException;
+import sistema.eventos.model.Evento;
+import sistema.eventos.model.Inscricao;
 import sistema.eventos.model.Perfil;
 import sistema.eventos.model.SolicitacaoOrganizador;
+import sistema.eventos.model.StatusInscricao;
 import sistema.eventos.model.StatusSolicitacao;
 import sistema.eventos.model.Usuario;
+import sistema.eventos.repository.EventoRepository;
+import sistema.eventos.repository.InscricaoRepository;
 import sistema.eventos.repository.SolicitacaoRepository;
 import sistema.eventos.repository.UsuarioRepository;
+import sistema.eventos.service.PresencaService;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Locale;
 
 @Service
@@ -27,6 +37,9 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final SolicitacaoRepository solicitacaoRepository;
     private final EmailService emailService;
+    private final EventoRepository eventoRepository;
+    private final InscricaoRepository inscricaoRepository;
+    private final PresencaService presencaService;
 
 
     /**
@@ -204,5 +217,99 @@ public class UsuarioService {
         solicitacao.setDataSolicitacao(LocalDateTime.now());
         solicitacaoRepository.save(solicitacao);
         emailService.enviarSolicitacaoParaAdmin(usuario);
+    }
+
+    /**
+     * Lista o histórico de participação de um usuário no painel SUPER_ADMIN.
+     * Considera apenas inscrições com status UTILIZADO (participação efetiva
+     * confirmada por check-in/consolidação de presença).
+     *
+     * @param usuarioId ID do usuário participante
+     * @return lista ordenada do mais recente para o mais antigo
+     */
+    @Transactional(readOnly = true)
+    public List<HistoricoParticipacaoDto> listarHistoricoParticipacao(Long usuarioId) {
+        List<Inscricao> inscricoes = inscricaoRepository.findByParticipanteIdComEvento(usuarioId);
+
+        return inscricoes.stream()
+                .filter(inscricao -> inscricao.getStatus() == StatusInscricao.UTILIZADO)
+                .map(inscricao -> {
+                    Evento evento = inscricao.getEvento();
+                    Double frequencia = null;
+                    try {
+                        frequencia = presencaService.calcularFrequencia(usuarioId, evento.getId());
+                    } catch (Exception ignored) {
+                        // Frequência não aplicável (ex: evento sem sessões)
+                    }
+
+                    boolean certificadoDisponivel = certificadoDisponivelPara(inscricao);
+
+                    return HistoricoParticipacaoDto.builder()
+                            .inscricaoId(inscricao.getId())
+                            .eventoId(evento.getId())
+                            .tituloEvento(evento.getTitulo())
+                            .dataInicio(evento.getDataInicio())
+                            .dataTermino(evento.getDataTermino())
+                            .modalidade(evento.getModalidade() != null ? evento.getModalidade().name() : null)
+                            .statusParticipacao("Presente")
+                            .percentualFrequencia(frequencia)
+                            .certificadoDisponivel(certificadoDisponivel)
+                            .build();
+                })
+                .sorted((a, b) -> {
+                    java.time.LocalDate d1 = a.getDataInicio() != null ? a.getDataInicio() : java.time.LocalDate.MIN;
+                    java.time.LocalDate d2 = b.getDataInicio() != null ? b.getDataInicio() : java.time.LocalDate.MIN;
+                    return d2.compareTo(d1);
+                })
+                .toList();
+    }
+
+    /**
+     * Lista os eventos organizados por um usuário no painel SUPER_ADMIN.
+     * Considera a associação real entre Evento.organizador_id e Usuario.id,
+     * independentemente do perfil atual do usuário ou do status do evento.
+     * Não acessa evento.getOrganizador() para evitar LazyInitializationException.
+     *
+     * @param usuarioId ID do usuário organizador
+     * @return lista ordenada do mais recente para o mais antigo; vazia se não houver eventos
+     */
+    @Transactional(readOnly = true)
+    public List<HistoricoEventosOrganizadosDto> listarEventosOrganizados(Long usuarioId) {
+        List<Evento> eventos = eventoRepository.findByOrganizadorId(usuarioId);
+
+        return eventos.stream()
+                .map(evento -> HistoricoEventosOrganizadosDto.builder()
+                        .eventoId(evento.getId())
+                        .titulo(evento.getTitulo())
+                        .dataInicio(evento.getDataInicio())
+                        .dataTermino(evento.getDataTermino())
+                        .modalidade(evento.getModalidade() != null ? evento.getModalidade().name() : null)
+                        .status(evento.getStatus() != null ? evento.getStatus().name() : null)
+                        .nicho(evento.getNicho() != null ? evento.getNicho().name() : null)
+                        .cargaHoraria(evento.getCargaHoraria())
+                        .totalInscritos(inscricaoRepository.contarInscricoesValidasDoEvento(evento.getId()))
+                        .build())
+                .sorted((a, b) -> {
+                    LocalDate d1 = a.getDataInicio() != null ? a.getDataInicio() : LocalDate.MIN;
+                    LocalDate d2 = b.getDataInicio() != null ? b.getDataInicio() : LocalDate.MIN;
+                    return d2.compareTo(d1);
+                })
+                .toList();
+    }
+
+    /**
+     * Reutiliza a mesma regra de elegibilidade do CertificadoService para
+     * determinar se o certificado está disponível para uma inscrição.
+     * Não duplica a lógica de geração de certificado.
+     */
+    private boolean certificadoDisponivelPara(Inscricao inscricao) {
+        if (inscricao.getStatus() != StatusInscricao.UTILIZADO) {
+            return false;
+        }
+        Evento evento = inscricao.getEvento();
+        String frente = evento.getCertificadoTemplate();
+        String verso = evento.getCertificadoTemplateVerso();
+        return frente != null && !frente.trim().isEmpty()
+                && verso != null && !verso.trim().isEmpty();
     }
 }
