@@ -54,7 +54,20 @@
                    class="text-sm font-medium bg-[#008A4B] hover:bg-[#00703c] text-white px-4 py-2 rounded shadow transition-all focus-ring">
                     <i class="fa-solid fa-user-plus mr-1"></i> Solicitar Organizador
                 </a>
-                <form th:action="@{/logout}" method="post" class="inline">
+    <!-- Banner de acesso organizador -->
+    <a th:href="@{/participante/solicitar-organizador}"
+       class="organizer-access-callout organizer-access-button block py-4 text-center">
+        <i class="fa-solid fa-user-plus text-2xl text-[#008A4B] mb-2 block"></i>
+        <span class="text-lg font-medium text-[#00457C]">Solicite acesso de Organizador</span>
+        <span class="text-sm text-[#666666]">Publique seus eventos e gerencie participações</span>
+    </a>
+<div sec:authorize="hasRole('PARTICIPANTE')"
+     th:href="@{/participante/solicitar-organizador}"
+     th:if="${solicitacaoOrganizadorPendente == false}"
+     class="text-sm font-medium bg-[#008A4B] hover:bg-[#00703c] text-white px-4 py-2 rounded shadow transition-all focus-ring">
+    <i class="fa-solid fa-user-plus mr-1"></i> Solicitar Organizador
+</a>
+</div>
                     <button type="submit" class="text-sm text-red-600 hover:text-red-800 font-medium transition-colors" title="Sair do Sistema">
                         <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
                     </button>

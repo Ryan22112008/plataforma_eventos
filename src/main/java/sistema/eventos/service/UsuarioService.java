@@ -199,21 +199,56 @@ public class UsuarioService {
         }
 
         var solicitacaoExistente = solicitacaoRepository.findByUsuarioId(usuario.getId());
+
+        // Regra 2: Se existe solicitação PENDENTE, bloqueia nova solicitação
         if (solicitacaoExistente.isPresent()
                 && solicitacaoExistente.get().getStatus() == StatusSolicitacao.PENDENTE) {
             throw new NegocioException("Sua solicitação já está aguardando aprovação da administração.");
         }
 
-        SolicitacaoOrganizador solicitacao = solicitacaoExistente.orElseGet(() -> {
-            SolicitacaoOrganizador nova = new SolicitacaoOrganizador();
-            nova.setUsuario(usuario);
-            return nova;
-        });
+        SolicitacaoOrganizador solicitacao;
+
+        // Regra 3: Se existe solicitação REJEITADA, reutiliza o mesmo registro
+        if (solicitacaoExistente.isPresent()
+                && solicitacaoExistente.get().getStatus() == StatusSolicitacao.REJEITADO) {
+            solicitacao = solicitacaoExistente.get();
+            solicitacao.setNomeCompleto(dto.getNomeCompleto().trim());
+            solicitacao.setMatricula(dto.getMatricula().trim());
+            solicitacao.setEmailInstitucional(dto.getEmailInstitucional().trim().toLowerCase(Locale.ROOT));
+            solicitacao.setJustificativa(dto.getJustificativa().trim());
+            solicitacao.setOrgao(dto.getOrgao() != null ? dto.getOrgao().trim() : null);
+            solicitacao.setStatus(StatusSolicitacao.PENDENTE);
+            solicitacao.setDataSolicitacao(LocalDateTime.now());
+        }
+        // Regra 4: Se existe solicitação APROVADA, verifica perfil do usuário
+        else if (solicitacaoExistente.isPresent()
+                && solicitacaoExistente.get().getStatus() == StatusSolicitacao.APROVADO) {
+            // Se usuário já tem perfil ORGANIZADOR, não permite nova solicitação
+            if (usuario.getPerfil() == Perfil.ROLE_ORGANIZADOR) {
+                throw new NegocioException("Este usuário já possui acesso de organizador aprovado.");
+            }
+            // Se ainda for PARTICIPANTE (dado legado), reutiliza o registro aprovado
+            // e atualiza para nova solicitação PENDENTE
+            solicitacao = solicitacaoExistente.get();
+            solicitacao.setNomeCompleto(dto.getNomeCompleto().trim());
+            solicitacao.setMatricula(dto.getMatricula().trim());
+            solicitacao.setEmailInstitucional(dto.getEmailInstitucional().trim().toLowerCase(Locale.ROOT));
+            solicitacao.setJustificativa(dto.getJustificativa().trim());
+            solicitacao.setOrgao(dto.getOrgao() != null ? dto.getOrgao().trim() : null);
+            solicitacao.setStatus(StatusSolicitacao.PENDENTE);
+            solicitacao.setDataSolicitacao(LocalDateTime.now());
+        }
+        // Regra 1: Se não existe solicitação, cria uma nova
+        else {
+            solicitacao = new SolicitacaoOrganizador();
+            solicitacao.setUsuario(usuario);
+        }
+
         solicitacao.setNomeCompleto(dto.getNomeCompleto().trim());
         solicitacao.setMatricula(dto.getMatricula().trim());
         solicitacao.setEmailInstitucional(dto.getEmailInstitucional().trim().toLowerCase(Locale.ROOT));
         solicitacao.setJustificativa(dto.getJustificativa().trim());
-        solicitacao.setOrgao(dto.getOrgao().trim());
+        solicitacao.setOrgao(dto.getOrgao() != null ? dto.getOrgao().trim() : null);
         solicitacao.setStatus(StatusSolicitacao.PENDENTE);
         solicitacao.setDataSolicitacao(LocalDateTime.now());
         solicitacaoRepository.save(solicitacao);
