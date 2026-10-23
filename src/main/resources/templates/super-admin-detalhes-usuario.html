@@ -169,52 +169,53 @@
     </div>
 
     <!-- Histórico de Participação -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div class="p-6 border-b border-gray-200">
-            <h2 class="text-lg font-bold text-[#00457C]">Histórico de Participação</h2>
-            <p class="text-sm text-gray-600 mt-1">Eventos e cursos nos quais o usuário efetivamente participou.</p>
+    <div class="bg-[#0B1F3A] rounded-xl shadow-lg border border-[#1E3A5F] overflow-hidden mb-8">
+        <div class="p-6 border-b border-[#1E3A5F]">
+            <h2 class="text-lg font-bold text-white">Histórico de Participação</h2>
+            <p class="text-sm text-[#94A3B8] mt-1">Eventos e cursos nos quais o usuário efetivamente participou.</p>
         </div>
         <div class="p-6">
             <div th:if="${#lists.isEmpty(historico)}" class="text-center py-8">
-                <i class="fa-solid fa-calendar-times text-gray-300 text-2xl mb-3"></i>
-                <p class="text-sm text-gray-500">Este usuário ainda não possui participações registradas.</p>
+                <i class="fa-solid fa-calendar-times text-[#475569] text-2xl mb-3"></i>
+                <p class="text-sm text-[#94A3B8]">Este usuário ainda não possui participações registradas.</p>
             </div>
             <div th:if="${!#lists.isEmpty(historico)}" class="space-y-4">
-                <div th:each="item : ${historico}" class="border border-gray-200 rounded-lg p-4 bg-gray-50/50">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h3 class="text-sm font-bold text-[#00457C]" th:text="${item.tituloEvento}">Curso de Java</h3>
-                            <p class="text-xs text-gray-500 mt-1"
+                <div th:each="item : ${historico}" class="bg-[#14294A] rounded-xl border border-[#2D4A73] p-5 hover:border-[#008A4B]/50 transition-colors duration-200">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div class="flex-1 min-w-0">
+                            <h3 class="text-sm font-bold text-white leading-tight" th:text="${item.tituloEvento}">Curso de Java</h3>
+                            <p class="text-xs text-[#94A3B8] mt-1"
                                th:text="${'Data: ' + #temporals.format(item.dataInicio, 'dd/MM/yyyy') + (item.dataTermino != null ? ' a ' + #temporals.format(item.dataTermino, 'dd/MM/yyyy') : '')}">10/10/2026</p>
-                            <p th:if="${item.modalidade != null}" class="text-xs text-gray-500 mt-1"
+                            <p th:if="${item.modalidade != null}" class="text-xs text-[#94A3B8] mt-1"
                                th:text="${'Modalidade: ' + item.modalidade}">Presencial</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-xs font-medium text-gray-700">Participação</p>
-                            <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded"
+                            <p class="text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Participação</p>
+                            <span class="text-xs bg-[#008A4B]/20 text-[#008A4B] px-2 py-0.5 rounded border border-[#008A4B]/30"
                                   th:text="${item.statusParticipacao}">Presente</span>
                         </div>
                     </div>
-                    <div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="mt-4 pt-4 border-t border-[#2D4A73] grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Frequência</p>
+                            <p class="text-xs font-medium text-[#64748B] uppercase tracking-wider">Frequência</p>
                             <p th:if="${item.percentualFrequencia != null}"
-                               class="text-sm font-semibold text-gray-900"
-                               th:text="${'${item.percentualFrequencia}%'}">100%</p>
+                               class="text-sm font-semibold text-white"
+                               th:text="${item.percentualFrequencia} + '%'">100%</p>
                             <p th:unless="${item.percentualFrequencia != null}"
-                               class="text-sm font-semibold text-gray-500">—</p>
+                               class="text-sm font-semibold text-[#64748B]">—</p>
                         </div>
-                        <div>
-                            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Certificado</p>
-                            <span th:if="${item.certificadoDisponivel}"
-                                  class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">Disponível</span>
-                            <span th:unless="${item.certificadoDisponivel}"
-                                  class="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded">Não disponível</span>
-                            <a th:if="${item.certificadoDisponivel}"
-                               th:href="@{/super-admin/usuarios/{usuarioId}/inscricoes/{inscricaoId}/certificado(usuarioId=${usuario.id}, inscricaoId=${item.inscricaoId})}"
-                               class="mt-2 inline-flex items-center justify-center gap-1 rounded bg-[#00457C] px-2.5 py-1 text-xs font-semibold text-white hover:bg-[#002d54] transition-colors">
-                                <i class="fa-solid fa-download"></i> Baixar certificado
-                            </a>
+                        <div class="md:col-span-2 flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+                            <div class="flex items-center gap-2 w-full md:w-auto">
+                                <span th:if="${item.certificadoDisponivel}"
+                                      class="text-xs bg-[#008A4B]/20 text-[#008A4B] px-2 py-0.5 rounded border border-[#008A4B]/30">Disponível</span>
+                                <span th:unless="${item.certificadoDisponivel}"
+                                      class="text-xs bg-[#334155] text-[#94A3B8] px-2 py-0.5 rounded border border-[#475569]/50">Não disponível</span>
+                                <a th:if="${item.certificadoDisponivel}"
+                                   th:href="@{/super-admin/usuarios/{usuarioId}/inscricoes/{inscricaoId}/certificado(usuarioId=${usuario.id}, inscricaoId=${item.inscricaoId})}"
+                                   class="mt-1 md:mt-0 inline-flex items-center justify-center gap-1 rounded bg-[#00457C] px-2.5 py-1 text-xs font-semibold text-white hover:bg-[#002d54] transition-colors border border-[#334155]/50">
+                                    <i class="fa-solid fa-download"></i> Baixar certificado
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
