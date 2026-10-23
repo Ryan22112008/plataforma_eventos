@@ -10,7 +10,7 @@
     <style>body { font-family: 'Inter', sans-serif; }</style>
     <link rel="stylesheet" th:href="@{/css/seplag-ui.css}">
 </head>
-<body class="bg-[#F4F6F9] min-h-screen flex flex-col">
+<body class="bg-[#0B1F3A] min-h-screen flex flex-col text-slate-200">
 
 <header class="bg-[#00457C] text-white py-4 px-6 shadow flex justify-between items-center border-b-4 border-[#FDB813]">
     <div class="flex items-center space-x-3">
@@ -30,123 +30,174 @@
 
 <main class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10 flex-grow">
 
-    <!-- Título e descrição -->
-    <div class="mb-8">
-        <p class="text-sm font-semibold uppercase tracking-wider text-[#07844c]">Super Administração</p>
-        <h1 class="mt-1 text-2xl font-bold text-[#00457C]">Gerenciamento de Usuários</h1>
-        <p class="mt-2 text-sm text-gray-600">Consulte e filtre todos os usuários cadastrados na plataforma.</p>
+    <!-- Cabeçalho da página -->
+    <div class="mb-10">
+        <p class="text-xs font-semibold uppercase tracking-widest text-[#008A4B]">Super Administração</p>
+        <h1 class="mt-1 text-3xl font-bold text-white tracking-tight">Gerenciamento de Usuários</h1>
+        <p class="mt-2 text-sm text-[#94A3B8]">Consulte e filtre todos os usuários cadastrados na plataforma.</p>
     </div>
 
     <!-- Mensagens de feedback -->
-    <div th:if="${sucesso}" role="status" class="mb-6 p-4 rounded-lg bg-emerald-50 border-l-4 border-emerald-500 text-sm text-emerald-800">
+    <div th:if="${sucesso}" role="status" class="mb-6 p-4 rounded-xl border border-[#008A4B]/30 bg-[#008A4B]/10 text-sm text-[#86EFAC]">
         <i class="fa-solid fa-circle-check mr-2"></i>
         <span th:text="${sucesso}">Operação realizada com sucesso.</span>
     </div>
-    <div th:if="${erro}" role="alert" class="mb-6 p-4 rounded-lg bg-rose-50 border-l-4 border-rose-500 text-sm text-rose-800" th:text="${erro}"></div>
+    <div th:if="${erro}" role="alert" class="mb-6 p-4 rounded-xl border border-[#DC2626]/30 bg-[#DC2626]/10 text-sm text-[#FCA5A5]" th:text="${erro}"></div>
 
-    <!-- Resumo de totais -->
-    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Total de Usuários</p>
-            <p class="text-2xl font-bold text-[#00457C]" th:text="${totalUsuarios}">0</p>
+    <!-- Cards de estatísticas -->
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-10">
+        <div class="bg-[#14294A] rounded-xl border border-[#2D4A73] p-5 hover:border-[#008A4B]/50 transition-colors duration-200">
+            <div class="flex items-center justify-between mb-1">
+                <div>
+                    <p class="text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Total de Usuários</p>
+                    <p class="text-2xl font-bold text-white mt-0.5" th:text="${totalUsuarios}">0</p>
+                </div>
+                <div class="w-8 h-8 rounded-lg bg-[#00457C]/20 flex items-center justify-center text-[#93C5FD] text-xs">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+            </div>
         </div>
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Participantes</p>
-            <p class="text-2xl font-bold text-[#3b82f6]" th:text="${totalParticipantes}">0</p>
+        <div class="bg-[#14294A] rounded-xl border border-[#2D4A73] p-5 hover:border-[#008A4B]/50 transition-colors duration-200">
+            <div class="flex items-center justify-between mb-1">
+                <div>
+                    <p class="text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Participantes</p>
+                    <p class="text-2xl font-bold text-white mt-0.5" th:text="${totalParticipantes}">0</p>
+                </div>
+                <div class="w-8 h-8 rounded-lg bg-[#008A4B]/20 flex items-center justify-center text-[#86EFAC] text-xs">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+            </div>
         </div>
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Organizadores</p>
-            <p class="text-2xl font-bold text-[#f59e0b]" th:text="${totalOrganizadores}">0</p>
+        <div class="bg-[#14294A] rounded-xl border border-[#2D4A73] p-5 hover:border-[#008A4B]/50 transition-colors duration-200">
+            <div class="flex items-center justify-between mb-1">
+                <div>
+                    <p class="text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Organizadores</p>
+                    <p class="text-2xl font-bold text-white mt-0.5" th:text="${totalOrganizadores}">0</p>
+                </div>
+                <div class="w-8 h-8 rounded-lg bg-[#00457C]/20 flex items-center justify-center text-[#93C5FD] text-xs">
+                    <i class="fa-solid fa-calendar"></i>
+                </div>
+            </div>
         </div>
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Avaliadores</p>
-            <p class="text-2xl font-bold text-[#8b5cf6]" th:text="${totalAvaliadores}">0</p>
+        <div class="bg-[#14294A] rounded-xl border border-[#2D4A73] p-5 hover:border-[#008A4B]/50 transition-colors duration-200">
+            <div class="flex items-center justify-between mb-1">
+                <div>
+                    <p class="text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Avaliadores</p>
+                    <p class="text-2xl font-bold text-white mt-0.5" th:text="${totalAvaliadores}">0</p>
+                </div>
+                <div class="w-8 h-8 rounded-lg bg-[#5B21B6]/20 flex items-center justify-center text-[#C4B5FD] text-xs">
+                    <i class="fa-solid fa-star"></i>
+                </div>
+            </div>
         </div>
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Administradores</p>
-            <p class="text-2xl font-bold text-[#ef4444]" th:text="${totalAdmins}">0</p>
+        <div class="bg-[#14294A] rounded-xl border border-[#2D4A73] p-5 hover:border-[#008A4B]/50 transition-colors duration-200">
+            <div class="flex items-center justify-between mb-1">
+                <div>
+                    <p class="text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Administradores</p>
+                    <p class="text-2xl font-bold text-white mt-0.5" th:text="${totalAdmins}">0</p>
+                </div>
+                <div class="w-8 h-8 rounded-lg bg-[#DC2626]/20 flex items-center justify-center text-[#FCA5A5] text-xs">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+            </div>
         </div>
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Super Admins</p>
-            <p class="text-2xl font-bold text-[#082f57]" th:text="${totalSuperAdmins}">0</p>
+        <div class="bg-[#14294A] rounded-xl border border-[#2D4A73] p-5 hover:border-[#008A4B]/50 transition-colors duration-200">
+            <div class="flex items-center justify-between mb-1">
+                <div>
+                    <p class="text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Super Admins</p>
+                    <p class="text-2xl font-bold text-white mt-0.5" th:text="${totalSuperAdmins}">0</p>
+                </div>
+                <div class="w-8 h-8 rounded-lg bg-[#082f57]/20 flex items-center justify-center text-[#67E8F9] text-xs">
+                    <i class="fa-solid fa-crown"></i>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Filtros de busca -->
-    <div class="bg-white p-7 rounded-xl shadow-sm border border-gray-200 mb-8">
-        <form th:action="@{/super-admin/usuarios}" method="GET" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-5 items-end">
-            <div class="md:col-span-2 lg:col-span-3">
-                <label for="nome" class="block text-sm font-medium text-gray-700 mb-1.5">Nome ou E-mail</label>
+    <!-- Área de filtros -->
+    <div class="bg-[#14294A] rounded-xl border border-[#2D4A73] p-7 mb-10">
+        <form th:action="@{/super-admin/usuarios}" method="GET" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="lg:col-span-2">
+                <label for="nome" class="block text-xs font-medium text-[#94A3B8] uppercase tracking-wider mb-1.5">Nome ou E-mail</label>
                 <input type="text" id="nome" name="nome" th:value="${filtroNome}"
                        placeholder="Buscar por nome ou e-mail..."
-                       class="w-full rounded-md border border-gray-300 px-3.5 py-2.5 text-sm focus:border-[#00457C] focus:outline-none focus:ring-1 focus:ring-[#00457C]">
+                       class="w-full rounded-lg border border-[#2D4A73] bg-[#0B1F3A] px-3.5 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:border-[#008A4B] focus:outline-none focus:ring-1 focus:ring-[#008A4B]">
             </div>
             <div>
-                <label for="perfil" class="block text-sm font-medium text-gray-700 mb-1.5">Perfil</label>
+                <label for="perfil" class="block text-xs font-medium text-[#94A3B8] uppercase tracking-wider mb-1.5">Perfil</label>
                 <select id="perfil" name="perfil"
-                        class="w-full rounded-md border border-gray-300 px-3.5 py-2.5 text-sm focus:border-[#00457C] focus:outline-none focus:ring-1 focus:ring-[#00457C]">
+                        class="w-full rounded-lg border border-[#2D4A73] bg-[#0B1F3A] px-3.5 py-2.5 text-sm text-slate-200 focus:border-[#008A4B] focus:outline-none focus:ring-1 focus:ring-[#008A4B]">
                     <option value="">Todos</option>
                     <option th:each="p : ${perfis}" th:value="${p}" th:selected="${filtroPerfil == p}" th:text="${p}">PARTICIPANTE</option>
                 </select>
             </div>
             <div>
-                <label for="ativo" class="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
+                <label for="ativo" class="block text-xs font-medium text-[#94A3B8] uppercase tracking-wider mb-1.5">Status</label>
                 <select id="ativo" name="ativo"
-                        class="w-full rounded-md border border-gray-300 px-3.5 py-2.5 text-sm focus:border-[#00457C] focus:outline-none focus:ring-1 focus:ring-[#00457C]">
+                        class="w-full rounded-lg border border-[#2D4A73] bg-[#0B1F3A] px-3.5 py-2.5 text-sm text-slate-200 focus:border-[#008A4B] focus:outline-none focus:ring-1 focus:ring-[#008A4B]">
                     <option value="">Todos</option>
                     <option value="true" th:selected="${filtroAtivo == true}">Ativos</option>
                     <option value="false" th:selected="${filtroAtivo == false}">Inativos</option>
                 </select>
             </div>
-            <div class="md:col-span-1 lg:col-span-1 flex flex-col sm:flex-row gap-3">
-                <button type="submit" class="w-full sm:w-auto flex-1 bg-[#00457C] hover:bg-[#00335c] text-white px-5 py-2.5 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-search"></i>Buscar
+            <div class="lg:col-span-4 flex flex-col sm:flex-row gap-3 items-end">
+                <button type="submit" class="w-full sm:w-auto flex-1 rounded-lg bg-[#00457C] hover:bg-[#00335c] text-white px-5 py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-search"></i> Buscar
                 </button>
-                <a th:href="@{/super-admin/usuarios}" class="w-full sm:w-auto flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-5 py-2.5 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-eraser"></i>Limpar
+                <a th:href="@{/super-admin/usuarios}" class="w-full sm:w-auto flex-1 rounded-lg border border-[#2D4A73] bg-[#0B1F3A] hover:bg-[#1E3A5F] text-slate-300 hover:text-white px-5 py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-eraser"></i> Limpar
                 </a>
                 <a th:href="@{/super-admin/usuarios/exportar(nome=${filtroNome}, email=${filtroEmail}, perfil=${filtroPerfil}, ativo=${filtroAtivo})}"
-                   class="w-full sm:w-auto flex-1 bg-[#008A4B] hover:bg-[#006637] text-white px-5 py-2.5 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-file-excel"></i>Exportar Excel
+                   class="w-full sm:w-auto flex-1 rounded-lg bg-[#008A4B] hover:bg-[#006637] text-white px-5 py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-file-excel"></i> Exportar Excel
                 </a>
             </div>
         </form>
     </div>
 
-    <!-- Tabela de usuarios -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <!-- Tabela de usuários -->
+    <div class="bg-[#14294A] rounded-xl border border-[#2D4A73] overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+            <table class="min-w-full divide-y divide-[#2D4A73]">
+                <thead class="bg-[#0B1F3A]">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">E-mail</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Perfil</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data de Cadastro</th>
-                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acao</th>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Nome</th>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-[#94A3B8] uppercase tracking-wider">E-mail</th>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Perfil</th>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Data de Cadastro</th>
+                    <th class="px-6 py-4 text-right text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Ação</th>
                 </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200 text-sm">
-                <tr th:if="${usuarios == null or usuarios.isEmpty()}" class="text-center text-gray-500">
+                <tbody class="divide-y divide-[#2D4A73] text-sm">
+                <tr th:if="${usuarios == null or usuarios.isEmpty()}" class="text-center">
                     <td colspan="6" class="p-12">
-                        <i class="fa-solid fa-users text-3xl mb-3 block text-gray-300"></i>
-                        <p>Nenhum usuario encontrado com os filtros informados.</p>
+                        <i class="fa-solid fa-users text-3xl mb-3 block text-[#475569]"></i>
+                        <p class="text-sm text-[#94A3B8]">Nenhum usuário encontrado com os filtros informados.</p>
                     </td>
                 </tr>
-                <tr th:each="usuario : ${usuarios}" class="hover:bg-gray-50 transition-colors">
-                    <td class="px-6 py-4 font-semibold text-gray-900" th:text="${usuario.nome}">Nome</td>
-                    <td class="px-6 py-4 text-gray-600" th:text="${usuario.email}">email@exemplo.com</td>
+                <tr th:each="usuario : ${usuarios}" class="hover:bg-[#1E3A5F]/50 transition-colors duration-150">
+                    <td class="px-6 py-4 font-semibold text-white" th:text="${usuario.nome}">Nome</td>
+                    <td class="px-6 py-4 text-[#CBD5E1]" th:text="${usuario.email}">email@exemplo.com</td>
                     <td class="px-6 py-4">
-                        <span th:text="${usuario.perfil}" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">PARTICIPANTE</span>
+                        <span th:class="'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ' +
+                              (${usuario.perfil} == 'ROLE_SUPER_ADMIN' ? 'bg-[#5B21B6]/20 text-[#C4B5FD] border-[#5B21B6]/30' :
+                               ${usuario.perfil} == 'ROLE_ADMIN' ? 'bg-[#DC2626]/20 text-[#FCA5A5] border-[#DC2626]/30' :
+                               ${usuario.perfil} == 'ROLE_ORGANIZADOR' ? 'bg-[#00457C]/20 text-[#93C5FD] border-[#00457C]/30' :
+                               ${usuario.perfil} == 'ROLE_PARTICIPANTE' ? 'bg-[#008A4B]/20 text-[#86EFAC] border-[#008A4B]/30' :
+                               ${usuario.perfil} == 'ROLE_AVALIADOR' ? 'bg-[#7C3AED]/20 text-[#C4B5FD] border-[#7C3AED]/30' :
+                               'bg-[#334155] text-[#94A3B8] border-[#475569]/30')"
+                              th:text="${usuario.perfil}">PARTICIPANTE</span>
                     </td>
                     <td class="px-6 py-4">
-                        <span th:text="${usuario.ativo ? 'Ativo' : 'Inativo'}" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">Ativo</span>
+                        <span th:class="'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ' +
+                              (${usuario.ativo} ? 'bg-[#008A4B]/20 text-[#86EFAC] border-[#008A4B]/30' : 'bg-[#334155] text-[#94A3B8] border-[#475569]/30')"
+                              th:text="${usuario.ativo ? 'Ativo' : 'Inativo'}">Ativo</span>
                     </td>
-                    <td class="px-6 py-4 text-gray-600" th:text="${#temporals.format(usuario.dataCriacao, 'dd/MM/yyyy HH:mm')}">01/01/2026</td>
+                    <td class="px-6 py-4 text-[#94A3B8]" th:text="${#temporals.format(usuario.dataCriacao, 'dd/MM/yyyy HH:mm')}">01/01/2026</td>
                     <td class="px-6 py-4 text-right">
-                        <a th:href="@{/super-admin/usuarios/{id}/detalhes(id=${usuario.id})}" class="text-[#00457C] hover:text-[#002d54] hover:underline font-medium inline-flex items-center">
-                            <i class="fa-solid fa-eye mr-1.5"></i> Ver Detalhes
+                        <a th:href="@{/super-admin/usuarios/{id}/detalhes(id=${usuario.id})}" class="text-[#00457C] hover:text-[#93C5FD] hover:underline font-medium inline-flex items-center gap-1.5">
+                            <i class="fa-solid fa-eye"></i> Ver Detalhes
                         </a>
                     </td>
                 </tr>
@@ -156,48 +207,48 @@
     </div>
 
     <!-- Paginação -->
-    <div th:if="${totalPages > 1}" class="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <p class="text-sm text-gray-700">
-            Exibindo <strong th:text="${(currentPage * size) + 1}">1</strong> a
-            <strong th:text="${Math.min((currentPage + 1) * size, totalElements)}">20</strong> de
-            <strong th:text="${totalElements}">0</strong> resultados
+    <div th:if="${totalPages > 1}" class="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <p class="text-sm text-[#94A3B8]">
+            Exibindo <strong class="text-white" th:text="${(currentPage * size) + 1}">1</strong> a
+            <strong class="text-white" th:text="${Math.min((currentPage + 1) * size, totalElements)}">20</strong> de
+            <strong class="text-white" th:text="${totalElements}">0</strong> resultados
         </p>
 
         <nav class="flex items-center gap-1">
             <!-- Primeira página -->
             <a th:if="${hasPrevious}" th:href="@{/super-admin/usuarios(page=0, size=${size}, nome=${filtroNome}, email=${filtroEmail}, perfil=${filtroPerfil}, ativo=${filtroAtivo})}"
-               class="px-3 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-[#00457C] hover:text-white transition-colors">
+               class="px-3 py-2 rounded-lg border border-[#2D4A73] bg-[#0B1F3A] text-sm font-medium text-slate-300 hover:bg-[#00457C] hover:text-white hover:border-[#00457C] transition-colors">
                 <i class="fa-solid fa-backward-step mr-1"></i> Primeira
             </a>
 
             <!-- Página anterior -->
             <a th:if="${hasPrevious}" th:href="@{/super-admin/usuarios(page=${currentPage - 1}, size=${size}, nome=${filtroNome}, email=${filtroEmail}, perfil=${filtroPerfil}, ativo=${filtroAtivo})}"
-               class="px-3 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-[#00457C] hover:text-white transition-colors">
+               class="px-3 py-2 rounded-lg border border-[#2D4A73] bg-[#0B1F3A] text-sm font-medium text-slate-300 hover:bg-[#00457C] hover:text-white hover:border-[#00457C] transition-colors">
                 <i class="fa-solid fa-chevron-left mr-1"></i> Anterior
             </a>
 
             <!-- Páginas -->
             <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                  th:class="${currentPage == i} ? 'px-3 py-2 rounded-md bg-[#00457C] text-white font-medium' : 'px-3 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors'"
+                  th:class="${currentPage == i} ? 'px-3 py-2 rounded-lg bg-[#00457C] text-white font-medium border border-[#00457C]' : 'px-3 py-2 rounded-lg border border-[#2D4A73] bg-[#0B1F3A] text-sm font-medium text-slate-300 hover:bg-[#1E3A5F] hover:text-white transition-colors'"
                   th:text="${i + 1}"
                   th:href="@{/super-admin/usuarios(page=${i}, size=${size}, nome=${filtroNome}, email=${filtroEmail}, perfil=${filtroPerfil}, ativo=${filtroAtivo})}">1</span>
 
             <!-- Próxima página -->
             <a th:if="${hasNext}" th:href="@{/super-admin/usuarios(page=${currentPage + 1}, size=${size}, nome=${filtroNome}, email=${filtroEmail}, perfil=${filtroPerfil}, ativo=${filtroAtivo})}"
-               class="px-3 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-[#00457C] hover:text-white transition-colors">
+               class="px-3 py-2 rounded-lg border border-[#2D4A73] bg-[#0B1F3A] text-sm font-medium text-slate-300 hover:bg-[#00457C] hover:text-white hover:border-[#00457C] transition-colors">
                 Próximo <i class="fa-solid fa-chevron-right ml-1"></i>
             </a>
 
             <!-- Última página -->
             <a th:if="${hasNext}" th:href="@{/super-admin/usuarios(page=${totalPages - 1}, size=${size}, nome=${filtroNome}, email=${filtroEmail}, perfil=${filtroPerfil}, ativo=${filtroAtivo})}"
-               class="px-3 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-[#00457C] hover:text-white transition-colors">
+               class="px-3 py-2 rounded-lg border border-[#2D4A73] bg-[#0B1F3A] text-sm font-medium text-slate-300 hover:bg-[#00457C] hover:text-white hover:border-[#00457C] transition-colors">
                 Última <i class="fa-solid fa-forward-step ml-1"></i>
             </a>
         </nav>
     </div>
 </main>
 
-<footer class="bg-white text-center py-4 border-t border-gray-200 text-xs text-gray-400 mt-auto">
+<footer class="bg-[#00457C] text-center py-4 border-t border-[#1E3A5F] text-xs text-[#94A3B8] mt-auto">
     &copy; 2026 Secretaria de Estado de Planejamento e Gestão de Mato Grosso. Todos os direitos reservados.
 </footer>
 
