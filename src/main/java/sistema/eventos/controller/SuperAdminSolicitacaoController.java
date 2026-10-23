@@ -102,7 +102,7 @@ public class SuperAdminSolicitacaoController {
                                           @RequestParam String matricula,
                                           @RequestParam String emailInstitucional,
                                           @RequestParam String justificativa,
-                                           @RequestParam String orgao,
+                                          @RequestParam String orgao,
                                           RedirectAttributes attributes) {
         SolicitacaoOrganizador solicitacao = solicitacaoRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Solicitação não encontrada"));
@@ -111,6 +111,7 @@ public class SuperAdminSolicitacaoController {
         solicitacao.setMatricula(matricula.trim());
         solicitacao.setEmailInstitucional(emailInstitucional.trim().toLowerCase(Locale.ROOT));
         solicitacao.setJustificativa(justificativa.trim());
+        solicitacao.setOrgao(orgao == null ? null : orgao.trim());
         solicitacaoRepository.save(solicitacao);
 
         attributes.addFlashAttribute("sucesso", "Dados da solicitação atualizados com sucesso.");

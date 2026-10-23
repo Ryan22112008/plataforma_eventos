@@ -126,7 +126,7 @@
         <p class="mt-1">Você já pode se inscrever em cursos enquanto a administração analisa a solicitação.</p>
     </div>
 
-    <div sec:authorize="hasRole('PARTICIPANTE')" th:if="${solicitacaoOrganizadorEnviada == true and solicitacaoOrganizadorPendente == false}"
+    <div sec:authorize="hasRole('PARTICIPANTE')" th:if="${solicitacaoOrganizadorEnviada == true}"
          class="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900" role="status">
         <p class="font-semibold"><i class="fa-solid fa-circle-check mr-2"></i>Solicitação enviada para análise da administração.</p>
     </div>
@@ -135,10 +135,9 @@
          class="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert"
          th:text="${erroSolicitacaoOrganizador}"></div>
 
-    <form sec:authorize="hasRole('PARTICIPANTE')" th:if="${not solicitacaoOrganizadorPendente}"
-          th:action="@{/participante/solicitar-organizador}" method="post"
-          class="organizer-access-callout mb-8">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+    <a sec:authorize="hasRole('PARTICIPANTE')" th:if="${not solicitacaoOrganizadorPendente}"
+       th:href="@{/participante/solicitar-organizador}"
+       class="organizer-access-callout mb-8 no-underline">
         <div class="organizer-access-copy">
             <span class="organizer-access-icon" aria-hidden="true"><i class="fa-solid fa-chalkboard-user"></i></span>
             <div>
@@ -146,10 +145,10 @@
                 <p class="organizer-access-description">Solicite acesso de organizador. A administração precisa aprovar o perfil.</p>
             </div>
         </div>
-        <button type="submit" class="organizer-access-button">
+        <span class="organizer-access-button">
             Solicitar acesso <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-        </button>
-    </form>
+        </span>
+    </a>
 
     <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-200 pb-5 mb-8">
         <div>

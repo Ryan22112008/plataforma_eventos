@@ -1,5 +1,6 @@
 package sistema.eventos.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -9,6 +10,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import sistema.eventos.dto.RequestSolicitacaoOrganizadorDto;
@@ -59,12 +61,14 @@ public class ParticipanteController {
 
     @PostMapping("/solicitar-organizador")
     public String solicitarAcessoOrganizador(@AuthenticationPrincipal UserDetails userDetails,
-                                            @jakarta.validation.Valid RequestSolicitacaoOrganizadorDto dto,
-                                            org.springframework.validation.BindingResult result,
+                                            @Valid @ModelAttribute("solicitacaoDto") RequestSolicitacaoOrganizadorDto dto,
+                                            BindingResult result,
+                                            Model model,
                                             RedirectAttributes attributes) {
         if (result.hasErrors()) {
-            attributes.addFlashAttribute("erroSolicitacaoOrganizador", "Preencha todos os campos obrigatórios corretamente.");
-            return "redirect:/participante/solicitar-organizador";
+            model.addAttribute("solicitacaoDto", dto);
+            model.addAttribute("erroSolicitacaoOrganizador", "Preencha todos os campos obrigatórios corretamente.");
+            return "solicitar-organizador";
         }
         try {
             usuarioService.solicitarAcessoOrganizador(userDetails.getUsername(), dto);
