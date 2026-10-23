@@ -180,19 +180,18 @@
                     <td class="px-6 py-4 font-semibold text-white" th:text="${usuario.nome}">Nome</td>
                     <td class="px-6 py-4 text-[#CBD5E1]" th:text="${usuario.email}">email@exemplo.com</td>
                     <td class="px-6 py-4">
-                        <span th:class="'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ' +
-                              (usuario.perfil == 'ROLE_SUPER_ADMIN' ? 'bg-[#5B21B6]/20 text-[#C4B5FD] border-[#5B21B6]/30' :
-                               usuario.perfil == 'ROLE_ADMIN' ? 'bg-[#DC2626]/20 text-[#FCA5A5] border-[#DC2626]/30' :
-                               usuario.perfil == 'ROLE_ORGANIZADOR' ? 'bg-[#00457C]/20 text-[#93C5FD] border-[#00457C]/30' :
-                               usuario.perfil == 'ROLE_PARTICIPANTE' ? 'bg-[#008A4B]/20 text-[#86EFAC] border-[#008A4B]/30' :
-                               usuario.perfil == 'ROLE_AVALIADOR' ? 'bg-[#7C3AED]/20 text-[#C4B5FD] border-[#7C3AED]/30' :
-                               'bg-[#334155] text-[#94A3B8] border-[#475569]/30')"
-                              th:text="${usuario.perfil}">PARTICIPANTE</span>
+                        <span th:switch="${usuario.perfil}">
+                            <span th:case="'ROLE_SUPER_ADMIN'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-[#5B21B6]/20 text-[#C4B5FD] border-[#5B21B6]/30" th:text="${usuario.perfil}">ROLE_SUPER_ADMIN</span>
+                            <span th:case="'ROLE_ADMIN'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-[#DC2626]/20 text-[#FCA5A5] border-[#DC2626]/30" th:text="${usuario.perfil}">ROLE_ADMIN</span>
+                            <span th:case="'ROLE_ORGANIZADOR'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-[#00457C]/20 text-[#93C5FD] border-[#00457C]/30" th:text="${usuario.perfil}">ROLE_ORGANIZADOR</span>
+                            <span th:case="'ROLE_PARTICIPANTE'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-[#008A4B]/20 text-[#86EFAC] border-[#008A4B]/30" th:text="${usuario.perfil}">ROLE_PARTICIPANTE</span>
+                            <span th:case="'ROLE_AVALIADOR'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-[#7C3AED]/20 text-[#C4B5FD] border-[#7C3AED]/30" th:text="${usuario.perfil}">ROLE_AVALIADOR</span>
+                            <span th:case="*" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-[#334155] text-[#94A3B8] border-[#475569]/30" th:text="${usuario.perfil}">PARTICIPANTE</span>
+                        </span>
                     </td>
                     <td class="px-6 py-4">
-                        <span th:class="'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ' +
-                              (usuario.ativo ? 'bg-[#008A4B]/20 text-[#86EFAC] border-[#008A4B]/30' : 'bg-[#334155] text-[#94A3B8] border-[#475569]/30')"
-                              th:text="${usuario.ativo ? 'Ativo' : 'Inativo'}">Ativo</span>
+                        <span th:if="${usuario.ativo}" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-[#008A4B]/20 text-[#86EFAC] border-[#008A4B]/30" th:text="'Ativo'">Ativo</span>
+                        <span th:unless="${usuario.ativo}" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-[#334155] text-[#94A3B8] border-[#475569]/30" th:text="'Inativo'">Inativo</span>
                     </td>
                     <td class="px-6 py-4 text-[#94A3B8]" th:text="${#temporals.format(usuario.dataCriacao, 'dd/MM/yyyy HH:mm')}">01/01/2026</td>
                     <td class="px-6 py-4 text-right">
