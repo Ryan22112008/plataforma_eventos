@@ -135,9 +135,8 @@
          class="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert"
          th:text="${erroSolicitacaoOrganizador}"></div>
 
-    <a sec:authorize="hasRole('PARTICIPANTE')" th:if="${not solicitacaoOrganizadorPendente}"
-       th:href="@{/participante/solicitar-organizador}"
-       class="organizer-access-callout mb-8 no-underline">
+    <div sec:authorize="hasRole('PARTICIPANTE')" th:if="${not solicitacaoOrganizadorPendente}"
+         class="organizer-access-callout mb-8">
         <div class="organizer-access-copy">
             <span class="organizer-access-icon" aria-hidden="true"><i class="fa-solid fa-chalkboard-user"></i></span>
             <div>
@@ -145,10 +144,7 @@
                 <p class="organizer-access-description">Solicite acesso de organizador. A administração precisa aprovar o perfil.</p>
             </div>
         </div>
-        <span class="organizer-access-button">
-            Solicitar acesso <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-        </span>
-    </a>
+    </div>
 
     <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-200 pb-5 mb-8">
         <div>
