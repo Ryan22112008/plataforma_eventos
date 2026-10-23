@@ -42,6 +42,9 @@ public class SolicitacaoOrganizador {
     @Column(name = "justificativa", nullable = false, length = 1000)
     private String justificativa;
 
+    @Column(name = "orgao", nullable = true, length = 100)
+    private String orgao;
+
     private LocalDateTime dataSolicitacao = LocalDateTime.now();
 
     @Enumerated(EnumType.STRING)
@@ -50,13 +53,14 @@ public class SolicitacaoOrganizador {
 
     /**
      * Identifica registros legados (criados antes da Etapa 3) que não possuem
-     * os quatro campos obrigatórios preenchidos. Não remove nemrelaxa as validações
+     * os cinco campos obrigatórios preenchidos. Não remove nemrelaxa as validações
      * @NotBlank; apenas permite detectar quem precisa de backfill/correção antes da aprovação.
      */
     public boolean isDadosIncompletos() {
         return nomeCompleto == null || nomeCompleto.isBlank()
                 || matricula == null || matricula.isBlank()
                 || emailInstitucional == null || emailInstitucional.isBlank()
-                || justificativa == null || justificativa.isBlank();
+                || justificativa == null || justificativa.isBlank()
+                || orgao == null || orgao.isBlank();
     }
 }

@@ -102,6 +102,7 @@ public class SuperAdminSolicitacaoController {
                                           @RequestParam String matricula,
                                           @RequestParam String emailInstitucional,
                                           @RequestParam String justificativa,
+                                           @RequestParam String orgao,
                                           RedirectAttributes attributes) {
         SolicitacaoOrganizador solicitacao = solicitacaoRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Solicitação não encontrada"));

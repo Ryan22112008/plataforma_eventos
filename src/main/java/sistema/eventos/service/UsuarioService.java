@@ -213,6 +213,7 @@ public class UsuarioService {
         solicitacao.setMatricula(dto.getMatricula().trim());
         solicitacao.setEmailInstitucional(dto.getEmailInstitucional().trim().toLowerCase(Locale.ROOT));
         solicitacao.setJustificativa(dto.getJustificativa().trim());
+        solicitacao.setOrgao(dto.getOrgao().trim());
         solicitacao.setStatus(StatusSolicitacao.PENDENTE);
         solicitacao.setDataSolicitacao(LocalDateTime.now());
         solicitacaoRepository.save(solicitacao);

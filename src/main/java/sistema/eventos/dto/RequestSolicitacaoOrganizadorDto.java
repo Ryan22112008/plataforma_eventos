@@ -30,4 +30,8 @@ public class RequestSolicitacaoOrganizadorDto {
     @NotBlank(message = "A justificativa é obrigatória.")
     @Size(max = 1000, message = "A justificativa não pode exceder 1000 caracteres.")
     private String justificativa;
+
+    @NotBlank(message = "O órgão é obrigatório.")
+    @Size(max = 100, message = "O órgão não pode exceder 100 caracteres.")
+    private String orgao;
 }
