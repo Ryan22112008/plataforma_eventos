@@ -91,8 +91,89 @@
         @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
     </style>
     <link rel="stylesheet" th:href="@{/css/seplag-ui.css}">
+    <style>
+        /* Page-specific product styling; overrides the shared theme without affecting other views. */
+        body.events-page { color: #eef4f8 !important; background: #081a2a !important; color-scheme: dark; }
+        body.events-page .site-header { background: rgba(7,22,37,.95) !important; border-bottom: 1px solid rgba(174,202,225,.13) !important; box-shadow: 0 8px 24px rgba(0,0,0,.15) !important; backdrop-filter: blur(14px); }
+        body.events-page .brand-name { color: #fff !important; }
+        body.events-page .brand-region { color: #adbdcb !important; }
+        body.events-page .nav-link { color: #c5d2de !important; }
+        body.events-page .nav-link:hover, body.events-page .nav-link-active { color: #fff !important; }
+        body.events-page .header-actions .user-name { color: #b7c7d6 !important; }
+        body.events-page .hero { background: radial-gradient(ellipse at 50% 0%,rgba(35,83,122,.30),transparent 54%),linear-gradient(180deg,#0b2540,#0a2037) !important; border-color: rgba(174,202,225,.09) !important; }
+        body.events-page .hero h1 { color: #f7f9fc !important; letter-spacing: -.045em; }
+        body.events-page .hero h1 span { color: #9fc8e7 !important; }
+        body.events-page .hero-kicker { color: #9dc7e8 !important; }
+        body.events-page .hero p { color: #c1d0dd !important; }
+        body.events-page .search-panel { max-width: 1050px; background: #112c46 !important; border: 1px solid rgba(179,207,231,.18) !important; border-radius: 13px !important; box-shadow: 0 18px 44px rgba(0,0,0,.22) !important; }
+        body.events-page .search-panel label { color: #b8cad9 !important; }
+        body.events-page .search-panel .search-control { background: #0b2034 !important; border-color: rgba(179,207,231,.17) !important; }
+        body.events-page .search-panel .search-control:focus-within { border-color: rgba(130,184,224,.72) !important; box-shadow: 0 0 0 3px rgba(99,155,199,.13) !important; }
+        body.events-page .search-panel input:not([type=checkbox]):not([type=radio]):not([type=file]),
+        body.events-page .search-panel select { min-height: 46px !important; padding: 0 2px !important; color: #f2f6fa !important; background: transparent !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
+        body.events-page .search-panel input::placeholder { color: #8da3b8 !important; }
+        body.events-page .search-panel option { color: #f2f6fa; background: #102a43; }
+        body.events-page .primary-button { color: #fff !important; background: #118458 !important; border-color: rgba(130,225,180,.18) !important; }
+        body.events-page .primary-button:hover { background: #0d704a !important; }
+        body.events-page main.event-catalog { max-width: none !important; padding: 58px 0 76px !important; color: #eef4f8 !important; background: radial-gradient(ellipse at 50% 0%,rgba(29,61,88,.2),transparent 52%),#0c2237 !important; }
+        body.events-page .catalog-area { background: transparent !important; color: #eef4f8 !important; }
+        body.events-page main.event-catalog h2, body.events-page main.event-catalog h3 { color: #f1f5f9 !important; }
+        body.events-page main.event-catalog p { color: #aebfd0 !important; }
+        body.events-page .notice-pending { max-width: 920px; background: rgba(18,43,65,.74) !important; border: 1px solid rgba(216,183,91,.18) !important; border-left: 2px solid #d8b75b !important; border-radius: 10px !important; box-shadow: none !important; }
+        body.events-page .notice-pending > span { color: #e5c979 !important; background: rgba(216,183,91,.11) !important; }
+        body.events-page .notice-pending p:first-child { color: #f1f5f8 !important; }
+        body.events-page .notice-pending p:nth-child(2) { color: #e0c46f !important; }
+        body.events-page .notice-pending p:nth-child(3) { color: #aebfd0 !important; }
+        body.events-page .event-grid { gap: 20px; }
+        body.events-page .event-card { min-width: 0; background: linear-gradient(155deg,#122d47,#10283f) !important; border: 1px solid rgba(174,202,225,.14) !important; border-radius: 11px !important; box-shadow: 0 6px 18px rgba(2,11,20,.13) !important; transition: transform .2s,border-color .2s,box-shadow .2s; }
+        body.events-page .event-card:hover { border-color: rgba(130,184,224,.36) !important; box-shadow: 0 15px 30px rgba(2,11,20,.25) !important; transform: translateY(-3px); }
+        body.events-page .event-image { aspect-ratio: 16 / 9; background: #0b2034 !important; border-color: rgba(174,202,225,.12) !important; }
+        body.events-page .event-title { color: #f2f6fa !important; }
+        body.events-page .event-category { margin: 0 0 7px; color: #91c4e9 !important; font-size: .62rem; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
+        body.events-page .event-card p, body.events-page .event-card span { color: #a8bbcc !important; }
+        body.events-page .event-card .event-category { color: #91c4e9 !important; }
+        body.events-page .event-card .event-image span { color: #fff !important; }
+        body.events-page .event-card .event-image span i { color: inherit !important; }
+        body.events-page .event-card .event-image div { color: #7892a8 !important; background: linear-gradient(145deg,#183650,#0c2237) !important; }
+        body.events-page .event-card .event-image div i { color: #7892a8 !important; }
+        body.events-page .event-card a { color: #f6f9fb !important; background: rgba(42,91,130,.54) !important; border: 1px solid rgba(132,179,216,.2); }
+        body.events-page .event-card a:hover { color: #fff !important; background: #1b527b !important; }
+        body.events-page .event-grid-single { grid-template-columns: minmax(0,1fr); }
+        body.events-page .event-grid-single .event-card { display: grid; grid-template-columns: minmax(320px,.95fr) minmax(0,1.05fr); min-height: 330px; }
+        body.events-page .event-grid-single .event-image { height: 100%; min-height: 100%; aspect-ratio: auto; border-right: 1px solid rgba(174,202,225,.14); border-bottom: 0; }
+        body.events-page .event-grid-single .event-card > div:nth-child(2) { padding: clamp(22px,4vw,42px); }
+        body.events-page .event-grid-single .event-title { font-size: clamp(1.15rem,2.2vw,1.55rem); }
+        body.events-page .event-grid-single .event-card p { max-width: 620px; line-height: 1.75; }
+        body.events-page main.event-catalog [class~="bg-white"] { background: #112b42 !important; border-color: rgba(174,202,225,.15) !important; box-shadow: none !important; }
+        body.events-page main.event-catalog [class*="bg-emerald-50"] { color: #b7e6ce !important; background: rgba(20,92,60,.24) !important; border-color: rgba(98,179,133,.35) !important; }
+        body.events-page main.event-catalog [class*="bg-red-50"] { color: #f0c2c5 !important; background: rgba(123,42,49,.23) !important; border-color: rgba(200,108,115,.36) !important; }
+        body.events-page .site-footer { color: #aebfcd !important; background: #071625 !important; border-top: 1px solid rgba(174,202,225,.13) !important; }
+        body.events-page .site-footer h4 { color: #edf3f7 !important; }
+        body.events-page .site-footer p { color: #91a6b8 !important; }
+        @media (max-width: 900px) { body.events-page .event-grid-single .event-card { grid-template-columns: minmax(270px,.9fr) minmax(0,1.1fr); } }
+        @media (max-width: 639px) {
+            body.events-page main.event-catalog { padding: 39px 0 54px !important; }
+            body.events-page .event-grid { grid-template-columns: minmax(0,1fr); gap: 15px; }
+            body.events-page .event-grid-single .event-card { display: flex; min-height: 0; }
+            body.events-page .event-grid-single .event-image { width: 100%; min-height: 0; aspect-ratio: 16 / 9; border-right: 0; border-bottom: 1px solid rgba(174,202,225,.14); }
+            body.events-page .event-grid-single .event-card > div:nth-child(2) { padding: 17px; }
+            body.events-page .event-grid-single .event-title { font-size: 1rem; }
+            body.events-page .section-heading { align-items: flex-start; }
+        }
+        body.events-page .section-tools { display: flex; align-items: center; gap: 10px; }
+        body.events-page .organizer-access-callout {
+            display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 11px;
+            color: #e5f5ec !important; background: rgba(17,132,88,.16) !important;
+            border: 1px solid rgba(91,190,143,.32) !important; border-radius: 7px !important;
+            box-shadow: none !important; font-size: .7rem; font-weight: 600; text-decoration: none;
+            transition: background .18s, border-color .18s;
+        }
+        body.events-page .organizer-access-callout:hover { color: #fff !important; background: rgba(17,132,88,.3) !important; border-color: rgba(91,190,143,.5) !important; }
+        @media (max-width: 639px) { body.events-page .section-tools { align-items: flex-end; flex-direction: column-reverse; gap: 8px; } }
+        @media (prefers-reduced-motion: reduce) { body.events-page *, body.events-page *:before, body.events-page *:after { transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+    </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="events-page min-h-screen flex flex-col">
 
 
 <header class="site-header sticky top-0 z-50">
@@ -128,12 +209,6 @@
 
             <div sec:authorize="isAuthenticated()" class="flex items-center gap-3 flex-wrap">
                 <span class="user-name text-xs">Olá, <strong class="text-white" sec:authentication="name">Usuário</strong></span>
-                <a sec:authorize="hasRole('PARTICIPANTE')"
-                   th:href="@{/participante/solicitar-organizador}"
-                   th:if="${solicitacaoOrganizadorPendente == false}"
-                   class="primary-button text-sm font-semibold text-white px-3 py-2 rounded-lg focus-ring">
-                    <i class="fa-solid fa-user-plus mr-1"></i> Solicitar Organizador
-                </a>
                 <form th:action="@{/logout}" method="post" class="inline-flex">
                     <button type="submit" class="text-slate-300 hover:text-white w-9 h-9 rounded-lg hover:bg-white/10 transition-colors" title="Sair do Sistema" aria-label="Sair do Sistema">
                         <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
@@ -146,9 +221,9 @@
 
 <section class="hero px-4 relative">
     <div class="hero-inner max-w-7xl mx-auto text-center">
-        <span class="hero-kicker text-[11px] font-semibold uppercase mb-4">Plataforma unificada de aprendizagem</span>
-        <h1 class="text-3xl sm:text-4xl lg:text-[2.7rem] font-semibold tracking-tight leading-tight mb-3">Cursos e capacitações SEPLAG-MT</h1>
-        <p class="text-slate-200 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">Encontre oportunidades de aprendizagem, participe de eventos e acompanhe suas capacitações em um só lugar.</p>
+        <span class="hero-kicker text-[11px] font-semibold uppercase mb-4">Plataforma de capacitação</span>
+        <h1 class="text-3xl sm:text-4xl lg:text-[2.7rem] font-semibold tracking-tight leading-tight mb-3">Capacitação que transforma.</h1>
+        <p class="text-slate-200 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">Encontre cursos, eventos e oportunidades de aprendizagem da SEPLAG-MT.</p>
     </div>
 </section>
 
@@ -223,11 +298,19 @@
 
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-slate-200 pb-5 mb-7">
         <div>
-            <p class="text-[11px] font-semibold tracking-[.14em] uppercase text-[#08784a] mb-1">Explore oportunidades</p>
-            <h2 class="text-2xl font-semibold text-[#092943] tracking-tight">Cursos disponíveis</h2>
-            <p class="text-sm text-slate-600 mt-1">Cursos e eventos com inscrições abertas.</p>
+            <p class="text-[11px] font-semibold tracking-[.14em] uppercase text-[#08784a] mb-1">Oportunidades</p>
+            <h2 class="text-2xl font-semibold text-[#092943] tracking-tight">Explore nossos cursos</h2>
+            <p class="text-sm text-slate-600 mt-1">Capacitações e eventos disponíveis para você.</p>
         </div>
-        <span class="text-xs text-slate-500 font-medium bg-white border border-slate-200 rounded-full px-3 py-1.5 w-fit" th:text="${'Total: ' + (eventos != null ? eventos.size() : 0) + ' cadastrados'}">Total: 0</span>
+        <div class="section-tools">
+            <a sec:authorize="hasRole('PARTICIPANTE')"
+               th:href="@{/participante/solicitar-organizador}"
+               th:if="${solicitacaoOrganizadorPendente == false}"
+               class="organizer-access-callout organizer-access-button">
+                <i class="fa-solid fa-user-plus" aria-hidden="true"></i><span>Solicitar Organizador</span>
+            </a>
+            <span class="text-xs text-slate-500 font-medium bg-white border border-slate-200 rounded-full px-3 py-1.5 w-fit" th:text="${'Total: ' + (eventos != null ? eventos.size() : 0) + ' cadastrados'}">Total: 0</span>
+        </div>
     </div>
 
     <div th:if="${eventos == null or eventos.isEmpty()}" class="bg-white rounded-2xl p-9 text-center border border-slate-200 shadow-sm max-w-lg mx-auto">
@@ -258,13 +341,14 @@
 
             <div class="p-4 sm:p-5 flex-grow flex flex-col justify-between">
                 <div>
+                    <p th:if="${evento.nicho != null}" class="event-category" th:text="${evento.nicho}">Categoria</p>
                     <h3 class="event-title font-semibold text-base tracking-tight line-clamp-2 min-h-[3rem] group-hover:text-[#00457C] transition-colors" th:text="${evento.titulo}">Título</h3>
                     <div class="mt-3 flex items-center text-xs text-slate-500 gap-2">
                         <i class="fa-regular fa-calendar text-[#00457C]"></i>
                         <span th:text="${#temporals.format(evento.dataInicio, 'dd/MM/yyyy') + ' - ' + #temporals.format(evento.dataTermino, 'dd/MM/yyyy')}">Data</span>
                     </div>
                     <div class="mt-2 flex items-center text-xs text-slate-500 gap-2">
-                        <i class="fa-solid fa-location-dot text-[#00457C]" aria-hidden="true"></i>
+                        <i class="fa-solid fa-display text-[#00457C]" aria-hidden="true"></i>
                         <span th:text="${evento.modalidade}">Modalidade</span>
                     </div>
                     <p class="text-xs text-slate-600 mt-3 line-clamp-3 leading-relaxed" th:text="${evento.descricao}">Descrição</p>
