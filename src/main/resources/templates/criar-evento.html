@@ -1,338 +1,403 @@
 <!DOCTYPE html>
-<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Novo Evento | Portal SEPLAG-MT</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .leaflet-container { z-index: 1; }
-        .glass-modal { backdrop-filter: blur(4px); background-color: rgba(0, 0, 0, 0.4); }
-
-        /* Estilização da barra de rolagem das recomendações */
-        .suggestions-scrollbar::-webkit-scrollbar { width: 6px; }
-        .suggestions-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
-        .suggestions-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-    </style>
-    <link rel="stylesheet" th:href="@{/css/seplag-ui.css}">
+    <th:block th:replace="~{fragments/seplag-ui :: head-content(${eventoDto.id != null} ? 'Editar Evento' : 'Novo Evento')}"></th:block>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 </head>
-<body class="bg-[#F4F6F9] min-h-screen flex flex-col">
+<body class="v2 seplag-shell">
 
-<nav class="bg-[#00457C] text-white shadow-md px-6 py-4 flex justify-between items-center border-b-4 border-[#FDB813]">
-    <div class="flex items-center space-x-3">
-        <img th:src="@{/images/logo-seplag-branco.png}" alt="Logo SEPLAG-MT" class="h-10 w-auto object-contain">
-        <span class="font-semibold text-lg tracking-wide">Painel do Organizador</span>
-    </div>
-    <a th:href="@{/organizador/painel}" class="text-sm bg-[#00335c] hover:bg-[#002240] px-4 py-2 rounded-md transition-colors">
-        <i class="fa-solid fa-arrow-left mr-2"></i> Voltar ao Painel
-    </a>
-</nav>
+<a class="seplag-skip-link" href="#conteudo">Ir para o conteúdo</a>
 
-<main class="max-w-2xl mx-auto w-full mt-10 px-4 flex-grow mb-10">
-    <div class="bg-white py-8 px-6 shadow sm:rounded-xl border border-gray-200">
+<div class="seplag-drawer-backdrop" data-seplag-backdrop aria-hidden="true"></div>
 
-        <div class="mb-6 border-b border-gray-100 pb-4">
-            <h2 class="text-2xl font-bold text-[#00457C]">
-                <i class="fa-solid fa-circle-plus mr-2"></i>
-                <span th:text="${eventoDto.id != null} ? 'Editar Detalhes do Evento' : 'Cadastrar Novo Evento'">Cadastrar Novo Evento</span>
-            </h2>
-            <p class="text-sm text-gray-500 mt-1" th:text="${eventoDto.id != null} ? 'Altere as informações necessárias e publique as atualizações.' : 'Preencha as informações para publicar o evento na vitrine oficial.'"></p>
+<aside th:replace="~{fragments/seplag-ui :: sidebar('novo-evento')}"></aside>
+
+<div class="seplag-main">
+
+    <header th:replace="~{fragments/seplag-ui :: topbar('Gestão de eventos', 'Organizador')}"></header>
+
+    <main class="seplag-content" id="conteudo">
+
+        <nav class="seplag-breadcrumb" aria-label="Trilha de navegação">
+            <ol>
+                <li><a th:href="@{/organizador/painel}">Painel do organizador</a></li>
+                <li aria-current="page"
+                    th:text="${eventoDto.id != null} ? 'Editar evento' : 'Novo evento'">Novo evento</li>
+            </ol>
+        </nav>
+
+        <div class="seplag-page-head">
+            <div class="seplag-page-head__copy">
+                <p class="seplag-eyebrow">Organizador</p>
+                <h1 th:text="${eventoDto.id != null} ? 'Editar Detalhes do Evento' : 'Cadastrar Novo Evento'">Cadastrar Novo Evento</h1>
+                <p th:text="${eventoDto.id != null} ? 'Altere as informações necessárias e publique as atualizações.' : 'Preencha as informações para publicar o evento na vitrine oficial.'"></p>
+            </div>
+
+            <a th:href="@{/organizador/painel}" class="seplag-btn seplag-btn-secondary">
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                Voltar ao painel
+            </a>
         </div>
 
-        <div th:if="${erroNegocio}" class="mb-5 bg-red-50 border-l-4 border-red-500 p-4 rounded text-sm text-red-700">
-            <i class="fa-solid fa-triangle-exclamation mr-2"></i> <span th:text="${erroNegocio}">Erro</span>
+        <div th:if="${erroNegocio}" class="seplag-flash">
+            <div class="seplag-alert seplag-alert--error" role="alert">
+                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                <span th:text="${erroNegocio}">Erro</span>
+            </div>
         </div>
 
         <form th:action="${eventoDto.id != null} ? @{/organizador/evento/editar/{id}(id=${eventoDto.id})} : @{/organizador/evento/novo}"
               th:object="${eventoDto}"
               method="POST"
               enctype="multipart/form-data"
-              class="space-y-5">
+              class="seplag-form">
 
             <input type="hidden" th:field="*{latitude}" id="latitude">
             <input type="hidden" th:field="*{longitude}" id="longitude">
             <input type="hidden" id="totalDisciplinasSalvas" th:value="${eventoDto.disciplinas != null ? eventoDto.disciplinas.size() : 0}">
 
-            <div>
-                <label for="titulo" class="block text-sm font-medium text-gray-700">Título do Evento</label>
-                <input type="text" th:field="*{titulo}" id="titulo"
-                       th:classappend="${#fields.hasErrors('titulo')} ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-[#00457C] focus:border-[#00457C]'"
-                       class="mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 bg-transparent" placeholder="Ex: I Congresso de Gestão Pública de MT">
-                <p th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}" class="mt-1 text-xs text-red-600 font-medium"></p>
-            </div>
-
-            <div>
-                <label for="descricao" class="block text-sm font-medium text-gray-700">Descrição Completa</label>
-                <textarea th:field="*{descricao}" id="descricao" rows="4"
-                          th:classappend="${#fields.hasErrors('descricao')} ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-[#00457C] focus:border-[#00457C]'"
-                          class="mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 bg-transparent" placeholder="Detalhes sobre cronograma..."></textarea>
-                <p th:if="${#fields.hasErrors('descricao')}" th:errors="*{descricao}" class="mt-1 text-xs text-red-600 font-medium"></p>
-            </div>
-
-            <!-- 1. BLOCO DO BANNER (ISOLADO) -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Banner de Identidade Visual</label>
-                <div th:if="${eventoDto.bannerAtual != null}" class="current-image-preview">
-                    <img th:src="${#strings.startsWith(eventoDto.bannerAtual, 'https://res.cloudinary.com/') ? eventoDto.bannerAtual : '/imagens-eventos/' + eventoDto.bannerAtual}" alt="Banner atualmente salvo"
-                         onerror="this.hidden=true; this.nextElementSibling.classList.remove('hidden')">
-                    <p class="hidden current-image-missing">O arquivo atual não está disponível no armazenamento. Envie o banner novamente.</p>
-                    <p>Banner atual. Selecione outro somente para substituí-lo.</p>
+            <!-- Identificação do evento -->
+            <section class="seplag-card seplag-form-card" aria-labelledby="secao-identificacao">
+                <div class="seplag-card__header">
+                    <div>
+                        <h2 class="seplag-card__title" id="secao-identificacao">Identificação do evento</h2>
+                        <p class="seplag-card__hint">Informações que aparecem para o participante na vitrine.</p>
+                    </div>
                 </div>
-                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-[#00457C] transition-colors bg-white">
-                    <div class="space-y-1 text-center">
-                        <i class="fa-solid fa-image mx-auto h-12 w-12 text-gray-400 text-4xl block mb-2"></i>
-                        <div class="flex text-sm text-gray-600 justify-center">
-                            <label for="bannerInput" class="relative cursor-pointer bg-white rounded-md font-semibold text-[#00457C] hover:text-[#00335c] focus-within:outline-none">
-                                <span>Faça upload do banner</span>
-                                <input id="bannerInput" name="banner" type="file" accept="image/*" class="sr-only" onchange="exibirNomeArquivo(this)">
+
+                <div class="seplag-card__body">
+                    <div class="seplag-field">
+                        <label for="titulo" class="seplag-label">
+                            Título do Evento <span class="seplag-req" aria-hidden="true">*</span>
+                        </label>
+                        <input type="text" th:field="*{titulo}" id="titulo"
+                               th:classappend="${#fields.hasErrors('titulo')} ? 'is-invalid' : ''"
+                               th:attr="aria-invalid=${#fields.hasErrors('titulo')} ? 'true' : null,aria-describedby=${#fields.hasErrors('titulo')} ? 'titulo-erro' : null"
+                               class="seplag-input" placeholder="Ex: I Congresso de Gestão Pública de MT">
+                        <p th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}" id="titulo-erro" class="seplag-field__error"></p>
+                    </div>
+
+                    <div class="seplag-field">
+                        <label for="descricao" class="seplag-label">
+                            Descrição Completa <span class="seplag-req" aria-hidden="true">*</span>
+                        </label>
+                        <textarea th:field="*{descricao}" id="descricao" rows="4"
+                                  th:classappend="${#fields.hasErrors('descricao')} ? 'is-invalid' : ''"
+                                  th:attr="aria-invalid=${#fields.hasErrors('descricao')} ? 'true' : null,aria-describedby=${#fields.hasErrors('descricao')} ? 'descricao-erro' : null"
+                                  class="seplag-input seplag-textarea" placeholder="Detalhes sobre cronograma, público-alvo e conteúdo do evento."></textarea>
+                        <p th:if="${#fields.hasErrors('descricao')}" th:errors="*{descricao}" id="descricao-erro" class="seplag-field__error"></p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Programação, classificação e local -->
+            <section class="seplag-card seplag-form-card seplag-card--overflow" aria-labelledby="secao-programacao">
+                <div class="seplag-card__header">
+                    <div>
+                        <h2 class="seplag-card__title" id="secao-programacao">Programação e local</h2>
+                        <p class="seplag-card__hint">Datas, modalidade, carga horária e local de realização.</p>
+                    </div>
+                </div>
+
+                <div class="seplag-card__body">
+                    <div class="seplag-form-grid seplag-form-grid--2">
+                        <div class="seplag-field">
+                            <label for="dataInicio" class="seplag-label">
+                                Data de Início <span class="seplag-req" aria-hidden="true">*</span>
                             </label>
+                            <input type="date" name="dataInicio" id="dataInicio" required
+                                   th:value="${eventoDto.dataInicio != null ? #temporals.format(eventoDto.dataInicio, 'yyyy-MM-dd') : ''}"
+                                   th:classappend="${#fields.hasErrors('dataInicio')} ? 'is-invalid' : ''"
+                                   th:attr="aria-invalid=${#fields.hasErrors('dataInicio')} ? 'true' : null,aria-describedby=${#fields.hasErrors('dataInicio')} ? 'dataInicio-erro' : null"
+                                   class="seplag-input">
+                            <p th:if="${#fields.hasErrors('dataInicio')}" th:errors="*{dataInicio}" id="dataInicio-erro" class="seplag-field__error"></p>
                         </div>
-                        <p class="text-xs text-gray-500">PNG, JPG ou foto baixada (conversão automática) · até 10 MB · recomendado: 1600 × 600 px</p>
-                        <p id="erroBanner" class="hidden text-xs font-semibold text-red-600 mt-2" role="alert"></p>
-                        <p id="labelNomeArquivo" class="text-xs font-semibold text-[#008A4B] mt-2 hidden">
-                            <i class="fa-solid fa-circle-check mr-1"></i> <span id="textoNomeArquivo"></span>
-                        </p>
-                    </div>
-                </div>
-            </div>
 
-            <!-- 2. BLOCO DO CERTIFICADO (LOGOS ABAIXO E SEPARADO) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Layout do Certificado (Frente)</label>
-                    <div th:if="${eventoDto.imagemFrenteAtual != null and !eventoDto.imagemFrenteAtual.startsWith('default-')}" class="current-image-preview">
-                        <img th:src="${#strings.startsWith(eventoDto.imagemFrenteAtual, 'https://res.cloudinary.com/') ? eventoDto.imagemFrenteAtual : '/imagens-eventos/' + eventoDto.imagemFrenteAtual}" alt="Frente do certificado atualmente salva"
-                             onerror="this.hidden=true; this.nextElementSibling.classList.remove('hidden')">
-                        <p class="hidden current-image-missing">A arte atual não está disponível no armazenamento. Envie-a novamente.</p>
-                        <p>Arte atual. Selecione outra somente para substituí-la.</p>
+                        <div class="seplag-field">
+                            <label for="dataTermino" class="seplag-label">
+                                Data de Término <span class="seplag-req" aria-hidden="true">*</span>
+                            </label>
+                            <input type="date" name="dataTermino" id="dataTermino" required
+                                   th:value="${eventoDto.dataTermino != null ? #temporals.format(eventoDto.dataTermino, 'yyyy-MM-dd') : ''}"
+                                   th:classappend="${#fields.hasErrors('dataTermino')} ? 'is-invalid' : ''"
+                                   th:attr="aria-invalid=${#fields.hasErrors('dataTermino')} ? 'true' : null,aria-describedby=${#fields.hasErrors('dataTermino')} ? 'dataTermino-erro' : null"
+                                   class="seplag-input">
+                            <p th:if="${#fields.hasErrors('dataTermino')}" th:errors="*{dataTermino}" id="dataTermino-erro" class="seplag-field__error"></p>
+                        </div>
                     </div>
-                    <div class="mt-1 flex justify-center px-4 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-[#00457C] transition-colors bg-white">
-                        <div class="space-y-1 text-center">
-                            <i class="fa-solid fa-graduation-cap mx-auto h-10 w-10 text-gray-400 text-3xl block mb-1"></i>
-                            <div class="flex text-sm text-gray-600 justify-center">
-                                <label for="certificadoFrenteInput" class="relative cursor-pointer bg-white rounded-md font-semibold text-[#00457C] hover:text-[#00335c] focus-within:outline-none">
-                                    <span>Upload da Frente</span>
-                                    <input id="certificadoFrenteInput" name="imagemFrente" type="file" accept="image/*" class="sr-only" onchange="exibirNomeCertificadoFrente(this)">
-                                </label>
+
+                    <div class="seplag-form-grid seplag-form-grid--3">
+                        <div class="seplag-field">
+                            <label for="modalidade" class="seplag-label">Modalidade</label>
+                            <select th:field="*{modalidade}" id="modalidade" onchange="toggleMapsInput()" class="seplag-select">
+                                <option value="PRESENCIAL">Presencial</option>
+                                <option value="ONLINE">Online / Remoto</option>
+                                <option value="HIBRIDO">Híbrido</option>
+                            </select>
+                        </div>
+
+                        <div class="seplag-field">
+                            <label for="nicho" class="seplag-label">
+                                Área / Nicho <span class="seplag-req" aria-hidden="true">*</span>
+                            </label>
+                            <div class="niche-picker" id="nichePicker">
+                                <input type="text" th:field="*{nicho}" id="nicho" placeholder="Selecione uma área"
+                                       autocomplete="off" readonly required aria-haspopup="listbox" aria-expanded="false" aria-controls="nichoOptions"
+                                       th:classappend="${#fields.hasErrors('nicho')} ? 'is-invalid' : ''"
+                                       th:attr="aria-invalid=${#fields.hasErrors('nicho')} ? 'true' : null,aria-describedby=${#fields.hasErrors('nicho')} ? 'nicho-erro' : null"
+                                       class="seplag-input">
+                                <i class="fa-solid fa-chevron-down niche-picker-chevron" aria-hidden="true"></i>
+                                <div class="niche-picker-options" id="nichoOptions" role="listbox" aria-label="Áreas disponíveis" hidden>
+                                    <button type="button" class="niche-picker-option" role="option" data-value="TECNOLOGIA" data-label="Tecnologia">Tecnologia</button>
+                                    <button type="button" class="niche-picker-option" role="option" data-value="TECNOLOGIA_E_INOVACAO" data-label="Tecnologia e Inovação">Tecnologia e Inovação</button>
+                                    <button type="button" class="niche-picker-option" role="option" data-value="GESTAO_PUBLICA" data-label="Gestão Pública">Gestão Pública</button>
+                                    <button type="button" class="niche-picker-option" role="option" data-value="SAUDE" data-label="Saúde">Saúde</button>
+                                    <button type="button" class="niche-picker-option" role="option" data-value="OUTROS" data-label="Outros">Outros</button>
+                                </div>
                             </div>
-                            <p class="text-[11px] text-gray-400">Pág. 1 · imagem até 10 MB · recomendado: 3508 × 2480 px (A4, 300 DPI)</p>
-                            <p id="erroCertificadoFrente" class="hidden text-xs font-semibold text-red-600 mt-2" role="alert"></p>
-                            <p id="labelNomeCertificadoFrente" class="text-xs font-semibold text-[#008A4B] mt-2 hidden">
-                                <i class="fa-solid fa-circle-check mr-1"></i> <span id="textoNomeCertificadoFrente"></span>
+                            <p th:if="${#fields.hasErrors('nicho')}" th:errors="*{nicho}" id="nicho-erro" class="seplag-field__error"></p>
+                        </div>
+
+                        <div class="seplag-field">
+                            <label for="cargaHoraria" class="seplag-label">
+                                Carga Horária (em horas) <span class="seplag-req" aria-hidden="true">*</span>
+                            </label>
+                            <input type="number" th:field="*{cargaHoraria}" id="cargaHoraria" min="1" required
+                                   th:classappend="${#fields.hasErrors('cargaHoraria')} ? 'is-invalid' : ''"
+                                   th:attr="aria-invalid=${#fields.hasErrors('cargaHoraria')} ? 'true' : null,aria-describedby=${#fields.hasErrors('cargaHoraria')} ? 'cargaHoraria-erro' : null"
+                                   class="seplag-input" placeholder="Ex: 20">
+                            <p th:if="${#fields.hasErrors('cargaHoraria')}" th:errors="*{cargaHoraria}" id="cargaHoraria-erro" class="seplag-field__error"></p>
+                        </div>
+                    </div>
+
+                    <div id="containerLocalizacao" class="seplag-location-grid">
+                        <div class="seplag-field">
+                            <label for="vagasTotais" class="seplag-label">Vagas Totais</label>
+                            <input type="number" th:field="*{vagasTotais}" id="vagasTotais" class="seplag-input">
+                        </div>
+
+                        <div class="seplag-field">
+                            <label for="local" class="seplag-label">Local de Realização</label>
+                            <div class="seplag-local-picker">
+                                <input type="text" th:field="*{local}" id="local" readonly
+                                       class="seplag-input" placeholder="Nenhum local selecionado...">
+                                <button type="button" id="btnAbrirModal" onclick="abrirModal()"
+                                        class="seplag-btn seplag-btn-primary">
+                                    <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i>
+                                    Buscar Mapa
+                                </button>
+                            </div>
+                            <p class="seplag-form-note">
+                                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                                <span>Selecione o ponto no mapa para preencher latitude, longitude e o nome do local.</span>
                             </p>
                         </div>
                     </div>
                 </div>
+            </section>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Layout do Certificado (Verso)</label>
-                    <div th:if="${eventoDto.imagemVersoAtual != null and !eventoDto.imagemVersoAtual.startsWith('default-')}" class="current-image-preview">
-                        <img th:src="${#strings.startsWith(eventoDto.imagemVersoAtual, 'https://res.cloudinary.com/') ? eventoDto.imagemVersoAtual : '/imagens-eventos/' + eventoDto.imagemVersoAtual}" alt="Verso do certificado atualmente salvo"
-                             onerror="this.hidden=true; this.nextElementSibling.classList.remove('hidden')">
-                        <p class="hidden current-image-missing">A arte atual não está disponível no armazenamento. Envie-a novamente.</p>
-                        <p>Arte atual. Selecione outra somente para substituí-la.</p>
+            <!-- Imagens do evento e do certificado -->
+            <section class="seplag-card seplag-form-card" aria-labelledby="secao-imagens">
+                <div class="seplag-card__header">
+                    <div>
+                        <h2 class="seplag-card__title" id="secao-imagens">Imagens do evento</h2>
+                        <p class="seplag-card__hint">Banner da vitrine e artes usadas na emissão dos certificados.</p>
                     </div>
-                    <div class="mt-1 flex justify-center px-4 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-[#00457C] transition-colors bg-white">
-                        <div class="space-y-1 text-center">
-                            <i class="fa-solid fa-list-check mx-auto h-10 w-10 text-gray-400 text-3xl block mb-1"></i>
-                            <div class="flex text-sm text-gray-600 justify-center">
-                                <label for="certificadoVersoInput" class="relative cursor-pointer bg-white rounded-md font-semibold text-[#00457C] hover:text-[#00335c] focus-within:outline-none">
-                                    <span>Upload do Verso</span>
-                                    <input id="certificadoVersoInput" name="imagemVerso" type="file" accept="image/*" class="sr-only" onchange="exibirNomeCertificadoVerso(this)">
-                                </label>
-                            </div>
-                            <p class="text-[11px] text-gray-400">Pág. 2 · imagem até 10 MB · recomendado: 3508 × 2480 px (A4, 300 DPI)</p>
-                            <p id="erroCertificadoVerso" class="hidden text-xs font-semibold text-red-600 mt-2" role="alert"></p>
-                            <p id="labelNomeCertificadoVerso" class="text-xs font-semibold text-[#008A4B] mt-2 hidden">
-                                <i class="fa-solid fa-circle-check mr-1"></i> <span id="textoNomeCertificadoVerso"></span>
+                </div>
+
+                <div class="seplag-card__body">
+                    <div class="seplag-upload-block">
+                        <label class="seplag-label" for="bannerInput">Banner de Identidade Visual</label>
+
+                        <div th:if="${eventoDto.bannerAtual != null}" class="seplag-current">
+                            <img th:src="${#strings.startsWith(eventoDto.bannerAtual, 'https://res.cloudinary.com/') ? eventoDto.bannerAtual : '/imagens-eventos/' + eventoDto.bannerAtual}" alt="Banner atualmente salvo"
+                                 onerror="this.hidden=true; this.nextElementSibling.classList.remove('hidden')">
+                            <p class="hidden seplag-current__missing">O arquivo atual não está disponível no armazenamento. Envie o banner novamente.</p>
+                            <p>Banner atual. Selecione outro somente para substituí-lo.</p>
+                        </div>
+
+                        <div class="seplag-upload">
+                            <i class="fa-solid fa-image seplag-upload__icon" aria-hidden="true"></i>
+                            <label for="bannerInput" class="seplag-upload__label">Faça upload do banner</label>
+                            <input id="bannerInput" name="banner" type="file" accept="image/*" class="seplag-sr-only" onchange="exibirNomeArquivo(this)">
+                            <p class="seplag-upload__hint">PNG, JPG ou foto baixada (conversão automática) · até 10 MB · recomendado: 1600 × 600 px</p>
+                            <p id="erroBanner" class="hidden seplag-file-error" role="alert"></p>
+                            <p id="labelNomeArquivo" class="hidden seplag-file-ok">
+                                <i class="fa-solid fa-circle-check" aria-hidden="true"></i> <span id="textoNomeArquivo"></span>
                             </p>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- 3. GRID DE DATAS (CORRIGIDO FORA DAS CAIXAS DE UPLOAD) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label for="dataInicio" class="block text-sm font-medium text-gray-700">Data de Início</label>
-                    <input type="date" name="dataInicio" id="dataInicio" required
-                           th:value="${eventoDto.dataInicio != null ? #temporals.format(eventoDto.dataInicio, 'yyyy-MM-dd') : ''}"
-                           th:classappend="${#fields.hasErrors('dataInicio')} ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-[#00457C] focus:border-[#00457C]'"
-                           class="mt-1 block w-full rounded-md border px-3 py-2 text-sm bg-transparent">
-                    <p th:if="${#fields.hasErrors('dataInicio')}" th:errors="*{dataInicio}" class="mt-1 text-xs text-red-600 font-medium"></p>
-                </div>
-                <div>
-                    <label for="dataTermino" class="block text-sm font-medium text-gray-700">Data de Término</label>
-                    <input type="date" name="dataTermino" id="dataTermino" required
-                           th:value="${eventoDto.dataTermino != null ? #temporals.format(eventoDto.dataTermino, 'yyyy-MM-dd') : ''}"
-                           th:classappend="${#fields.hasErrors('dataTermino')} ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-[#00457C] focus:border-[#00457C]'"
-                           class="mt-1 block w-full rounded-md border px-3 py-2 text-sm bg-transparent">
-                    <p th:if="${#fields.hasErrors('dataTermino')}" th:errors="*{dataTermino}" class="mt-1 text-xs text-red-600 font-medium"></p>
-                </div>
-            </div>
+                    <div class="seplag-form-grid seplag-form-grid--2">
+                        <div class="seplag-upload-block">
+                            <label class="seplag-label" for="certificadoFrenteInput">Layout do Certificado (Frente)</label>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                    <label for="modalidade" class="block text-sm font-medium text-gray-700">Modalidade</label>
-                    <select th:field="*{modalidade}" id="modalidade" onchange="toggleMapsInput()" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-[#00457C] focus:border-[#00457C]">
-                        <option value="PRESENCIAL">Presencial</option>
-                        <option value="ONLINE">Online / Remoto</option>
-                        <option value="HIBRIDO">Híbrido</option>
-                    </select>
-                </div>
+                            <div th:if="${eventoDto.imagemFrenteAtual != null and !eventoDto.imagemFrenteAtual.startsWith('default-')}" class="seplag-current">
+                                <img th:src="${#strings.startsWith(eventoDto.imagemFrenteAtual, 'https://res.cloudinary.com/') ? eventoDto.imagemFrenteAtual : '/imagens-eventos/' + eventoDto.imagemFrenteAtual}" alt="Frente do certificado atualmente salva"
+                                     onerror="this.hidden=true; this.nextElementSibling.classList.remove('hidden')">
+                                <p class="hidden seplag-current__missing">A arte atual não está disponível no armazenamento. Envie-a novamente.</p>
+                                <p>Arte atual. Selecione outra somente para substituí-la.</p>
+                            </div>
 
-                <div>
-                    <label for="nicho" class="block text-sm font-medium text-gray-700">Área / Nicho</label>
-                    <div class="niche-picker mt-1" id="nichePicker">
-                        <input type="text" th:field="*{nicho}" id="nicho" placeholder="Selecione uma área"
-                               autocomplete="off" readonly required aria-haspopup="listbox" aria-expanded="false" aria-controls="nichoOptions"
-                               th:classappend="${#fields.hasErrors('nicho')} ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-[#00457C] focus:border-[#00457C]'"
-                               class="block w-full rounded-md border px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1">
-                        <i class="fa-solid fa-chevron-down niche-picker-chevron" aria-hidden="true"></i>
-                        <div class="niche-picker-options" id="nichoOptions" role="listbox" aria-label="Áreas disponíveis" hidden>
-                            <button type="button" class="niche-picker-option" role="option" data-value="TECNOLOGIA" data-label="Tecnologia">Tecnologia</button>
-                            <button type="button" class="niche-picker-option" role="option" data-value="TECNOLOGIA_E_INOVACAO" data-label="Tecnologia e Inovação">Tecnologia e Inovação</button>
-                            <button type="button" class="niche-picker-option" role="option" data-value="GESTAO_PUBLICA" data-label="Gestão Pública">Gestão Pública</button>
-                            <button type="button" class="niche-picker-option" role="option" data-value="SAUDE" data-label="Saúde">Saúde</button>
-                            <button type="button" class="niche-picker-option" role="option" data-value="OUTROS" data-label="Outros">Outros</button>
+                            <div class="seplag-upload">
+                                <i class="fa-solid fa-graduation-cap seplag-upload__icon" aria-hidden="true"></i>
+                                <label for="certificadoFrenteInput" class="seplag-upload__label">Upload da Frente</label>
+                                <input id="certificadoFrenteInput" name="imagemFrente" type="file" accept="image/*" class="seplag-sr-only" onchange="exibirNomeCertificadoFrente(this)">
+                                <p class="seplag-upload__hint">Pág. 1 · imagem até 10 MB · recomendado: 3508 × 2480 px (A4, 300 DPI)</p>
+                                <p id="erroCertificadoFrente" class="hidden seplag-file-error" role="alert"></p>
+                                <p id="labelNomeCertificadoFrente" class="hidden seplag-file-ok">
+                                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i> <span id="textoNomeCertificadoFrente"></span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="seplag-upload-block">
+                            <label class="seplag-label" for="certificadoVersoInput">Layout do Certificado (Verso)</label>
+
+                            <div th:if="${eventoDto.imagemVersoAtual != null and !eventoDto.imagemVersoAtual.startsWith('default-')}" class="seplag-current">
+                                <img th:src="${#strings.startsWith(eventoDto.imagemVersoAtual, 'https://res.cloudinary.com/') ? eventoDto.imagemVersoAtual : '/imagens-eventos/' + eventoDto.imagemVersoAtual}" alt="Verso do certificado atualmente salvo"
+                                     onerror="this.hidden=true; this.nextElementSibling.classList.remove('hidden')">
+                                <p class="hidden seplag-current__missing">A arte atual não está disponível no armazenamento. Envie-a novamente.</p>
+                                <p>Arte atual. Selecione outra somente para substituí-la.</p>
+                            </div>
+
+                            <div class="seplag-upload">
+                                <i class="fa-solid fa-list-check seplag-upload__icon" aria-hidden="true"></i>
+                                <label for="certificadoVersoInput" class="seplag-upload__label">Upload do Verso</label>
+                                <input id="certificadoVersoInput" name="imagemVerso" type="file" accept="image/*" class="seplag-sr-only" onchange="exibirNomeCertificadoVerso(this)">
+                                <p class="seplag-upload__hint">Pág. 2 · imagem até 10 MB · recomendado: 3508 × 2480 px (A4, 300 DPI)</p>
+                                <p id="erroCertificadoVerso" class="hidden seplag-file-error" role="alert"></p>
+                                <p id="labelNomeCertificadoVerso" class="hidden seplag-file-ok">
+                                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i> <span id="textoNomeCertificadoVerso"></span>
+                                </p>
+                            </div>
                         </div>
                     </div>
-                    <p th:if="${#fields.hasErrors('nicho')}" th:errors="*{nicho}" class="mt-1 text-xs text-red-600 font-medium"></p>
                 </div>
+            </section>
 
-                <div>
-                    <label for="cargaHoraria" class="block text-sm font-medium text-gray-700">Carga Horária (em horas)</label>
-                    <input type="number" th:field="*{cargaHoraria}" id="cargaHoraria" min="1" required
-                           th:classappend="${#fields.hasErrors('cargaHoraria')} ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-[#00457C] focus:border-[#00457C]'"
-                           class="mt-1 block w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-1 bg-transparent" placeholder="Ex: 20">
-                    <p th:if="${#fields.hasErrors('cargaHoraria')}" th:errors="*{cargaHoraria}" class="mt-1 text-xs text-red-600 font-medium"></p>
-                </div>
-            </div>
-
-            <div id="containerLocalizacao" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="sm:col-span-1">
-                    <label for="vagasTotais" class="block text-sm font-medium text-gray-700">Vagas Totais</label>
-                    <input type="number" th:field="*{vagasTotais}" id="vagasTotais" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-transparent">
-                </div>
-
-                <div class="sm:col-span-2">
-                    <label for="local" class="block text-sm font-medium text-gray-700">Local de Realização</label>
-                    <div class="relative mt-1">
-                        <input type="text" th:field="*{local}" id="local" readonly
-                               class="block w-full rounded-md border border-gray-300 bg-gray-50 pl-3 pr-24 py-2 text-sm focus:outline-none text-gray-700 cursor-not-allowed" placeholder="Nenhum local selecionado...">
-                        <button type="button" id="btnAbrirModal" onclick="abrirModal()"
-                                class="absolute inset-y-1 right-1 px-3 bg-[#00457C] text-white rounded-md text-xs font-semibold hover:bg-[#00335c] transition-colors">
-                            <i class="fa-solid fa-map-location-dot mr-1"></i> Buscar Mapa
-                        </button>
+            <!-- Disciplinas / temas do curso -->
+            <section class="seplag-card seplag-form-card" aria-labelledby="secao-disciplinas">
+                <div class="seplag-card__header">
+                    <div>
+                        <h2 class="seplag-card__title" id="secao-disciplinas">Disciplinas / Temas do Curso</h2>
+                        <p class="seplag-card__hint">Histórico impresso no verso do certificado.</p>
                     </div>
-                </div>
-            </div>
-
-            <div class="border-t border-gray-200 pt-5">
-                <div class="flex justify-between items-center mb-3">
-                    <label class="block text-sm font-semibold text-gray-700">Disciplinas / Temas do Curso (Histórico do Verso)</label>
-                    <button type="button" onclick="adicionarLinhaDisciplina()"
-                            class="px-3 py-1.5 bg-[#00457C] text-white text-xs font-semibold rounded hover:bg-[#00335c] transition-colors">
-                        <i class="fa-solid fa-plus mr-1"></i> Adicionar Disciplina
+                    <button type="button" onclick="adicionarLinhaDisciplina()" class="seplag-btn seplag-btn-secondary seplag-btn--sm">
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                        Adicionar Disciplina
                     </button>
                 </div>
 
-                <div class="overflow-x-auto border border-gray-200 rounded-md bg-gray-50">
-                    <table class="min-w-full divide-y divide-gray-200 text-sm" id="tabelaDisciplinas">
-                        <tbody class="divide-y divide-gray-200 bg-white" id="corpoTabelaDisciplinas">
-                        <tr th:each="disciplina, stat : *{disciplinas}" class="hover:bg-gray-50 transition-colors">
-                            <td class="px-4 py-2">
-                                <input type="text" th:field="*{disciplinas[__${stat.index}__].nome}" required maxlength="200"
-                                       class="w-full rounded border-gray-300 px-2 py-1 text-sm focus:ring-1 focus:ring-[#00457C] focus:outline-none border">
-                            </td>
-                            <td class="px-4 py-2 w-32">
-                                <input type="number" th:field="*{disciplinas[__${stat.index}__].cargaHoraria}" min="1" required
-                                       class="w-full rounded border-gray-300 px-2 py-1 text-sm text-center focus:ring-1 focus:ring-[#00457C] focus:outline-none border">
-                            </td>
-                            <td class="px-4 py-2 text-center w-12">
-                                <button type="button" onclick="this.closest('tr').remove()" class="text-red-500 hover:text-red-700">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
+                <div class="seplag-card__body seplag-card__body--flush">
+                    <p class="seplag-table-scroll-hint">
+                        <i class="fa-solid fa-arrows-left-right" aria-hidden="true"></i>
+                        <span>Deslize a tabela para o lado para ver todas as colunas.</span>
+                    </p>
+                    <div class="seplag-table-wrap seplag-table-wrap--scroll">
+                        <table class="seplag-grid-table seplag-grid-table--disciplinas" id="tabelaDisciplinas">
+                            <thead>
+                            <tr>
+                                <th scope="col">Disciplina / Tema</th>
+                                <th scope="col" class="seplag-col-hours">Horas</th>
+                                <th scope="col" class="seplag-col-icon" aria-label="Remover disciplina">
+                                    <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody id="corpoTabelaDisciplinas">
+                            <tr th:each="disciplina, stat : *{disciplinas}">
+                                <td>
+                                    <input type="text" th:field="*{disciplinas[__${stat.index}__].nome}" required maxlength="200"
+                                           class="seplag-input seplag-input--compact">
+                                </td>
+                                <td class="seplag-col-hours">
+                                    <input type="number" th:field="*{disciplinas[__${stat.index}__].cargaHoraria}" min="1" required
+                                           class="seplag-input seplag-input--compact seplag-input--number">
+                                </td>
+                                <td class="seplag-col-icon">
+                                    <button type="button" onclick="this.closest('tr').remove()" class="seplag-icon-btn seplag-icon-btn--sm seplag-icon-btn--danger" aria-label="Remover disciplina">
+                                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
+            </section>
 
-            <div class="pt-4 flex flex-col sm:flex-row-reverse gap-3">
-                <button type="submit" class="w-full sm:w-auto flex justify-center py-2.5 px-6 border border-transparent rounded-md shadow-sm text-sm font-semibold text-white bg-[#008A4B] hover:bg-[#00703c]"
+            <div class="seplag-form-actions">
+                <a th:href="@{/organizador/painel}" class="seplag-btn seplag-btn-secondary">
+                    Cancelar e Voltar
+                </a>
+                <button type="submit" class="seplag-btn seplag-btn--success"
                         th:text="${eventoDto.id != null} ? 'Salvar Alterações' : 'Publicar Evento'">
                     Publicar Evento
                 </button>
-                <a th:href="@{/organizador/painel}" class="w-full sm:w-auto text-center py-2.5 px-6 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white">
-                    Cancelar e Voltar
-                </a>
             </div>
         </form>
-    </div>
-</main>
 
-<div id="modalMapa" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 glass-modal map-modal-overlay">
-    <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full border border-gray-200 overflow-hidden flex flex-col max-h-[90vh] map-modal-dialog">
+    </main>
 
-        <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white flex-shrink-0 map-modal-header">
-            <div class="map-modal-heading">
-                <span class="map-modal-heading-icon" aria-hidden="true"><i class="fa-solid fa-location-dot"></i></span>
+    <footer class="seplag-footer">
+        &copy; 2026 Secretaria de Estado de Planejamento e Gestão de Mato Grosso.
+    </footer>
+
+</div>
+
+<!-- Modal de seleção de local no mapa -->
+<div id="modalMapa" class="seplag-modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalMapaTitulo">
+    <div class="seplag-modal__dialog">
+
+        <div class="seplag-modal__header">
+            <div class="seplag-modal__heading">
+                <span class="seplag-modal__icon" aria-hidden="true"><i class="fa-solid fa-location-dot"></i></span>
                 <div>
-                    <h3 class="text-lg font-bold text-gray-800">Selecione o local do evento</h3>
+                    <h2 class="seplag-modal__title" id="modalMapaTitulo">Selecione o local do evento</h2>
                     <p>Pesquise um endereço ou marque o ponto diretamente no mapa.</p>
                 </div>
             </div>
-            <button type="button" onclick="fecharModal()" class="text-gray-400 hover:text-gray-600 transition-colors text-xl map-modal-close" aria-label="Fechar mapa">
-                <i class="fa-solid fa-xmark"></i>
+            <button type="button" onclick="fecharModal()" class="seplag-icon-btn" aria-label="Fechar mapa">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
             </button>
         </div>
 
-        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 relative flex-shrink-0 z-20 map-modal-search-panel">
-            <label class="map-search-label" for="inputPesquisaMapa">Buscar endereço ou local</label>
-            <div class="flex gap-2 map-search-row">
-                <div class="relative flex-grow map-search-field">
-                    <i class="fa-solid fa-magnifying-glass map-search-icon" aria-hidden="true"></i>
+        <div class="seplag-map-search">
+            <label class="seplag-label" for="inputPesquisaMapa">Buscar endereço ou local</label>
+            <div class="seplag-map-search__row">
+                <div class="seplag-map-search__field">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                     <input type="text" id="inputPesquisaMapa" autocomplete="off"
-                           class="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#00457C] focus:border-[#00457C] outline-none map-search-input"
+                           class="seplag-input"
                            placeholder="Ex.: SEPLAG, Shopping Pantanal ou nome da rua">
                 </div>
-                <button type="button" onclick="executarBusca()" class="px-5 py-2 bg-[#00457C] hover:bg-[#00335c] text-white rounded-lg text-sm font-semibold transition-colors shadow map-search-button">
+                <button type="button" onclick="executarBusca()" class="seplag-btn seplag-btn-primary">
                     <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span>Buscar</span>
                 </button>
             </div>
 
-            <div id="boxSugestoes" class="hidden absolute left-6 right-6 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-48 overflow-y-auto suggestions-scrollbar z-50 map-suggestions">
-            </div>
+            <div id="boxSugestoes" class="seplag-suggestions hidden"></div>
         </div>
 
-        <div class="p-4 bg-gray-100 flex-grow relative h-[450px] md:h-[480px] map-modal-map-wrap">
-            <div class="map-modal-map-caption"><i class="fa-solid fa-hand-pointer" aria-hidden="true"></i> Clique no mapa para selecionar o local</div>
-            <div id="mapaSelecao" class="w-full h-full rounded-lg border border-gray-300 shadow-inner"></div>
+        <div class="seplag-map-canvas">
+            <div class="seplag-map-caption"><i class="fa-solid fa-hand-pointer" aria-hidden="true"></i> Clique no mapa para selecionar o local</div>
+            <div id="mapaSelecao"></div>
         </div>
 
-        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end space-x-3 flex-shrink-0 map-modal-footer">
-            <button type="button" onclick="fecharModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 map-cancel-button">
+        <div class="seplag-modal__footer">
+            <button type="button" onclick="fecharModal()" class="seplag-btn seplag-btn-secondary">
                 Cancelar
             </button>
-            <button type="button" onclick="confirmarLocalizacao()" class="px-5 py-2 bg-[#00457C] text-white rounded-lg text-sm font-semibold hover:bg-[#00335c] shadow map-confirm-button">
+            <button type="button" onclick="confirmarLocalizacao()" class="seplag-btn seplag-btn-primary">
                 <i class="fa-solid fa-check" aria-hidden="true"></i> Confirmar local
             </button>
         </div>
     </div>
 </div>
 
-<footer class="bg-white text-center py-4 border-t border-gray-200 text-xs text-gray-400 mt-auto">
-    © 2026 Secretaria de Estado de Planejamento e Gestão de Mato Grosso.
-</footer>
-
+<script th:src="@{/js/seplag-shell.js}" defer></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
@@ -411,7 +476,7 @@
                 mostrarErro('A imagem convertida ultrapassa 10 MB. Reduza o tamanho e tente novamente.');
                 return;
             }
-            const baseName = file.name.replace(/\\.[^.]+$/, '');
+            const baseName = file.name.replace(/\.[^.]+$/, '');
             const converted = new File([png], `${baseName || nomeCampo}.png`, { type: 'image/png' });
             const transfer = new DataTransfer();
             transfer.items.add(converted);
@@ -458,21 +523,20 @@
     function adicionarLinhaDisciplina() {
         const tbody = document.getElementById('corpoTabelaDisciplinas');
         const tr = document.createElement('tr');
-        tr.className = "hover:bg-gray-50 transition-colors";
         tr.innerHTML = `
-        <td class="px-4 py-2">
+        <td>
             <input type="text" name="disciplinas[${indiceDisciplina}].nome" required maxlength="200"
-                   class="w-full rounded border-gray-300 px-2 py-1 text-sm focus:ring-1 focus:ring-[#00457C] focus:outline-none border"
+                   class="seplag-input seplag-input--compact"
                    placeholder="Nome da Disciplina (máx. 200 caracteres)">
         </td>
-        <td class="px-4 py-2 w-32">
+        <td class="seplag-col-hours">
             <input type="number" name="disciplinas[${indiceDisciplina}].cargaHoraria" min="1" required
-                   class="w-full rounded border-gray-300 px-2 py-1 text-sm text-center focus:ring-1 focus:ring-[#00457C] focus:outline-none border"
+                   class="seplag-input seplag-input--compact seplag-input--number"
                    placeholder="Horas">
         </td>
-        <td class="px-4 py-2 text-center w-12">
-            <button type="button" onclick="this.closest('tr').remove()" class="text-red-500 hover:text-red-700">
-                <i class="fa-solid fa-trash-can"></i>
+        <td class="seplag-col-icon">
+            <button type="button" onclick="this.closest('tr').remove()" class="seplag-icon-btn seplag-icon-btn--sm seplag-icon-btn--danger" aria-label="Remover disciplina">
+                <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
             </button>
         </td>
     `;
@@ -540,19 +604,19 @@
 
         locaisEncontrados.forEach(item => {
             const itemDiv = document.createElement('div');
-            itemDiv.className = "px-4 py-2.5 bg-blue-50/60 hover:bg-blue-100/80 cursor-pointer border-b border-blue-100 text-sm text-left transition-colors";
+            itemDiv.className = "seplag-suggestion";
             const title = document.createElement('div');
-            title.className = "font-bold text-[#00457C] flex items-center";
+            title.className = "seplag-suggestion__title";
             const icon = document.createElement('i');
-            icon.className = "fa-solid fa-building-flag mr-2 text-xs";
+            icon.className = "fa-solid fa-building-flag";
             const name = document.createElement('span');
             name.textContent = item.nome;
             const badge = document.createElement('span');
-            badge.className = "ml-2 text-[10px] bg-[#00457C] text-white px-1.5 py-0.5 rounded font-semibold tracking-wide";
+            badge.className = "seplag-badge seplag-badge--role";
             badge.textContent = "Oficial";
             title.append(icon, name, badge);
             const detail = document.createElement('div');
-            detail.className = "text-xs text-gray-500 pl-4 truncate";
+            detail.className = "seplag-suggestion__detail";
             detail.textContent = item.complemento;
             itemDiv.append(title, detail);
 
@@ -568,7 +632,7 @@
         const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(valor + ", Cuiaba MT")}&addressdetails=1&limit=5`;
 
         if (box.children.length === 0) {
-            box.innerHTML = `<div class="p-3 text-sm text-gray-500 flex items-center"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Buscando na rede pública...</div>`;
+            box.innerHTML = `<div class="seplag-suggestion__status"><i class="fa-solid fa-spinner fa-spin"></i> <span>Buscando na rede pública...</span></div>`;
         }
 
         fetch(url, { headers: { 'Accept-Language': 'pt-BR' } })
@@ -585,7 +649,7 @@
                 }
 
                 if (dados.length === 0 && locaisEncontrados.length === 0) {
-                    box.innerHTML = `<div class="p-3 text-sm text-red-500 font-medium"><i class="fa-solid fa-circle-exclamation mr-1"></i> Nenhum local encontrado. Tente outro termo.</div>`;
+                    box.innerHTML = `<div class="seplag-suggestion__status seplag-suggestion__status--error"><i class="fa-solid fa-circle-exclamation"></i> <span>Nenhum local encontrado. Tente outro termo.</span></div>`;
                     return;
                 }
 
@@ -603,16 +667,16 @@
                     if (jáExisteNaLista) return;
 
                     const itemDiv = document.createElement('div');
-                    itemDiv.className = "px-4 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-100 text-sm transition-colors text-left";
+                    itemDiv.className = "seplag-suggestion";
                     const title = document.createElement('div');
-                    title.className = "font-semibold text-gray-800 flex items-center";
+                    title.className = "seplag-suggestion__title";
                     const icon = document.createElement('i');
-                    icon.className = "fa-solid fa-location-dot text-[#00457C] mr-2 text-xs";
+                    icon.className = "fa-solid fa-location-dot";
                     const name = document.createElement('span');
                     name.textContent = nomePrincipal;
                     title.append(icon, name);
                     const detail = document.createElement('div');
-                    detail.className = "text-xs text-gray-400 pl-4 truncate";
+                    detail.className = "seplag-suggestion__detail";
                     detail.textContent = complemento;
                     itemDiv.append(title, detail);
 
@@ -627,7 +691,7 @@
             })
             .catch(() => {
                 if (locaisEncontrados.length === 0) {
-                    box.innerHTML = `<div class="p-3 text-sm text-red-500 font-medium"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Erro ao conectar ao servidor de mapas.</div>`;
+                    box.innerHTML = `<div class="seplag-suggestion__status seplag-suggestion__status--error"><i class="fa-solid fa-triangle-exclamation"></i> <span>Erro ao conectar ao servidor de mapas.</span></div>`;
                 }
             });
     }

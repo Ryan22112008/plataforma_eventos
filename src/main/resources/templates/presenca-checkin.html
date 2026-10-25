@@ -1,33 +1,50 @@
 <!DOCTYPE html>
-<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Confirmar presença | SEPLAG-MT</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" th:href="@{/css/seplag-ui.css}">
+    <link rel="stylesheet" th:href="@{/css/seplag-ui-v2.css}">
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
-<main class="w-full max-w-lg rounded-2xl border border-gray-200 bg-white p-6 sm:p-8 shadow-sm">
-    <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-xl" aria-hidden="true">
-        <i class="fa-solid fa-clipboard-check"></i>
-    </div>
-    <p class="mt-5 text-sm font-semibold uppercase tracking-wider text-[#0b4d7e]">Confirmação de presença</p>
-    <h1 class="mt-2 text-2xl font-bold text-gray-900" th:text="${sessao.nome}">Sessão</h1>
-    <p class="mt-2 text-sm text-gray-600" th:text="${#temporals.format(sessao.dataHoraInicio, 'dd/MM/yyyy HH:mm')}">Data e hora</p>
+<body class="v2 seplag-public">
+<a class="seplag-skip-link" href="#conteudo">Ir para o conteúdo</a>
+<header th:replace="~{fragments/seplag-ui :: public-header('')}"></header>
 
-    <div th:if="${mensagemSucesso}" role="status" class="mt-5 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800" th:text="${mensagemSucesso}"></div>
-    <div th:if="${mensagemErro}" role="alert" class="mt-5 rounded-lg bg-rose-50 p-3 text-sm text-rose-800" th:text="${mensagemErro}"></div>
+<main class="seplag-public-main seplag-public-main--narrow" id="conteudo">
+    <nav class="seplag-breadcrumb" aria-label="Trilha de navegação">
+        <ol>
+            <li><a th:href="@{/}">Início</a></li>
+            <li aria-current="page">Confirmação de presença</li>
+        </ol>
+    </nav>
 
-    <form th:unless="${mensagemSucesso}" th:action="@{/participante/presencas/checkin}" method="post" class="mt-6">
-        <input type="hidden" name="token" th:value="${token}">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-        <button type="submit" class="w-full min-h-12 rounded-lg bg-[#07844c] px-5 py-3 font-semibold text-white hover:bg-[#066c3e]">
-            Confirmar minha presença
-        </button>
-    </form>
-    <a th:href="@{/dashboard}" class="mt-4 inline-flex text-sm font-medium text-[#0b4d7e] hover:underline">Ir para meu painel</a>
+    <section class="seplag-card" aria-labelledby="checkin-heading">
+        <div class="seplag-card__header">
+            <div>
+                <p class="seplag-eyebrow">Confirmação de presença</p>
+                <h1 id="checkin-heading" class="seplag-card__title" th:text="${sessao.nome}">Sessão</h1>
+                <p class="seplag-card__hint" th:text="${#temporals.format(sessao.dataHoraInicio, 'dd/MM/yyyy HH:mm')}">Data e hora</p>
+            </div>
+        </div>
+        <div class="seplag-card__body">
+            <div th:if="${mensagemSucesso}" class="seplag-alert seplag-alert--success" role="status" th:text="${mensagemSucesso}"></div>
+            <div th:if="${mensagemErro}" class="seplag-alert seplag-alert--error" role="alert" th:text="${mensagemErro}"></div>
+
+            <form th:unless="${mensagemSucesso}" th:action="@{/participante/presencas/checkin}" method="post" class="seplag-form">
+                <input type="hidden" name="token" th:value="${token}">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <div class="seplag-form-actions">
+                    <button type="submit" class="seplag-btn seplag-btn-success">Confirmar minha presença</button>
+                    <a th:href="@{/dashboard}" class="seplag-btn seplag-btn-secondary">Ir para meu painel</a>
+                </div>
+            </form>
+            <div th:if="${mensagemSucesso}" class="seplag-form-actions">
+                <a th:href="@{/dashboard}" class="seplag-btn seplag-btn-secondary">Ir para meu painel</a>
+            </div>
+        </div>
+    </section>
 </main>
+
+<footer th:replace="~{fragments/seplag-ui :: public-footer}"></footer>
 </body>
 </html>

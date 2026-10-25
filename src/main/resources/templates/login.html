@@ -1,75 +1,72 @@
 <!DOCTYPE html>
-<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/seplag-ui :: head('Acesso ao Sistema')}">
     <title>Acesso ao Sistema | SEPLAG-MT</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Inter', sans-serif; }</style>
-    <link rel="stylesheet" th:href="@{/css/seplag-ui.css}">
 </head>
-<body class="bg-[#F4F6F9] min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+<body class="v2 seplag-auth-page">
 
-<div class="sm:mx-auto w-full max-w-md">
-    <div class="text-center">
-        <div class="flex justify-center mb-4">
-            <img th:src="@{/images/logo-seplag-branco.png}" alt="Logotipo SEPLAG-MT" class="h-24 w-auto object-contain drop-shadow-sm">
+<main class="seplag-auth">
+    <div class="seplag-auth__inner">
+
+        <div class="seplag-auth__brand">
+            <img th:src="@{/images/logo-seplag-branco.png}" alt="Logotipo SEPLAG-MT" class="seplag-auth__logo">
         </div>
-        <h2 class="text-2xl font-bold tracking-tight text-[#00457C]">Área do Usuário SEPLAG</h2>
-        <p class="mt-2 text-sm text-gray-600">Acesse cursos, inscrições e certificados.</p>
-    </div>
 
-    <div class="mt-8 sm:mx-auto w-full max-w-md">
-        <div class="bg-white py-8 px-4 shadow sm:rounded-xl sm:px-10 border border-gray-200">
+        <section class="seplag-card seplag-auth__card" aria-labelledby="login-title">
 
-            <div th:if="${param.sucesso}" class="mb-4 bg-green-50 border-l-4 border-green-500 p-4 rounded text-sm text-green-700">
-                <i class="fa-solid fa-circle-check mr-2"></i> Cadastro efetuado! Faça seu login agora.
+            <div class="seplag-auth__header">
+                <p class="seplag-eyebrow">Acesso institucional</p>
+                <h1 id="login-title">Área do Usuário SEPLAG</h1>
+                <p>Acesse cursos, inscrições e certificados.</p>
             </div>
 
-            <div th:if="${param.error}" class="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded text-sm text-red-700">
-                <i class="fa-solid fa-triangle-exclamation mr-2"></i> E-mail ou senha inválidos.
+            <div class="seplag-auth__alerts"
+                 th:if="${param.sucesso != null or param.error != null or param.logout != null}">
+                <div th:if="${param.sucesso}" class="seplag-alert seplag-alert--success" role="status">
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                    <span>Cadastro efetuado! Faça seu login agora.</span>
+                </div>
+
+                <div th:if="${param.error}" class="seplag-alert seplag-alert--error" role="alert">
+                    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                    <span>E-mail ou senha inválidos.</span>
+                </div>
+
+                <div th:if="${param.logout}" class="seplag-alert seplag-alert--info" role="status">
+                    <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                    <span>Você saiu do sistema com segurança.</span>
+                </div>
             </div>
 
-            <div th:if="${param.logout}" class="mb-4 bg-blue-50 border-l-4 border-blue-500 p-4 rounded text-sm text-blue-700">
-                <i class="fa-solid fa-circle-info mr-2"></i> Você saiu do sistema com segurança.
-            </div>
-
-            <form th:action="@{/login}" method="POST" class="space-y-6">
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700">E-mail cadastrado</label>
+            <form th:action="@{/login}" method="POST" class="seplag-form">
+                <div class="seplag-field">
+                    <label for="email" class="seplag-label">E-mail cadastrado</label>
                     <input type="email" name="username" id="email" autocomplete="username" required
-                           class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#00457C] focus:outline-none focus:ring-1 focus:ring-[#00457C] transition-shadow bg-transparent">
+                           class="seplag-input">
                 </div>
 
-                <div>
-                    <label for="senha" class="block text-sm font-medium text-gray-700">Sua senha</label>
+                <div class="seplag-field">
+                    <label for="senha" class="seplag-label">Sua senha</label>
                     <input type="password" name="password" id="senha" autocomplete="current-password" required
-                           class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#00457C] focus:outline-none focus:ring-1 focus:ring-[#00457C] transition-shadow bg-transparent">
+                           class="seplag-input">
                 </div>
 
-                <div>
-                    <button type="submit" class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-semibold text-white bg-[#00457C] hover:bg-[#00335c] transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00457C]">
-                        Entrar no Painel
-                    </button>
-                </div>
+                <button type="submit" class="seplag-btn seplag-btn-primary seplag-btn--block">
+                    Entrar no Painel
+                </button>
             </form>
 
-            <div class="mt-6 border-t border-gray-200 pt-6 text-center text-sm flex flex-col space-y-3">
-                <div>
-                    <span class="text-gray-600">Não tem acesso?</span>
-                    <a th:href="@{/cadastro}" class="font-medium text-[#008A4B] hover:underline ml-1">Criar uma conta gratuita</a>
-                </div>
-                <div class="pt-1">
-                    <a th:href="@{/}" class="text-xs text-gray-400 hover:text-[#00457C] transition-colors">
-                        <i class="fa-solid fa-house-chimney mr-1"></i> Voltar para a Vitrine de Eventos
-                    </a>
-                </div>
+            <div class="seplag-auth__footer">
+                <p>Não tem acesso? <a th:href="@{/cadastro}">Criar uma conta gratuita</a></p>
+                <a th:href="@{/}" class="seplag-auth__back">
+                    <i class="fa-solid fa-house-chimney" aria-hidden="true"></i>
+                    Voltar para a Vitrine de Eventos
+                </a>
             </div>
-        </div>
+        </section>
+
     </div>
-</div>
+</main>
 
 </body>
 </html>

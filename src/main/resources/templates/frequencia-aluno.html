@@ -1,112 +1,154 @@
 <!DOCTYPE html>
-<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
 <head>
-    <meta charset="UTF-8">
+    <th:block th:replace="~{fragments/seplag-ui :: head-content('Grade de Frequência')}"></th:block>
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
-    <title>Grade de Frequência | SEPLAG-MT</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" th:href="@{/css/seplag-ui.css}">
 </head>
-<body class="bg-[#F4F6F9] min-h-screen">
+<body class="v2 seplag-shell">
 
-<nav class="bg-[#00457C] text-white shadow-md px-6 py-4 flex justify-between items-center">
-    <h1 class="font-bold text-lg">Controle de Frequência: <span th:text="${evento.titulo}"></span></h1>
-    <a th:href="@{/organizador/eventos/{id}/inscritos(id=${evento.id})}" class="text-sm underline">Voltar para Inscritos</a>
-</nav>
-<div class="max-w-7xl mx-auto mt-4 px-4 sm:px-6 lg:px-8">
-    <div class="flex items-center space-x-1 bg-white p-1 rounded-lg shadow-sm border border-gray-200 inline-flex">
+<a class="seplag-skip-link" href="#conteudo">Ir para o conteúdo</a>
 
-        <a th:href="@{/organizador/eventos/{id}/inscritos(id=${evento.id})}"
-           th:classappend="${paginaAtiva == 'inscritos' ? 'bg-[#00457C] text-white shadow' : 'text-gray-600 hover:bg-gray-100'}"
-           class="px-4 py-2 rounded-md text-sm font-semibold transition-all">
-            <i class="fa-solid fa-users mr-2"></i> Inscritos
-        </a>
+<div class="seplag-drawer-backdrop" data-seplag-backdrop aria-hidden="true"></div>
 
-        <a th:href="@{/presencas/{id}/frequencia(id=${evento.id})}"
-           th:classappend="${paginaAtiva == 'frequencia' ? 'bg-[#00457C] text-white shadow' : 'text-gray-600 hover:bg-gray-100'}"
-           class="px-4 py-2 rounded-md text-sm font-semibold transition-all">
-            <i class="fa-solid fa-clipboard-check mr-2"></i> Frequência
-        </a>
-    </div>
-</div>
-<main class="max-w-7xl mx-auto mt-8 px-4">
+<aside th:replace="~{fragments/seplag-ui :: sidebar('')}"></aside>
 
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6">
-        <div class="flex justify-between items-end mb-2">
-            <h2 class="text-gray-700 font-semibold">Desempenho da Turma</h2>
-            <span class="text-sm font-bold text-[#00457C]" th:text="${percentualGlobal} + '% de presença geral'"></span>
+<div class="seplag-main">
+
+    <header th:replace="~{fragments/seplag-ui :: topbar('Frequência', 'Organizador')}"></header>
+
+    <main class="seplag-content" id="conteudo">
+
+        <nav class="seplag-breadcrumb" aria-label="Trilha de navegação">
+            <ol>
+                <li><a th:href="@{/organizador/painel}">Painel do organizador</a></li>
+                <li><a th:href="@{/organizador/eventos/{id}/inscritos(id=${evento.id})}" class="seplag-breadcrumb__link"><span class="seplag-breadcrumb__label" th:text="${evento.titulo}">Evento</span></a></li>
+                <li aria-current="page">Frequência</li>
+            </ol>
+        </nav>
+
+        <nav class="seplag-subnav" aria-label="Seções do evento">
+            <a th:href="@{/organizador/eventos/{id}/inscritos(id=${evento.id})}"
+               th:classappend="${paginaAtiva == 'inscritos' ? 'is-active' : ''}"
+               class="seplag-subnav__link">
+                <i class="fa-solid fa-users" aria-hidden="true"></i> Inscritos
+            </a>
+
+            <a th:href="@{/presencas/{id}/frequencia(id=${evento.id})}"
+               th:classappend="${paginaAtiva == 'frequencia' ? 'is-active' : ''}"
+               class="seplag-subnav__link">
+                <i class="fa-solid fa-clipboard-check" aria-hidden="true"></i> Frequência
+            </a>
+        </nav>
+
+        <div class="seplag-page-head">
+            <div class="seplag-page-head__copy">
+                <p class="seplag-eyebrow">Organizador</p>
+                <h1 th:text="${evento.titulo}">Evento</h1>
+                <p>Acompanhe o desempenho da turma por sessão e ajuste as presenças quando necessário.</p>
+            </div>
+
+            <div class="seplag-toolbar">
+                <a th:href="@{/organizador/eventos/{id}/inscritos(id=${evento.id})}" class="seplag-btn seplag-btn-secondary">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                    Voltar para Inscritos
+                </a>
+                <button type="button" onclick="toggleEdicao()" class="seplag-btn seplag-btn--warning">
+                    <i class="fa-solid fa-pen" aria-hidden="true"></i> Alterar Presença
+                </button>
+            </div>
         </div>
-        <div class="w-full bg-gray-200 rounded-full h-4">
-            <div class="bg-emerald-500 h-4 rounded-full transition-all duration-500"
-                 th:style="'width: ' + ${percentualGlobal} + '%'"></div>
-        </div>
-    </div>
 
-    <div class="bg-white shadow rounded-xl border border-gray-200 overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-            <h3 class="font-bold text-[#00457C]">Grade de Presenças</h3>
-            <button onclick="toggleEdicao()" class="text-xs bg-amber-500 text-white px-3 py-1 rounded hover:bg-amber-600 transition">
-                <i class="fa-solid fa-pen"></i> Alterar Presença
-            </button>
-        </div>
+        <section class="seplag-card" aria-labelledby="titulo-desempenho">
+            <div class="seplag-card__header">
+                <div>
+                    <h2 class="seplag-card__title" id="titulo-desempenho">Desempenho da Turma</h2>
+                    <p class="seplag-card__hint">Percentual de presença consolidado em todas as sessões.</p>
+                </div>
+                <span class="seplag-badge seplag-badge--role"
+                      th:text="${percentualGlobal} + '% de presença geral'">0% de presença geral</span>
+            </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
-                <thead class="bg-gray-100 uppercase text-xs text-gray-600 border-b border-gray-200 sticky top-0 z-20">
-                <tr>
-                    <th class="px-6 py-4 text-left font-bold text-gray-700 bg-gray-100 sticky left-0 z-30 shadow-[3px_0_6px_-2px_rgba(0,0,0,0.1)] min-w-[250px]">
-                        <div class="flex items-center space-x-2">
-                            <i class="fa-solid fa-user text-[#00457C]"></i>
-                            <span>Participante</span>
-                        </div>
-                    </th>
+            <div class="seplag-card__body">
+                <div class="seplag-progress" role="progressbar"
+                     aria-label="Percentual de presença geral"
+                     th:attr="aria-valuenow=${percentualGlobal}">
+                    <div class="seplag-progress__bar"
+                         th:style="'width: ' + ${percentualGlobal} + '%'"></div>
+                </div>
+            </div>
+        </section>
 
-                    <th th:each="s : ${sessoes}"
-                        class="px-3 py-3 text-center border-l border-gray-200 bg-slate-50/80 min-w-[120px] transition-colors hover:bg-slate-100">
-                        <div class="text-[11px] font-bold tracking-wide text-[#00457C]" th:text="${s.nome}">
-                            Seg - Manhã
-                        </div>
-                        <div class="text-[10px] text-gray-400 font-normal mt-0.5 flex items-center justify-center space-x-1">
-                            <i class="fa-regular fa-calendar text-[9px]"></i>
-                            <span th:text="${#temporals.format(s.dataHoraInicio, 'dd/MM')}">18/06</span>
-                        </div>
-                    </th>
-                </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                <tr th:each="i : ${inscritos}" class="hover:bg-gray-50">
-                    <td class="px-6 py-4 font-medium text-gray-900 sticky left-0 bg-white z-10 shadow-[3px_0_6px_-2px_rgba(0,0,0,0.05)]"
-                        th:text="${i.participante.nome}">
-                        Nome do Aluno
-                    </td>
+        <section class="seplag-card" aria-labelledby="titulo-grade">
+            <div class="seplag-card__header">
+                <div>
+                    <h2 class="seplag-card__title" id="titulo-grade">Grade de Presenças</h2>
+                    <p class="seplag-card__hint">Passe o dedo ou use a rolagem horizontal para ver todas as sessões.</p>
+                </div>
+            </div>
 
-                    <td th:each="s : ${sessoes}" class="px-4 py-4 text-center border-l">
-                        <div class="status-visual">
+            <div class="seplag-table-wrap seplag-table-wrap--matrix">
+                <table class="seplag-grid-table seplag-matrix">
+                    <thead>
+                    <tr>
+                        <th scope="col" class="seplag-matrix__who">
+                            <span class="seplag-matrix__session-name">
+                                <i class="fa-solid fa-user" aria-hidden="true"></i>
+                                Participante
+                            </span>
+                        </th>
+
+                        <th scope="col" th:each="s : ${sessoes}" class="seplag-matrix__session">
+                            <div class="seplag-matrix__session-name" th:text="${s.nome}">
+                                Seg - Manhã
+                            </div>
+                            <div class="seplag-matrix__session-date">
+                                <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                                <span th:text="${#temporals.format(s.dataHoraInicio, 'dd/MM')}">18/06</span>
+                            </div>
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="i : ${inscritos}">
+                        <td class="seplag-matrix__who"
+                            th:text="${i.participante.nome}">
+                            Nome do Aluno
+                        </td>
+
+                        <td th:each="s : ${sessoes}" class="seplag-matrix__cell">
+                            <div class="status-visual">
                                 <span th:with="status=${mapaPresencas.get(i.participante.id + '_' + s.id)}"
-                                      th:classappend="${status == 'PRESENTE' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}"
-                                      class="px-3 py-1 rounded-full text-[10px] font-bold uppercase">
+                                      th:classappend="${status == 'PRESENTE' ? 'seplag-status--present' : 'seplag-status--absent'}"
+                                      class="seplag-status">
                                     <span th:text="${status != null ? status : 'FALTA'}">FALTA</span>
                                 </span>
-                        </div>
+                            </div>
 
-                        <div class="campos-edicao hidden">
-                            <select onchange="atualizarStatus(this)"
-                                    th:data-aluno-id="${i.participante.id}"
-                                    th:data-sessao-id="${s.id}"
-                                    class="border rounded text-xs p-1">
-                                <option value="FALTA" th:selected="${mapaPresencas.get(i.participante.id + '_' + s.id) != 'PRESENTE'}">FALTA</option>
-                                <option value="PRESENTE" th:selected="${mapaPresencas.get(i.participante.id + '_' + s.id) == 'PRESENTE'}">PRESENTE</option>
-                            </select>
-                        </div>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</main>
+                            <div class="campos-edicao hidden">
+                                <select onchange="atualizarStatus(this)"
+                                        th:data-aluno-id="${i.participante.id}"
+                                        th:data-sessao-id="${s.id}"
+                                        class="seplag-select seplag-select--compact">
+                                    <option value="FALTA" th:selected="${mapaPresencas.get(i.participante.id + '_' + s.id) != 'PRESENTE'}">FALTA</option>
+                                    <option value="PRESENTE" th:selected="${mapaPresencas.get(i.participante.id + '_' + s.id) == 'PRESENTE'}">PRESENTE</option>
+                                </select>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="seplag-footer">
+        &copy; 2026 Secretaria de Estado de Planejamento e Gestão de Mato Grosso.
+    </footer>
+
+</div>
 
 <script>
     function toggleEdicao() {
@@ -126,5 +168,8 @@
         }).then(() => window.location.reload());
     }
 </script>
+
+<script th:src="@{/js/seplag-shell.js}" defer></script>
+
 </body>
 </html>

@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
@@ -28,5 +29,11 @@ public class GlobalErrorController implements ErrorController {
 
         model.addAttribute("mensagem", "Ocorreu um erro interno inesperado no servidor do Even3.");
         return "erro/500"; // Aponta para templates/erro/500.html para qualquer outro erro
+    }
+
+    @GetMapping("/erro/403")
+    public String acessoNegado(Model model) {
+        model.addAttribute("mensagem", "Você não tem permissão para acessar esta área do sistema.");
+        return "erro/403";
     }
 }

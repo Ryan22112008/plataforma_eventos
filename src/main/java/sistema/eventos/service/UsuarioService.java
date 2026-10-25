@@ -28,6 +28,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @AllArgsConstructor
@@ -127,6 +129,21 @@ public class UsuarioService {
     public long contarPorAtivo(boolean ativo) {
         return usuarioRepository.countByAtivo(ativo);
     }
+
+    @Transactional(readOnly = true)
+    public Map<Long, Long> contarEventosOrganizados(List<Long> organizadorIds) {
+        if (organizadorIds == null || organizadorIds.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<Long, Long> contagens = new HashMap<>();
+        organizadorIds.forEach(id -> contagens.put(id, 0L));
+        for (Object[] resultado : eventoRepository.contarEventosPorOrganizadores(organizadorIds)) {
+            contagens.put((Long) resultado[0], (Long) resultado[1]);
+        }
+        return contagens;
+    }
+
     /**
      * Desativa um usuário (ativo = false).
      * Não exclui o registro do banco; preserva histórico e relacionamentos.

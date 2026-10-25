@@ -1,60 +1,64 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meus Certificados | SEPLAG-MT</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" th:href="@{/css/seplag-ui.css}">
+    <link rel="stylesheet" th:href="@{/css/seplag-ui-v2.css}">
 </head>
-<body class="min-h-screen flex flex-col">
-<header>
-    <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 min-h-[76px] flex items-center justify-between gap-4">
-        <a th:href="@{/}" class="inline-flex items-center" aria-label="Página inicial">
-            <img th:src="@{/images/logo-seplag-branco.png}" alt="Logo SEPLAG-MT" class="h-11 w-auto object-contain">
-        </a>
-        <a th:href="@{/}" class="inline-flex items-center gap-2 rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10">
-            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
-            <span>Voltar aos eventos</span>
-        </a>
-    </div>
-</header>
+<body class="v2 seplag-public">
+<a class="seplag-skip-link" href="#conteudo">Ir para o conteúdo</a>
+<header th:replace="~{fragments/seplag-ui :: public-header('')}"></header>
 
-<main class="certificados-main w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex-grow">
-    <section class="mb-8 sm:mb-10">
-        <p class="mb-2 text-xs font-bold uppercase tracking-[.16em] text-sky-300">Área do participante</p>
-        <h1 class="text-3xl sm:text-4xl font-bold tracking-tight">Meus certificados</h1>
-        <p class="mt-3 max-w-2xl text-base text-slate-300">Acesse e baixe os certificados dos cursos em que sua presença foi confirmada.</p>
+<main class="seplag-public-main seplag-public-main--narrow" id="conteudo">
+    <nav class="seplag-breadcrumb" aria-label="Trilha de navegação">
+        <ol>
+            <li><a th:href="@{/}">Início</a></li>
+            <li aria-current="page">Meus certificados</li>
+        </ol>
+    </nav>
+
+    <section class="seplag-page-head">
+        <div class="seplag-page-head__copy">
+            <p class="seplag-eyebrow">Área do participante</p>
+            <h1>Meus certificados</h1>
+            <p>Acesse os certificados dos cursos em que sua presença foi confirmada.</p>
+        </div>
     </section>
 
-    <section th:if="${not #lists.isEmpty(certificados)}" class="space-y-4" aria-label="Eventos com presença confirmada">
-        <article th:each="inscricao : ${certificados}" class="certificado-card">
-            <div class="certificado-icon" aria-hidden="true">
-                <i class="fa-solid fa-award"></i>
+    <section th:if="${not #lists.isEmpty(certificados)}" class="seplag-event-grid" aria-label="Eventos com presença confirmada">
+        <article th:each="inscricao : ${certificados}" class="seplag-card">
+            <div class="seplag-card__header">
+                <div>
+                    <span class="seplag-badge seplag-badge--success">Presença confirmada</span>
+                    <h2 class="seplag-card__title" th:text="${inscricao.evento.titulo}">Nome do Curso/Evento</h2>
+                </div>
             </div>
-            <div class="certificado-info">
-                <p class="mb-1 text-xs font-semibold uppercase tracking-wider text-sky-300">Presença confirmada</p>
-                <h2 th:text="${inscricao.evento.titulo}">Nome do Curso/Evento</h2>
-                <p class="certificado-carga"><i class="fa-regular fa-clock mr-2" aria-hidden="true"></i>Carga horária: <span th:text="${inscricao.evento.cargaHoraria}">0</span> horas</p>
+            <div class="seplag-card__body">
+                <dl class="seplag-facts">
+                    <div>
+                        <dt>Carga horária</dt>
+                        <dd><span th:text="${inscricao.evento.cargaHoraria}">0</span> horas</dd>
+                    </div>
+                </dl>
             </div>
-            <a th:href="@{/participante/inscricoes/{id}/certificado(id=${inscricao.id})}" class="certificado-link" target="_blank" rel="noopener">
-                <span>Baixar certificado</span>
-                <i class="fa-solid fa-download" aria-hidden="true"></i>
-            </a>
+            <div class="seplag-card__footer">
+                <a th:href="@{/participante/inscricoes/{id}/certificado(id=${inscricao.id})}" class="seplag-btn seplag-btn-primary" target="_blank" rel="noopener">
+                    <span>Baixar certificado</span>
+                </a>
+            </div>
         </article>
     </section>
 
-    <section th:if="${#lists.isEmpty(certificados)}" class="certificados-empty" role="status">
-        <span class="certificados-empty-icon" aria-hidden="true"><i class="fa-regular fa-calendar-check"></i></span>
-        <h2>Nenhum certificado disponível</h2>
-        <p>Depois que sua presença for confirmada, o certificado ficará disponível aqui.</p>
-        <a th:href="@{/}" class="certificado-link mt-5">Explorar cursos <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+    <section th:if="${#lists.isEmpty(certificados)}" class="seplag-card seplag-empty-card" role="status">
+        <div class="seplag-empty">
+            <strong>Nenhum certificado disponível</strong>
+            <p>Depois que sua presença for confirmada, o certificado ficará disponível aqui.</p>
+            <a th:href="@{/}" class="seplag-btn seplag-btn-secondary">Explorar cursos</a>
+        </div>
     </section>
 </main>
 
-<footer class="mt-10 px-4 py-5 text-center text-xs">
-    <p>&copy; 2026 SEPLAG-MT — Plataforma de Eventos.</p>
-</footer>
+<footer th:replace="~{fragments/seplag-ui :: public-footer}"></footer>
 </body>
 </html>

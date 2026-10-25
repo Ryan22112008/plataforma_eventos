@@ -25,14 +25,22 @@ public class CertificadoValidacaoController {
         response.setHeader("Cache-Control", "no-store, max-age=0");
         response.setHeader("Referrer-Policy", "no-referrer");
         response.setHeader("X-Robots-Tag", "noindex, nofollow");
-        model.addAttribute("codigo", codigo);
+        String codigoNormalizado = codigo == null ? "" : codigo.trim();
+        boolean codigoInformado = !codigoNormalizado.isEmpty();
+        model.addAttribute("codigo", codigoNormalizado);
+        model.addAttribute("codigoInformado", codigoInformado);
 
-        if (codigo.length() > 140 || !codigo.startsWith(PREFIXO_CODIGO)) {
+        if (!codigoInformado) {
             model.addAttribute("valido", false);
             return "validar-certificado";
         }
 
-        String token = codigo.substring(PREFIXO_CODIGO.length());
+        if (codigoNormalizado.length() > 140 || !codigoNormalizado.startsWith(PREFIXO_CODIGO)) {
+            model.addAttribute("valido", false);
+            return "validar-certificado";
+        }
+
+        String token = codigoNormalizado.substring(PREFIXO_CODIGO.length());
         if (!token.matches("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")) {
             model.addAttribute("valido", false);
             return "validar-certificado";

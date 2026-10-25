@@ -31,6 +31,8 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.transaction.annotation.Transactional;
@@ -101,6 +103,40 @@ public class SuperAdminController {
         return "super-admin-usuarios";
     }
 
+    @GetMapping("/organizadores")
+    public String listarOrganizadores(
+            Model model,
+            @RequestParam(value = "nome", required = false) String nome,
+            @RequestParam(value = "email", required = false) String email,
+            @RequestParam(value = "ativo", required = false) Boolean ativo,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size) {
+
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(1, Math.min(size, 100)));
+        Page<Usuario> organizadoresPage = usuarioService.listarUsuarios(
+                nome, email, Perfil.ROLE_ORGANIZADOR, ativo, pageable);
+
+        Map<Long, Long> eventosPorOrganizador = usuarioService.contarEventosOrganizados(
+                organizadoresPage.getContent().stream().map(Usuario::getId).collect(Collectors.toList()));
+
+        Long idLogado = idDoUsuarioLogado();
+        model.addAttribute("organizadores", organizadoresPage.getContent());
+        model.addAttribute("eventosPorOrganizador", eventosPorOrganizador);
+        model.addAttribute("idUsuarioLogado", idLogado);
+        model.addAttribute("totalOrganizadores", organizadoresPage.getTotalElements());
+        model.addAttribute("currentPage", organizadoresPage.getNumber());
+        model.addAttribute("totalPages", organizadoresPage.getTotalPages());
+        model.addAttribute("totalElements", organizadoresPage.getTotalElements());
+        model.addAttribute("hasPrevious", organizadoresPage.hasPrevious());
+        model.addAttribute("hasNext", organizadoresPage.hasNext());
+        model.addAttribute("size", organizadoresPage.getSize());
+        model.addAttribute("filtroNome", nome == null ? "" : nome.trim());
+        model.addAttribute("filtroEmail", email == null ? "" : email.trim());
+        model.addAttribute("filtroAtivo", ativo);
+
+        return "super-admin-organizadores";
+    }
+
     @GetMapping("/usuarios/exportar")
     public ResponseEntity<byte[]> exportarUsuarios(
             @RequestParam(value = "nome", required = false) String nome,
@@ -125,9 +161,28 @@ public class SuperAdminController {
         model.addAttribute("ehPropriaConta", idLogado != null && id.equals(idLogado));
 
         Usuario usuario = usuarioService.buscarPorId(id);
+        var historico = usuarioService.listarHistoricoParticipacao(id);
+        var eventosOrganizados = usuarioService.listarEventosOrganizados(id);
+        LocalDate hoje = LocalDate.now();
+        long inscricoesValidasNosEventos = eventosOrganizados.stream()
+                .mapToLong(evento -> evento.getTotalInscritos() == null ? 0L : evento.getTotalInscritos())
+                .sum();
+        long eventosAtivosOuFuturos = eventosOrganizados.stream()
+                .filter(evento -> "PUBLICADO".equals(evento.getStatus()))
+                .filter(evento -> {
+                    LocalDate fim = evento.getDataTermino() != null ? evento.getDataTermino() : evento.getDataInicio();
+                    return fim == null || !fim.isBefore(hoje);
+                })
+                .count();
+
         model.addAttribute("usuario", usuario);
-        model.addAttribute("historico", usuarioService.listarHistoricoParticipacao(id));
-        model.addAttribute("eventosOrganizados", usuarioService.listarEventosOrganizados(id));
+        model.addAttribute("ehOrganizador", usuario.getPerfil() == Perfil.ROLE_ORGANIZADOR);
+        model.addAttribute("historico", historico);
+        model.addAttribute("eventosOrganizados", eventosOrganizados);
+        model.addAttribute("totalEventosOrganizados", eventosOrganizados.size());
+        model.addAttribute("inscricoesValidasNosEventos", inscricoesValidasNosEventos);
+        model.addAttribute("eventosAtivosOuFuturos", eventosAtivosOuFuturos);
+        model.addAttribute("totalParticipacoes", historico.size());
         return "super-admin-detalhes-usuario";
     }
 

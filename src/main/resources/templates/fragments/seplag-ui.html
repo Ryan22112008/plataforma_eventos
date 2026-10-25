@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+<head th:fragment="head(title)">
+    <th:block th:replace="~{fragments/seplag-ui :: head-content(${title})}"></th:block>
+</head>
+<body>
+
+<!-- ======================================================================
+     Cabeçalho padrão das páginas (reutilizado por head e head com noindex)
+     ====================================================================== -->
+<th:block th:fragment="head-content(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' | SEPLAG-MT'">SEPLAG-MT</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/seplag-ui-v2.css}">
+</th:block>
+
+<!-- ======================================================================
+     Marca institucional
+     ====================================================================== -->
+<a th:fragment="brand" th:href="@{/}" class="seplag-brand">
+    <img th:src="@{/images/logo-seplag-branco.png}" alt="Logotipo SEPLAG-MT" class="seplag-brand__logo">
+    <span class="seplag-brand__text">
+        <strong>SEPLAG Eventos</strong>
+        <small>Mato Grosso</small>
+    </span>
+</a>
+
+<!-- ======================================================================
+     Cabeçalho público
+     active: "cursos" | "" (nenhum item destacado)
+     ====================================================================== -->
+<header th:fragment="public-header(active)" class="seplag-public-header">
+    <div class="seplag-public-header__inner">
+        <a th:href="@{/}" class="seplag-brand" aria-label="SEPLAG-MT — página inicial">
+            <img th:src="@{/images/logo-seplag-branco.png}" alt="Logotipo SEPLAG-MT" class="seplag-brand__logo">
+            <span class="seplag-brand__text">
+                <strong>SEPLAG Eventos</strong>
+                <small>Mato Grosso</small>
+            </span>
+        </a>
+
+        <nav class="seplag-public-nav" aria-label="Navegação principal">
+            <a th:href="@{/}" th:classappend="${active == 'cursos'} ? 'is-active'"
+               th:attr="aria-current=${active == 'cursos' ? 'page' : null}">Cursos</a>
+            <a sec:authorize="hasRole('ORGANIZADOR')" th:href="@{/organizador/painel}">
+                Painel do organizador
+            </a>
+            <a sec:authorize="hasRole('PARTICIPANTE')" th:href="@{/participante/meus-certificados}">
+                <i class="fa-solid fa-award" aria-hidden="true"></i>
+                Meus certificados
+            </a>
+        </nav>
+
+        <div class="seplag-public-header__actions">
+            <div sec:authorize="isAnonymous()" class="seplag-public-header__group">
+                <a th:href="@{/login}" class="seplag-public-login">Entrar</a>
+                <a th:href="@{/cadastro}" class="seplag-btn seplag-btn-secondary seplag-btn--sm">Criar conta</a>
+            </div>
+
+            <div sec:authorize="isAuthenticated()" class="seplag-public-header__group">
+                <span class="seplag-public-header__user">
+                    Olá, <strong sec:authentication="name">Usuário</strong>
+                </span>
+                <form th:action="@{/logout}" method="post" class="seplag-inline-form">
+                    <button type="submit" class="seplag-btn seplag-btn-ghost seplag-btn--sm"
+                            title="Sair do sistema" aria-label="Sair do sistema">
+                        <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+                        <span>Sair</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- ======================================================================
+     Rodapé público
+     ====================================================================== -->
+<footer th:fragment="public-footer" class="seplag-public-footer">
+    <div class="seplag-public-footer__inner">
+        <p>SEPLAG-MT — Plataforma de Eventos e Capacitações.</p>
+        <p>&copy; 2026 Secretaria de Estado de Planejamento e Gestão de Mato Grosso.</p>
+    </div>
+</footer>
+
+<!-- ======================================================================
+     Rótulos legíveis para os enums de evento
+     ====================================================================== -->
+<span th:fragment="nicho(valor)" th:text="${valor == 'TECNOLOGIA' ? 'Tecnologia' : (valor == 'TECNOLOGIA_E_INOVACAO' ? 'Tecnologia e Inovação' : (valor == 'GESTAO_PUBLICA' ? 'Gestão Pública' : (valor == 'SAUDE' ? 'Saúde' : (valor == 'OUTROS' ? 'Outros' : valor))))}">Área</span>
+
+<span th:fragment="modalidade(valor)" th:text="${valor == 'PRESENCIAL' ? 'Presencial' : (valor == 'ONLINE' ? 'Online' : (valor == 'HIBRIDO' ? 'Híbrido' : valor))}">Modalidade</span>
+
+<!-- ======================================================================
+     Sidebar do organizador
+     active: "painel" | "novo-evento" | "vitrine"
+     ====================================================================== -->
+<aside th:fragment="sidebar(active)" class="seplag-sidebar" id="seplag-sidebar"
+       aria-label="Navegação principal">
+    <div class="seplag-sidebar__top">
+        <a th:replace="~{fragments/seplag-ui :: brand}"></a>
+    </div>
+
+    <nav class="seplag-nav" aria-label="Menu do organizador">
+        <p class="seplag-nav__label">Organização</p>
+
+        <a th:href="@{/organizador/painel}" class="seplag-nav__link"
+           th:classappend="${active == 'painel'} ? 'is-active'"
+           th:attr="aria-current=${active == 'painel' ? 'page' : null}">
+            <i class="fa-solid fa-table-columns" aria-hidden="true"></i>
+            <span>Painel</span>
+        </a>
+
+        <a th:href="@{/organizador/evento/novo}" class="seplag-nav__link"
+           th:classappend="${active == 'novo-evento'} ? 'is-active'"
+           th:attr="aria-current=${active == 'novo-evento' ? 'page' : null}">
+            <i class="fa-solid fa-circle-plus" aria-hidden="true"></i>
+            <span>Novo evento</span>
+        </a>
+
+        <p class="seplag-nav__label">Plataforma</p>
+
+        <a th:href="@{/}" class="seplag-nav__link"
+           th:classappend="${active == 'vitrine'} ? 'is-active'"
+           th:attr="aria-current=${active == 'vitrine' ? 'page' : null}">
+            <i class="fa-solid fa-store" aria-hidden="true"></i>
+            <span>Vitrine de eventos</span>
+        </a>
+    </nav>
+
+    <div class="seplag-sidebar__footer">
+        <div class="seplag-session">
+            <span class="seplag-session__label">Sessão</span>
+            <span class="seplag-topbar__user" sec:authentication="name">Organizador</span>
+        </div>
+        <form th:action="@{/logout}" method="POST" class="seplag-inline-form">
+            <button type="submit" class="seplag-btn seplag-btn-danger seplag-btn--block seplag-btn--sm">
+                <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+                Sair
+            </button>
+        </form>
+    </div>
+</aside>
+
+<!-- ======================================================================
+     Topbar
+     ====================================================================== -->
+<header th:fragment="topbar(title, eyebrow)" class="seplag-topbar">
+    <button type="button" class="seplag-menu-toggle" data-seplag-menu-toggle
+            aria-controls="seplag-sidebar" aria-expanded="false"
+            aria-label="Abrir menu de navegação">
+        <i class="fa-solid fa-bars" aria-hidden="true"></i>
+    </button>
+
+    <div class="seplag-topbar__titles">
+        <p class="seplag-topbar__eyebrow" th:text="${eyebrow}">Organizador</p>
+        <p class="seplag-topbar__title" th:text="${title}">Painel</p>
+    </div>
+
+    <div class="seplag-topbar__actions">
+        <span class="seplag-badge seplag-badge--role">Organizador</span>
+        <span class="seplag-topbar__user" sec:authentication="name">Organizador</span>
+    </div>
+</header>
+
+</body>
+</html>

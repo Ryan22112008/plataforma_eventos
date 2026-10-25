@@ -1,393 +1,208 @@
 <!DOCTYPE html>
-<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/seplag-ui :: head('Cursos e Eventos')}">
     <title>Cursos e Eventos | SEPLAG-MT</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root { color-scheme: light; --navy: #092943; --blue: #00457c; --green: #08784a; --ink: #172b3b; --muted: #637587; --line: #dce5ec; --canvas: #f3f6f8; }
-        * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body { font-family: 'Inter', sans-serif; background: var(--canvas); color: var(--ink); }
-        .site-header { background: var(--navy); border-bottom: 3px solid #e4b52d; box-shadow: 0 3px 14px rgb(9 41 67 / 12%); }
-        .header-inner { min-height: 76px; }
-        .brand-logo { height: 42px; width: auto; max-width: 150px; }
-        .nav-link { color: #d8e4ed; padding: 10px 2px; border-bottom: 2px solid transparent; transition: color .18s ease, border-color .18s ease; }
-        .nav-link:hover, .nav-link-active { color: #fff; border-color: #e4b52d; }
-        .user-name { color: #e2ebf1; }
-        .hero { background: var(--navy); color: #fff; }
-        .hero-inner { padding-top: 43px; padding-bottom: 76px; }
-        .hero-kicker { display: inline-flex; align-items: center; gap: 9px; color: #dce8f1; letter-spacing: .13em; }
-        .hero-kicker:before { content: ''; width: 22px; height: 2px; background: #e4b52d; }
-        .search-panel { max-width: 1040px; margin: -36px auto 0; position: relative; z-index: 2; background: #fff; border: 1px solid var(--line); box-shadow: 0 12px 32px rgb(9 41 67 / 10%); }
-        .search-control { min-height: 48px; border: 1px solid var(--line); border-radius: 8px; background: #fff; transition: border-color .18s, box-shadow .18s; }
-        .search-control:focus-within { border-color: #4380ae; box-shadow: 0 0 0 3px rgb(0 69 124 / 12%); }
-        .search-control input, .search-control select { min-width: 0; outline: 0; }
-        .primary-button { background: var(--green); transition: background .18s, transform .18s; }
-        .primary-button:hover { background: #05643d; transform: translateY(-1px); }
-        .content-wrap { padding-top: 44px; }
-        .notice-pending { border: 1px solid #e6d7a6; border-left: 4px solid #c39b2e; background: #fffdf7; }
-        .event-card { border: 1px solid var(--line); box-shadow: 0 3px 12px rgb(9 41 67 / 5%); transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
-        .event-card:hover { transform: translateY(-3px); border-color: #c1d1dd; box-shadow: 0 12px 24px rgb(9 41 67 / 11%); }
-        .event-image { aspect-ratio: 16 / 9; min-height: 0; }
-        .event-title { color: var(--ink); }
-        .footer { background: var(--navy); border-top: 4px solid #08784a; }
-        .focus-ring:focus-visible, a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #e4b52d; outline-offset: 3px; }
-        /* Keep the catalog legible against the dark shared site theme. */
-        .catalog-area { background: #f3f6f8; color: #172b3b; }
-        .search-host { color-scheme: light; }
-        .search-host .search-panel { background: #fff !important; border-color: #dce5ec !important; }
-        .search-host .search-panel label { color: #43596d !important; }
-        .search-host .search-panel .search-control { background: #fff !important; border-color: #cbd7e1 !important; }
-        .search-host .search-panel input:not([type=checkbox]):not([type=radio]):not([type=file]),
-        .search-host .search-panel select { min-height: 46px !important; padding: 9px 12px !important; color: #172b3b !important; background: #fff !important; border: 0 !important; border-radius: 7px !important; box-shadow: none !important; }
-        .search-host .search-panel input::placeholder { color: #8293a1 !important; }
-        main.event-catalog { max-width: none !important; padding: 0 0 48px !important; background: #f3f6f8 !important; color: #172b3b !important; }
-        main.event-catalog h2, main.event-catalog h3 { color: #12314b !important; }
-        main.event-catalog p { color: #526779 !important; }
-        main.event-catalog .search-panel { background: #fff !important; border-color: #dce5ec !important; }
-        main.event-catalog .search-panel label { color: #43596d !important; }
-        main.event-catalog .search-panel .search-control { background: #fff !important; border-color: #cbd7e1 !important; }
-        main.event-catalog .search-panel input:not([type=checkbox]):not([type=radio]):not([type=file]),
-        main.event-catalog .search-panel select { min-height: 46px !important; padding: 9px 12px !important; color: #172b3b !important; background: #fff !important; border: 0 !important; border-radius: 7px !important; box-shadow: none !important; }
-        main.event-catalog .search-panel input::placeholder { color: #8293a1 !important; }
-        main.event-catalog .notice-pending { background: #fffdf7 !important; border-color: #e6d7a6 !important; border-left-color: #c39b2e !important; }
-        main.event-catalog .notice-pending > span { color: #876516 !important; background: #f7edcf !important; }
-        main.event-catalog .notice-pending p { color: #526779 !important; }
-        main.event-catalog .notice-pending p:first-child { color: #172b3b !important; }
-        main.event-catalog .notice-pending p:nth-child(2) { color: #866516 !important; }
-        main.event-catalog .event-card { background: #fff !important; border-color: #dce5ec !important; box-shadow: 0 3px 12px rgb(9 41 67 / 6%) !important; }
-        main.event-catalog .event-card:hover { box-shadow: 0 12px 24px rgb(9 41 67 / 12%) !important; }
-        main.event-catalog .event-card h3 { color: #172b3b !important; }
-        main.event-catalog .event-card p, main.event-catalog .event-card span { color: #526779 !important; }
-        main.event-catalog .event-card .event-image span { color: #fff !important; }
-        main.event-catalog .event-card .event-image span i { color: inherit !important; }
-        main.event-catalog .event-card .event-image div { color: #c4d0d9 !important; }
-        main.event-catalog .event-card .event-image div i { color: #c4d0d9 !important; }
-        main.event-catalog .event-card a { color: #fff !important; background: #00457c !important; }
-        main.event-catalog .event-card a:hover { background: #092943 !important; }
-        main.event-catalog .event-card .event-image { background: #e8eef3 !important; }
-        main.event-catalog [class~="bg-white"] { background: #fff !important; }
-        main.event-catalog [class*="bg-emerald-50"] { color: #145c3c !important; background: #eaf7f1 !important; border-color: #add6c1 !important; }
-        main.event-catalog [class*="bg-red-50"] { color: #8b2730 !important; background: #fff0f0 !important; border-color: #edc2c4 !important; }
-        main.event-catalog > .max-w-7xl > .flex > span { color: #526779 !important; background: #fff !important; }
-        main.event-catalog .event-grid-single { grid-template-columns: minmax(0, 360px); justify-content: center; }
-        @media (max-width: 639px) { main.event-catalog .event-grid-single { grid-template-columns: minmax(0, 1fr); } }
-        @media (max-width: 767px) {
-            .header-inner { padding-top: 12px; padding-bottom: 12px; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
-            .brand-logo { height: 36px; }
-            .header-nav { order: 3; width: 100%; justify-content: flex-start; gap: 22px; border-top: 1px solid rgb(255 255 255 / 12%); padding-top: 8px; }
-            .header-actions { margin-left: auto; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
-            .hero-inner { padding-top: 36px; padding-bottom: 62px; }
-            .search-panel { margin-top: -28px; }
-            .content-wrap { padding-top: 32px; }
-        }
-        @media (max-width: 420px) { .header-actions { width: 100%; justify-content: flex-start; margin-left: 0; } }
-        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
-    </style>
-    <link rel="stylesheet" th:href="@{/css/seplag-ui.css}">
-    <style>
-        /* Page-specific product styling; overrides the shared theme without affecting other views. */
-        body.events-page { color: #eef4f8 !important; background: #081a2a !important; color-scheme: dark; }
-        body.events-page .site-header { background: rgba(7,22,37,.95) !important; border-bottom: 1px solid rgba(174,202,225,.13) !important; box-shadow: 0 8px 24px rgba(0,0,0,.15) !important; backdrop-filter: blur(14px); }
-        body.events-page .brand-name { color: #fff !important; }
-        body.events-page .brand-region { color: #adbdcb !important; }
-        body.events-page .nav-link { color: #c5d2de !important; }
-        body.events-page .nav-link:hover, body.events-page .nav-link-active { color: #fff !important; }
-        body.events-page .header-actions .user-name { color: #b7c7d6 !important; }
-        body.events-page .hero { background: radial-gradient(ellipse at 50% 0%,rgba(35,83,122,.30),transparent 54%),linear-gradient(180deg,#0b2540,#0a2037) !important; border-color: rgba(174,202,225,.09) !important; }
-        body.events-page .hero h1 { color: #f7f9fc !important; letter-spacing: -.045em; }
-        body.events-page .hero h1 span { color: #9fc8e7 !important; }
-        body.events-page .hero-kicker { color: #9dc7e8 !important; }
-        body.events-page .hero p { color: #c1d0dd !important; }
-        body.events-page .search-panel { max-width: 1050px; background: #112c46 !important; border: 1px solid rgba(179,207,231,.18) !important; border-radius: 13px !important; box-shadow: 0 18px 44px rgba(0,0,0,.22) !important; }
-        body.events-page .search-panel label { color: #b8cad9 !important; }
-        body.events-page .search-panel .search-control { background: #0b2034 !important; border-color: rgba(179,207,231,.17) !important; }
-        body.events-page .search-panel .search-control:focus-within { border-color: rgba(130,184,224,.72) !important; box-shadow: 0 0 0 3px rgba(99,155,199,.13) !important; }
-        body.events-page .search-panel input:not([type=checkbox]):not([type=radio]):not([type=file]),
-        body.events-page .search-panel select { min-height: 46px !important; padding: 0 2px !important; color: #f2f6fa !important; background: transparent !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
-        body.events-page .search-panel input::placeholder { color: #8da3b8 !important; }
-        body.events-page .search-panel option { color: #f2f6fa; background: #102a43; }
-        body.events-page .primary-button { color: #fff !important; background: #118458 !important; border-color: rgba(130,225,180,.18) !important; }
-        body.events-page .primary-button:hover { background: #0d704a !important; }
-        body.events-page main.event-catalog { max-width: none !important; padding: 58px 0 76px !important; color: #eef4f8 !important; background: radial-gradient(ellipse at 50% 0%,rgba(29,61,88,.2),transparent 52%),#0c2237 !important; }
-        body.events-page .catalog-area { background: transparent !important; color: #eef4f8 !important; }
-        body.events-page main.event-catalog h2, body.events-page main.event-catalog h3 { color: #f1f5f9 !important; }
-        body.events-page main.event-catalog p { color: #aebfd0 !important; }
-        body.events-page .notice-pending { max-width: 920px; background: rgba(18,43,65,.74) !important; border: 1px solid rgba(216,183,91,.18) !important; border-left: 2px solid #d8b75b !important; border-radius: 10px !important; box-shadow: none !important; }
-        body.events-page .notice-pending > span { color: #e5c979 !important; background: rgba(216,183,91,.11) !important; }
-        body.events-page .notice-pending p:first-child { color: #f1f5f8 !important; }
-        body.events-page .notice-pending p:nth-child(2) { color: #e0c46f !important; }
-        body.events-page .notice-pending p:nth-child(3) { color: #aebfd0 !important; }
-        body.events-page .event-grid { gap: 20px; }
-        body.events-page .event-card { min-width: 0; background: linear-gradient(155deg,#122d47,#10283f) !important; border: 1px solid rgba(174,202,225,.14) !important; border-radius: 11px !important; box-shadow: 0 6px 18px rgba(2,11,20,.13) !important; transition: transform .2s,border-color .2s,box-shadow .2s; }
-        body.events-page .event-card:hover { border-color: rgba(130,184,224,.36) !important; box-shadow: 0 15px 30px rgba(2,11,20,.25) !important; transform: translateY(-3px); }
-        body.events-page .event-image { aspect-ratio: 16 / 9; background: #0b2034 !important; border-color: rgba(174,202,225,.12) !important; }
-        body.events-page .event-title { color: #f2f6fa !important; }
-        body.events-page .event-category { margin: 0 0 7px; color: #91c4e9 !important; font-size: .62rem; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
-        body.events-page .event-card p, body.events-page .event-card span { color: #a8bbcc !important; }
-        body.events-page .event-card .event-category { color: #91c4e9 !important; }
-        body.events-page .event-card .event-image span { color: #fff !important; }
-        body.events-page .event-card .event-image span i { color: inherit !important; }
-        body.events-page .event-card .event-image div { color: #7892a8 !important; background: linear-gradient(145deg,#183650,#0c2237) !important; }
-        body.events-page .event-card .event-image div i { color: #7892a8 !important; }
-        body.events-page .event-card a { color: #f6f9fb !important; background: rgba(42,91,130,.54) !important; border: 1px solid rgba(132,179,216,.2); }
-        body.events-page .event-card a:hover { color: #fff !important; background: #1b527b !important; }
-        body.events-page .event-grid-single { grid-template-columns: minmax(0,1fr); }
-        body.events-page .event-grid-single .event-card { display: grid; grid-template-columns: minmax(320px,.95fr) minmax(0,1.05fr); min-height: 330px; }
-        body.events-page .event-grid-single .event-image { height: 100%; min-height: 100%; aspect-ratio: auto; border-right: 1px solid rgba(174,202,225,.14); border-bottom: 0; }
-        body.events-page .event-grid-single .event-card > div:nth-child(2) { padding: clamp(22px,4vw,42px); }
-        body.events-page .event-grid-single .event-title { font-size: clamp(1.15rem,2.2vw,1.55rem); }
-        body.events-page .event-grid-single .event-card p { max-width: 620px; line-height: 1.75; }
-        /* Keep a single result the same compact card size as future grid items. */
-        body.events-page { background: #0b2034 !important; }
-        body.events-page .hero { background: radial-gradient(ellipse at 50% 0%,rgba(35,83,122,.22),transparent 54%),#0b2034 !important; border-bottom: 0 !important; }
-        body.events-page main.event-catalog { background: #0b2034 !important; }
-        body.events-page .catalog-area { background: transparent !important; }
-        body.events-page .event-grid-single { grid-template-columns: minmax(0,340px) !important; justify-content: start; }
-        body.events-page .event-grid-single .event-card { display: flex; grid-template-columns: none; min-height: 0; max-width: 340px; }
-        body.events-page .event-grid-single .event-image { width: 100%; height: auto; min-height: 0; aspect-ratio: 16 / 9; border-right: 0; border-bottom: 1px solid rgba(174,202,225,.14); }
-        body.events-page .event-grid-single .event-card > div:nth-child(2) { padding: 17px; }
-        body.events-page .event-grid-single .event-title { font-size: 1rem; }
-        body.events-page .event-grid-single .event-card p { max-width: none; line-height: 1.65; }
-        body.events-page main.event-catalog [class~="bg-white"] { background: #112b42 !important; border-color: rgba(174,202,225,.15) !important; box-shadow: none !important; }
-        body.events-page main.event-catalog [class*="bg-emerald-50"] { color: #b7e6ce !important; background: rgba(20,92,60,.24) !important; border-color: rgba(98,179,133,.35) !important; }
-        body.events-page main.event-catalog [class*="bg-red-50"] { color: #f0c2c5 !important; background: rgba(123,42,49,.23) !important; border-color: rgba(200,108,115,.36) !important; }
-        body.events-page .site-footer { color: #aebfcd !important; background: #071625 !important; border-top: 1px solid rgba(174,202,225,.13) !important; }
-        body.events-page .site-footer h4 { color: #edf3f7 !important; }
-        body.events-page .site-footer p { color: #91a6b8 !important; }
-        @media (max-width: 900px) { body.events-page .event-grid-single .event-card { grid-template-columns: minmax(270px,.9fr) minmax(0,1.1fr); } }
-        @media (max-width: 639px) {
-            body.events-page main.event-catalog { padding: 39px 0 54px !important; }
-            body.events-page .event-grid { grid-template-columns: minmax(0,1fr); gap: 15px; }
-            body.events-page .event-grid-single { grid-template-columns: minmax(0,1fr) !important; }
-            body.events-page .event-grid-single .event-card { max-width: none; }
-            body.events-page .section-heading { align-items: flex-start; }
-        }
-        body.events-page .section-tools { display: flex; align-items: center; gap: 10px; }
-        body.events-page .organizer-access-callout {
-            display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 11px;
-            color: #e5f5ec !important; background: rgba(17,132,88,.16) !important;
-            border: 1px solid rgba(91,190,143,.32) !important; border-radius: 7px !important;
-            box-shadow: none !important; font-size: .7rem; font-weight: 600; text-decoration: none;
-            transition: background .18s, border-color .18s;
-        }
-        body.events-page .organizer-access-callout:hover { color: #fff !important; background: rgba(17,132,88,.3) !important; border-color: rgba(91,190,143,.5) !important; }
-        @media (max-width: 639px) { body.events-page .section-tools { align-items: flex-end; flex-direction: column-reverse; gap: 8px; } }
-        @media (prefers-reduced-motion: reduce) { body.events-page *, body.events-page *:before, body.events-page *:after { transition-duration: .01ms !important; animation-duration: .01ms !important; } }
-    </style>
 </head>
-<body class="events-page min-h-screen flex flex-col">
+<body class="v2 seplag-public">
 
+<a class="seplag-skip-link" href="#conteudo">Ir para o conteúdo</a>
 
-<header class="site-header sticky top-0 z-50">
-    <div class="header-inner max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-6">
+<header th:replace="~{fragments/seplag-ui :: public-header('cursos')}"></header>
 
-        <div class="flex items-center space-x-3">
-            <a th:href="@{/}" class="flex items-center space-x-3 rounded" aria-label="SEPLAG-MT — página inicial">
+<main id="conteudo">
 
-                <img th:src="@{/images/logo-seplag-branco.png}"
-                     alt="Logo SEPLAG"
-                     class="brand-logo object-contain" />
+    <section class="seplag-public-hero" aria-labelledby="vitrine-titulo">
+        <div class="seplag-public-hero__inner">
+            <p class="seplag-eyebrow">Plataforma de capacitação</p>
+            <h1 id="vitrine-titulo">Capacitação que transforma.</h1>
+            <p class="seplag-public-hero__lead">
+                Encontre cursos, eventos e oportunidades de aprendizagem da SEPLAG-MT.
+            </p>
 
-                <div class="flex flex-col border-l border-white/25 pl-3">
-                    <span class="text-sm font-bold tracking-tight text-white">SEPLAG</span>
-                    <span class="text-[10px] text-slate-300 font-medium tracking-widest uppercase">Governo de Mato Grosso</span>
-                </div>
-            </a>
-        </div>
-
-        <nav class="header-nav flex items-center gap-7 text-sm font-medium">
-            <a th:href="@{/}" class="nav-link nav-link-active">Cursos</a>
-            <a sec:authorize="hasRole('ORGANIZADOR')" th:href="@{/organizador/painel}" class="nav-link">Painel do Organizador</a>
-            <a sec:authorize="hasRole('PARTICIPANTE')" th:href="@{/participante/meus-certificados}" class="nav-link">
-                <i class="fa-solid fa-award mr-1 text-amber-300"></i> Meus Certificados
-            </a>
-        </nav>
-
-        <div class="header-actions flex items-center gap-4">
-            <div sec:authorize="isAnonymous()" class="flex items-center gap-3">
-                <a th:href="@{/login}" class="text-sm font-medium text-slate-200 hover:text-white px-2 py-2 transition-colors">Entrar</a>
-                <a th:href="@{/cadastro}" class="text-sm font-semibold bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors focus-ring">Criar Conta</a>
-            </div>
-
-            <div sec:authorize="isAuthenticated()" class="flex items-center gap-3 flex-wrap">
-                <span class="user-name text-xs">Olá, <strong class="text-white" sec:authentication="name">Usuário</strong></span>
-                <form th:action="@{/logout}" method="post" class="inline-flex">
-                    <button type="submit" class="text-slate-300 hover:text-white w-9 h-9 rounded-lg hover:bg-white/10 transition-colors" title="Sair do Sistema" aria-label="Sair do Sistema">
-                        <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</header>
-
-<section class="hero px-4 relative">
-    <div class="hero-inner max-w-7xl mx-auto text-center">
-        <span class="hero-kicker text-[11px] font-semibold uppercase mb-4">Plataforma de capacitação</span>
-        <h1 class="text-3xl sm:text-4xl lg:text-[2.7rem] font-semibold tracking-tight leading-tight mb-3">Capacitação que transforma.</h1>
-        <p class="text-slate-200 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">Encontre cursos, eventos e oportunidades de aprendizagem da SEPLAG-MT.</p>
-    </div>
-</section>
-
-<div class="search-host max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-    <form th:action="@{/}" method="get" class="search-panel rounded-xl p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_auto] gap-3 items-end">
-        <div>
-            <label for="busca" class="block text-xs font-semibold text-slate-600 mb-1.5">Buscar cursos</label>
-            <div class="search-control flex items-center px-3 gap-2">
-                <i class="fa-solid fa-magnifying-glass text-sm text-slate-400" aria-hidden="true"></i>
-                <input id="busca" type="text" name="busca" th:value="${param.busca}" placeholder="Buscar cursos..." class="w-full text-sm text-[#172b3b] placeholder-gray-400 bg-transparent py-3">
-            </div>
-        </div>
-        <div>
-            <label for="nicho" class="block text-xs font-semibold text-slate-600 mb-1.5">Área / Nicho</label>
-            <div class="search-control flex items-center px-3">
-                <select name="nicho" id="nicho" class="w-full text-sm text-[#172b3b] bg-transparent py-3">
-                    <option value="" th:selected="${param.nicho == null}">Todos</option>
-                    <option value="TECNOLOGIA" th:selected="${param.nicho == 'TECNOLOGIA'}">Tecnologia</option>
-                    <option value="TECNOLOGIA_E_INOVACAO" th:selected="${param.nicho == 'TECNOLOGIA_E_INOVACAO'}">Tecnologia e Inovação</option>
-                    <option value="GESTAO_PUBLICA" th:selected="${param.nicho == 'GESTAO_PUBLICA'}">Gestão Pública</option>
-                    <option value="SAUDE" th:selected="${param.nicho == 'SAUDE'}">Saúde</option>
-                    <option value="OUTROS" th:selected="${param.nicho == 'OUTROS'}">Outros</option>
-                </select>
-            </div>
-        </div>
-        <input type="hidden" name="modalidade" th:value="${param.modalidade}">
-        <button type="submit" class="primary-button min-h-12 w-full sm:w-auto text-white text-sm font-semibold px-6 py-3 rounded-lg shadow-sm focus-ring">
-            <i class="fa-solid fa-magnifying-glass mr-2" aria-hidden="true"></i>Pesquisar
-        </button>
-    </form>
-</div>
-
-<main class="event-catalog flex-grow w-full">
-<div class="catalog-area max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 content-wrap">
-
-    <!-- --- ADICIONADO: CARD VERDE DE INSCRIÇÃO REALIZADA COM SUCESSO --- -->
-    <div th:if="${sucesso}" class="mb-6 bg-emerald-50 border-l-4 border-emerald-600 p-4 rounded-lg shadow-sm flex items-center text-sm text-emerald-900">
-        <i class="fa-solid fa-circle-check mr-3 text-xl text-emerald-600"></i>
-        <div>
-            <span class="font-bold">Excelente!</span>
-            <p class="mt-0.5" th:text="${sucesso}">Inscrição realizada com sucesso!</p>
-        </div>
-    </div>
-
-    <!-- --- ADICIONADO: CARD VERMELHO SE O EVENTO ESTIVER EM RASCUNHO OU JÁ INSCRITO --- -->
-    <div th:if="${erroNegocio}" class="mb-6 bg-red-50 border-l-4 border-red-600 p-4 rounded-lg shadow-sm flex items-center text-sm text-red-800">
-        <i class="fa-solid fa-triangle-exclamation mr-3 text-xl text-red-500"></i>
-        <div>
-            <span class="font-bold">Não foi possível prosseguir</span>
-            <p class="mt-0.5" th:text="${erroNegocio}">Erro de validação do negócio.</p>
-        </div>
-    </div>
-
-    <div sec:authorize="hasRole('PARTICIPANTE')" th:if="${solicitacaoOrganizadorPendente}"
-         class="notice-pending mb-6 rounded-xl p-4 sm:p-5 text-sm text-slate-800 flex gap-4 items-start max-w-4xl" role="status">
-        <span class="w-10 h-10 shrink-0 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center"><i class="fa-solid fa-clock" aria-hidden="true"></i></span>
-        <div>
-            <p class="font-semibold text-[#172b3b]">Solicitação de acesso para criar cursos</p>
-            <p class="mt-1 text-xs font-semibold uppercase tracking-wide text-amber-800">Aguardando aprovação</p>
-            <p class="mt-2 text-sm leading-relaxed text-slate-600">Você já pode se inscrever em cursos enquanto a administração analisa a solicitação.</p>
-        </div>
-    </div>
-
-    <div sec:authorize="hasRole('PARTICIPANTE')" th:if="${solicitacaoOrganizadorEnviada == true}"
-         class="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900" role="status">
-        <p class="font-semibold"><i class="fa-solid fa-circle-check mr-2"></i>Solicitação enviada para análise da administração.</p>
-    </div>
-
-    <div sec:authorize="hasRole('PARTICIPANTE')" th:if="${erroSolicitacaoOrganizador}"
-         class="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert"
-         th:text="${erroSolicitacaoOrganizador}"></div>
-
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-slate-200 pb-5 mb-7">
-        <div>
-            <p class="text-[11px] font-semibold tracking-[.14em] uppercase text-[#08784a] mb-1">Oportunidades</p>
-            <h2 class="text-2xl font-semibold text-[#092943] tracking-tight">Explore nossos cursos</h2>
-            <p class="text-sm text-slate-600 mt-1">Capacitações e eventos disponíveis para você.</p>
-        </div>
-        <div class="section-tools">
-            <a sec:authorize="hasRole('PARTICIPANTE')"
-               th:href="@{/participante/solicitar-organizador}"
-               th:if="${solicitacaoOrganizadorPendente == false}"
-               class="organizer-access-callout organizer-access-button">
-                <i class="fa-solid fa-user-plus" aria-hidden="true"></i><span>Solicitar Organizador</span>
-            </a>
-            <span class="text-xs text-slate-500 font-medium bg-white border border-slate-200 rounded-full px-3 py-1.5 w-fit" th:text="${'Total: ' + (eventos != null ? eventos.size() : 0) + ' cadastrados'}">Total: 0</span>
-        </div>
-    </div>
-
-    <div th:if="${eventos == null or eventos.isEmpty()}" class="bg-white rounded-2xl p-9 text-center border border-slate-200 shadow-sm max-w-lg mx-auto">
-        <div class="text-[#00457C] text-3xl mb-3"><i class="fa-regular fa-calendar-xmark"></i></div>
-        <h3 class="font-semibold text-[#172b3b] mb-1">Nenhum curso localizado</h3>
-        <p class="text-sm text-slate-600">Não há cursos publicados no momento ou a busca não retornou resultados.</p>
-    </div>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-6" th:classappend="${eventos.size() == 1} ? 'event-grid-single'" th:if="${eventos != null and !eventos.isEmpty()}">
-        <div th:each="evento : ${eventos}" class="event-card bg-white rounded-xl overflow-hidden flex flex-col group min-w-0">
-
-            <div class="event-image bg-slate-100 relative overflow-hidden shrink-0 border-b border-slate-100 flex items-center justify-center">
-
-                <img th:if="${evento.bannerUrl != null}"
-                     th:src="${#strings.startsWith(evento.bannerUrl, 'https://res.cloudinary.com/') ? evento.bannerUrl : '/imagens-eventos/' + evento.bannerUrl}"
-                     alt="Capa do Evento"
-                     onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden')"
-                     class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300">
-
-                <div th:class="${evento.bannerUrl == null} ? 'w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center' : 'hidden w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center'">
-                    <i class="fa-solid fa-building-columns text-4xl text-slate-300 group-hover:scale-105 transition-transform duration-200"></i>
-                </div>
-
-                <span class="absolute top-3 left-3 bg-[#08784a] text-white font-semibold text-[10px] uppercase tracking-wider px-2.5 py-1.5 rounded-md shadow-sm">
-        <i class="fa-solid fa-gift mr-1"></i>Gratuito
-    </span>
-            </div>
-
-            <div class="p-4 sm:p-5 flex-grow flex flex-col justify-between">
-                <div>
-                    <p th:if="${evento.nicho != null}" class="event-category" th:text="${evento.nicho}">Categoria</p>
-                    <h3 class="event-title font-semibold text-base tracking-tight line-clamp-2 min-h-[3rem] group-hover:text-[#00457C] transition-colors" th:text="${evento.titulo}">Título</h3>
-                    <div class="mt-3 flex items-center text-xs text-slate-500 gap-2">
-                        <i class="fa-regular fa-calendar text-[#00457C]"></i>
-                        <span th:text="${#temporals.format(evento.dataInicio, 'dd/MM/yyyy') + ' - ' + #temporals.format(evento.dataTermino, 'dd/MM/yyyy')}">Data</span>
+            <form th:action="@{/}" method="get" class="seplag-public-search" role="search">
+                <div class="seplag-field">
+                    <label for="busca" class="seplag-label">Buscar cursos</label>
+                    <div class="seplag-search-input">
+                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        <input id="busca" type="text" name="busca" th:value="${termoBusca}"
+                               placeholder="Buscar cursos..." class="seplag-input" autocomplete="off">
                     </div>
-                    <div class="mt-2 flex items-center text-xs text-slate-500 gap-2">
-                        <i class="fa-solid fa-display text-[#00457C]" aria-hidden="true"></i>
-                        <span th:text="${evento.modalidade}">Modalidade</span>
-                    </div>
-                    <p class="text-xs text-slate-600 mt-3 line-clamp-3 leading-relaxed" th:text="${evento.descricao}">Descrição</p>
                 </div>
 
-                <div class="mt-6 pt-4 border-t border-slate-100">
-                    <a th:href="@{/eventos/{id}(id=${evento.id})}"
-                       class="w-full bg-[#00457c] hover:bg-[#092943] text-white text-center text-xs font-semibold py-3 px-4 rounded-lg block transition-colors">
-                        <i class="fa-solid fa-eye mr-1"></i> Ver Detalhes
-                    </a>
+                <div class="seplag-field">
+                    <label for="nicho" class="seplag-label">Área / Nicho</label>
+                    <select name="nicho" id="nicho" class="seplag-select">
+                        <option value="" th:selected="${filtroNicho == ''}">Todos</option>
+                        <option value="TECNOLOGIA" th:selected="${filtroNicho == 'TECNOLOGIA'}">Tecnologia</option>
+                        <option value="TECNOLOGIA_E_INOVACAO" th:selected="${filtroNicho == 'TECNOLOGIA_E_INOVACAO'}">Tecnologia e Inovação</option>
+                        <option value="GESTAO_PUBLICA" th:selected="${filtroNicho == 'GESTAO_PUBLICA'}">Gestão Pública</option>
+                        <option value="SAUDE" th:selected="${filtroNicho == 'SAUDE'}">Saúde</option>
+                        <option value="OUTROS" th:selected="${filtroNicho == 'OUTROS'}">Outros</option>
+                    </select>
+                </div>
+
+                <div class="seplag-field">
+                    <label for="modalidade" class="seplag-label">Modalidade</label>
+                    <select name="modalidade" id="modalidade" class="seplag-select">
+                        <option value="" th:selected="${filtroModalidade == ''}">Todas</option>
+                        <option value="PRESENCIAL" th:selected="${filtroModalidade == 'PRESENCIAL'}">Presencial</option>
+                        <option value="ONLINE" th:selected="${filtroModalidade == 'ONLINE'}">Online</option>
+                        <option value="HIBRIDO" th:selected="${filtroModalidade == 'HIBRIDO'}">Híbrido</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="seplag-btn seplag-btn-primary seplag-public-search__submit">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    Pesquisar
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <div class="seplag-public-content">
+
+        <div th:if="${sucesso}" class="seplag-flash">
+            <div class="seplag-alert seplag-alert--success" role="status">
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                <div class="seplag-alert__body">
+                    <p class="seplag-alert__title">Excelente!</p>
+                    <p th:text="${sucesso}">Inscrição realizada com sucesso!</p>
                 </div>
             </div>
         </div>
+
+        <div th:if="${erroNegocio}" class="seplag-flash">
+            <div class="seplag-alert seplag-alert--error" role="alert">
+                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                <div class="seplag-alert__body">
+                    <p class="seplag-alert__title">Não foi possível prosseguir</p>
+                    <p th:text="${erroNegocio}">Erro de validação do negócio.</p>
+                </div>
+            </div>
+        </div>
+
+        <div sec:authorize="hasRole('PARTICIPANTE')" th:if="${solicitacaoOrganizadorPendente}" class="seplag-flash" role="status">
+            <div class="seplag-alert seplag-alert--warning">
+                <i class="fa-solid fa-clock" aria-hidden="true"></i>
+                <div class="seplag-alert__body">
+                    <p class="seplag-alert__title">Solicitação de acesso para criar cursos</p>
+                    <p class="seplag-alert__meta">Aguardando aprovação</p>
+                    <p>Você já pode se inscrever em cursos enquanto a administração analisa a solicitação.</p>
+                </div>
+            </div>
+        </div>
+
+        <div sec:authorize="hasRole('PARTICIPANTE')" th:if="${solicitacaoOrganizadorEnviada == true}" class="seplag-flash" role="status">
+            <div class="seplag-alert seplag-alert--success">
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                <span>Solicitação enviada para análise da administração.</span>
+            </div>
+        </div>
+
+        <div sec:authorize="hasRole('PARTICIPANTE')" th:if="${erroSolicitacaoOrganizador}" class="seplag-flash" role="alert">
+            <div class="seplag-alert seplag-alert--error">
+                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                <span th:text="${erroSolicitacaoOrganizador}">Erro na solicitação.</span>
+            </div>
+        </div>
+
+        <div class="seplag-public-section">
+            <div class="seplag-public-section__copy">
+                <p class="seplag-eyebrow">Oportunidades</p>
+                <h2>Explore nossos cursos</h2>
+                <p>Capacitações e eventos disponíveis para você.</p>
+            </div>
+
+            <div class="seplag-public-section__tools">
+                <a sec:authorize="hasRole('PARTICIPANTE')"
+                   th:href="@{/participante/solicitar-organizador}"
+                   th:if="${solicitacaoOrganizadorPendente == false}"
+                   class="organizer-access-callout organizer-access-button">
+                    <i class="fa-solid fa-user-plus" aria-hidden="true"></i><span>Solicitar Organizador</span>
+                </a>
+                <span class="seplag-public-count" th:text="${'Total: ' + totalElements + ' cadastrados'}">Total: 0 cadastrados</span>
+            </div>
+        </div>
+
+        <div th:if="${eventos == null or eventos.isEmpty()}" class="seplag-card seplag-empty-card">
+            <div class="seplag-empty">
+                <i class="fa-regular fa-calendar-xmark" aria-hidden="true"></i>
+                <strong>Nenhum curso localizado</strong>
+                <p>Não há cursos publicados no momento ou a busca não retornou resultados.</p>
+            </div>
+        </div>
+
+        <div class="seplag-event-grid"
+             th:classappend="${totalElements == 1} ? 'event-grid-single'"
+             th:if="${eventos != null and !eventos.isEmpty()}">
+
+            <article th:each="evento : ${eventos}" class="seplag-event-card">
+
+                <div class="seplag-event-card__media">
+                    <img th:if="${evento.bannerUrl != null}"
+                         th:src="${#strings.startsWith(evento.bannerUrl, 'https://res.cloudinary.com/') ? evento.bannerUrl : '/imagens-eventos/' + evento.bannerUrl}"
+                         alt="Capa do Evento"
+                         onerror="this.style.display='none'; this.nextElementSibling.classList.remove('is-hidden')">
+
+                    <div th:class="${evento.bannerUrl == null} ? 'seplag-event-fallback' : 'seplag-event-fallback is-hidden'">
+                        <i class="fa-solid fa-building-columns" aria-hidden="true"></i>
+                    </div>
+                </div>
+
+                <div class="seplag-event-card__body">
+
+                    <div class="seplag-event-card__badges">
+                        <span th:if="${evento.modalidade != null}" class="seplag-badge seplag-badge--role">
+                            <i class="fa-solid fa-display" aria-hidden="true"></i>
+                            <th:block th:replace="~{fragments/seplag-ui :: modalidade(${evento.modalidade})}"></th:block>
+                        </span>
+                        <span th:if="${evento.nicho != null}" class="seplag-badge seplag-badge--neutral">
+                            <th:block th:replace="~{fragments/seplag-ui :: nicho(${evento.nicho})}"></th:block>
+                        </span>
+                    </div>
+
+                    <h3 class="seplag-event-card__title" th:text="${evento.titulo}">Título do evento</h3>
+
+                    <ul class="seplag-event-card__meta">
+                        <li>
+                            <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                            <span th:text="${#temporals.format(evento.dataInicio, 'dd/MM/yyyy') + ' - ' + #temporals.format(evento.dataTermino, 'dd/MM/yyyy')}">Data</span>
+                        </li>
+                        <li th:if="${evento.local != null and !evento.local.isEmpty()}">
+                            <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                            <span th:text="${evento.local}">Local</span>
+                        </li>
+                    </ul>
+
+                    <p class="seplag-event-card__desc" th:text="${evento.descricao}">Descrição do evento.</p>
+
+                    <div class="seplag-event-card__footer">
+                        <a th:href="@{/eventos/{id}(id=${evento.id})}" class="seplag-btn seplag-btn-primary seplag-btn--block">
+                            <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                            Ver Detalhes
+                        </a>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <section th:if="${totalPages > 1}" class="seplag-public-section" aria-label="Paginação de eventos">
+            <div class="seplag-public-section__tools">
+                <span class="seplag-public-count" th:text="|Página ${currentPage + 1} de ${totalPages} · ${totalElements} eventos|">Página 1 de 1 · 0 eventos</span>
+                <nav class="seplag-pagination" aria-label="Páginas de eventos">
+                    <a th:if="${hasPrevious}"
+                       th:href="@{/(page=${currentPage - 1}, busca=${termoBusca}, nicho=${filtroNicho}, modalidade=${filtroModalidade})}">Anterior</a>
+                    <span class="is-active" aria-current="page" th:text="|${currentPage + 1} / ${totalPages}|">1 / 1</span>
+                    <a th:if="${hasNext}"
+                       th:href="@{/(page=${currentPage + 1}, busca=${termoBusca}, nicho=${filtroNicho}, modalidade=${filtroModalidade})}">Próxima</a>
+                </nav>
+            </div>
+        </section>
     </div>
-</div>
 </main>
 
-<footer class="footer text-white mt-auto">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
-            <div class="space-y-3">
-                <h4 class="font-semibold text-base tracking-tight border-b border-white/15 pb-2 text-amber-300">SEPLAG-MT</h4>
-            <p class="text-slate-300 font-light text-xs">Plataforma de eventos e capacitações.</p>
-            </div>
-        </div>
-        <div class="border-t border-white/10 mt-8 pt-6 text-center text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p>&copy; 2026 SEPLAG-MT — Plataforma de Eventos.</p>
-        </div>
-    </div>
-</footer>
+<footer th:replace="~{fragments/seplag-ui :: public-footer}"></footer>
 
 </body>
 </html>
