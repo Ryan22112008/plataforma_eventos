@@ -38,6 +38,40 @@
         .event-title { color: var(--ink); }
         .footer { background: var(--navy); border-top: 4px solid #08784a; }
         .focus-ring:focus-visible, a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #e4b52d; outline-offset: 3px; }
+        /* Keep the catalog legible against the dark shared site theme. */
+        .catalog-area { background: #f3f6f8; color: #172b3b; }
+        .search-host .search-panel { background: #fff !important; border-color: #dce5ec !important; }
+        .search-host .search-panel label { color: #43596d !important; }
+        .search-host .search-panel .search-control { background: #fff !important; border-color: #cbd7e1 !important; }
+        .search-host .search-panel input:not([type=checkbox]):not([type=radio]):not([type=file]),
+        .search-host .search-panel select { min-height: 46px !important; padding: 9px 12px !important; color: #172b3b !important; background: #fff !important; border: 0 !important; border-radius: 7px !important; box-shadow: none !important; }
+        .search-host .search-panel input::placeholder { color: #8293a1 !important; }
+        main.event-catalog { max-width: none !important; padding: 0 0 48px !important; background: #f3f6f8 !important; color: #172b3b !important; }
+        main.event-catalog h2, main.event-catalog h3 { color: #12314b !important; }
+        main.event-catalog p { color: #526779 !important; }
+        main.event-catalog .search-panel { background: #fff !important; border-color: #dce5ec !important; }
+        main.event-catalog .search-panel label { color: #43596d !important; }
+        main.event-catalog .search-panel .search-control { background: #fff !important; border-color: #cbd7e1 !important; }
+        main.event-catalog .search-panel input:not([type=checkbox]):not([type=radio]):not([type=file]),
+        main.event-catalog .search-panel select { min-height: 46px !important; padding: 9px 12px !important; color: #172b3b !important; background: #fff !important; border: 0 !important; border-radius: 7px !important; box-shadow: none !important; }
+        main.event-catalog .search-panel input::placeholder { color: #8293a1 !important; }
+        main.event-catalog .notice-pending { background: #fffdf7 !important; border-color: #e6d7a6 !important; border-left-color: #c39b2e !important; }
+        main.event-catalog .notice-pending > span { color: #876516 !important; background: #f7edcf !important; }
+        main.event-catalog .notice-pending p { color: #526779 !important; }
+        main.event-catalog .notice-pending p:first-child { color: #172b3b !important; }
+        main.event-catalog .notice-pending p:nth-child(2) { color: #866516 !important; }
+        main.event-catalog .event-card { background: #fff !important; border-color: #dce5ec !important; box-shadow: 0 3px 12px rgb(9 41 67 / 6%) !important; }
+        main.event-catalog .event-card:hover { box-shadow: 0 12px 24px rgb(9 41 67 / 12%) !important; }
+        main.event-catalog .event-card h3 { color: #172b3b !important; }
+        main.event-catalog .event-card p, main.event-catalog .event-card span { color: #526779 !important; }
+        main.event-catalog .event-card .event-image span { color: #fff !important; }
+        main.event-catalog .event-card .event-image span i { color: inherit !important; }
+        main.event-catalog .event-card .event-image div { color: #c4d0d9 !important; }
+        main.event-catalog .event-card .event-image div i { color: #c4d0d9 !important; }
+        main.event-catalog .event-card a { color: #fff !important; background: #00457c !important; }
+        main.event-catalog .event-card a:hover { background: #092943 !important; }
+        main.event-catalog .event-card .event-image { background: #e8eef3 !important; }
+        main.event-catalog > .max-w-7xl > .flex > span { color: #526779 !important; background: #fff !important; }
         @media (max-width: 767px) {
             .header-inner { padding-top: 12px; padding-bottom: 12px; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
             .brand-logo { height: 36px; }
@@ -112,7 +146,7 @@
     </div>
 </section>
 
-<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+<div class="search-host max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
     <form th:action="@{/}" method="get" class="search-panel rounded-xl p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_auto] gap-3 items-end">
         <div>
             <label for="busca" class="block text-xs font-semibold text-slate-600 mb-1.5">Buscar cursos</label>
@@ -141,7 +175,8 @@
     </form>
 </div>
 
-<main class="content-wrap max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-14 flex-grow w-full">
+<main class="event-catalog flex-grow w-full">
+<div class="catalog-area max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 content-wrap">
 
     <!-- --- ADICIONADO: CARD VERDE DE INSCRIÇÃO REALIZADA COM SUCESSO --- -->
     <div th:if="${sucesso}" class="mb-6 bg-emerald-50 border-l-4 border-emerald-600 p-4 rounded-lg shadow-sm flex items-center text-sm text-emerald-900">
@@ -234,6 +269,7 @@
             </div>
         </div>
     </div>
+</div>
 </main>
 
 <footer class="footer text-white mt-auto">
