@@ -37,6 +37,22 @@
         <p class="mt-2 text-sm text-[#94A3B8]">Consulte e filtre todos os usuários cadastrados na plataforma.</p>
     </div>
 
+    <section aria-labelledby="solicitacoes-title" class="mb-8 flex flex-col gap-4 rounded-xl border border-[#2D4A73] bg-[#14294A] p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-start gap-4">
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-[#008A4B]/30 bg-[#008A4B]/10 text-[#86EFAC]">
+                <i class="fa-solid fa-clipboard-check" aria-hidden="true"></i>
+            </span>
+            <div>
+                <h2 id="solicitacoes-title" class="font-semibold text-white">Solicitações de Organizador</h2>
+                <p class="mt-1 text-sm text-[#94A3B8]">Acesse a fila de solicitações aguardando aprovação da administração.</p>
+            </div>
+        </div>
+        <a th:href="@{/super-admin/solicitacoes}"
+           class="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[#008A4B]/40 bg-[#008A4B]/15 px-4 py-2 text-sm font-semibold text-[#A7F3D0] transition-colors hover:border-[#008A4B] hover:bg-[#008A4B]/25 hover:text-white">
+            Ver solicitações <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
+        </a>
+    </section>
+
     <!-- Mensagens de feedback -->
     <div th:if="${sucesso}" role="status" class="mb-6 p-4 rounded-xl border border-[#008A4B]/30 bg-[#008A4B]/10 text-sm text-[#86EFAC]">
         <i class="fa-solid fa-circle-check mr-2"></i>
