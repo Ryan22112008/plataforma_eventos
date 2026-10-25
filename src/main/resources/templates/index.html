@@ -9,66 +9,93 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Inter', sans-serif; }</style>
+    <style>
+        :root { color-scheme: light; --navy: #092943; --blue: #00457c; --green: #08784a; --ink: #172b3b; --muted: #637587; --line: #dce5ec; --canvas: #f3f6f8; }
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background: var(--canvas); color: var(--ink); }
+        .site-header { background: var(--navy); border-bottom: 3px solid #e4b52d; box-shadow: 0 3px 14px rgb(9 41 67 / 12%); }
+        .header-inner { min-height: 76px; }
+        .brand-logo { height: 42px; width: auto; max-width: 150px; }
+        .nav-link { color: #d8e4ed; padding: 10px 2px; border-bottom: 2px solid transparent; transition: color .18s ease, border-color .18s ease; }
+        .nav-link:hover, .nav-link-active { color: #fff; border-color: #e4b52d; }
+        .user-name { color: #e2ebf1; }
+        .hero { background: var(--navy); color: #fff; }
+        .hero-inner { padding-top: 43px; padding-bottom: 76px; }
+        .hero-kicker { display: inline-flex; align-items: center; gap: 9px; color: #dce8f1; letter-spacing: .13em; }
+        .hero-kicker:before { content: ''; width: 22px; height: 2px; background: #e4b52d; }
+        .search-panel { margin-top: -36px; position: relative; z-index: 2; background: #fff; border: 1px solid var(--line); box-shadow: 0 12px 32px rgb(9 41 67 / 10%); }
+        .search-control { min-height: 48px; border: 1px solid var(--line); border-radius: 8px; background: #fff; transition: border-color .18s, box-shadow .18s; }
+        .search-control:focus-within { border-color: #4380ae; box-shadow: 0 0 0 3px rgb(0 69 124 / 12%); }
+        .search-control input, .search-control select { min-width: 0; outline: 0; }
+        .primary-button { background: var(--green); transition: background .18s, transform .18s; }
+        .primary-button:hover { background: #05643d; transform: translateY(-1px); }
+        .content-wrap { padding-top: 44px; }
+        .notice-pending { border: 1px solid #e6d7a6; border-left: 4px solid #c39b2e; background: #fffdf7; }
+        .event-card { border: 1px solid var(--line); box-shadow: 0 3px 12px rgb(9 41 67 / 5%); transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+        .event-card:hover { transform: translateY(-3px); border-color: #c1d1dd; box-shadow: 0 12px 24px rgb(9 41 67 / 11%); }
+        .event-image { aspect-ratio: 16 / 9; min-height: 0; }
+        .event-title { color: var(--ink); }
+        .footer { background: var(--navy); border-top: 4px solid #08784a; }
+        .focus-ring:focus-visible, a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #e4b52d; outline-offset: 3px; }
+        @media (max-width: 767px) {
+            .header-inner { padding-top: 12px; padding-bottom: 12px; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+            .brand-logo { height: 36px; }
+            .header-nav { order: 3; width: 100%; justify-content: flex-start; gap: 22px; border-top: 1px solid rgb(255 255 255 / 12%); padding-top: 8px; }
+            .header-actions { margin-left: auto; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+            .hero-inner { padding-top: 36px; padding-bottom: 62px; }
+            .search-panel { margin-top: -28px; }
+            .content-wrap { padding-top: 32px; }
+        }
+        @media (max-width: 420px) { .header-actions { width: 100%; justify-content: flex-start; margin-left: 0; } }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+    </style>
     <link rel="stylesheet" th:href="@{/css/seplag-ui.css}">
 </head>
-<body class="bg-[#F4F6F9] text-[#333333] min-h-screen flex flex-col">
+<body class="min-h-screen flex flex-col">
 
 
-<header class="bg-white border-b-4 border-[#FDB813] shadow-sm sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+<header class="site-header sticky top-0 z-50">
+    <div class="header-inner max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-6">
 
         <div class="flex items-center space-x-3">
-            <a th:href="@{/}" class="flex items-center space-x-3 rounded">
+            <a th:href="@{/}" class="flex items-center space-x-3 rounded" aria-label="SEPLAG-MT — página inicial">
 
                 <img th:src="@{/images/logo-seplag-branco.png}"
                      alt="Logo SEPLAG"
-                     class="h-12 w-auto object-contain" />
+                     class="brand-logo object-contain" />
 
-                <div class="flex flex-col border-l-2 border-gray-200 pl-3">
-                    <span class="text-sm font-bold tracking-tight text-[#00457C]">SEPLAG</span>
-                    <span class="text-[10px] text-gray-500 font-medium tracking-widest uppercase">Governo de Mato Grosso</span>
+                <div class="flex flex-col border-l border-white/25 pl-3">
+                    <span class="text-sm font-bold tracking-tight text-white">SEPLAG</span>
+                    <span class="text-[10px] text-slate-300 font-medium tracking-widest uppercase">Governo de Mato Grosso</span>
                 </div>
             </a>
         </div>
 
-        <nav class="hidden md:flex space-x-8 text-sm font-medium">
-            <a th:href="@{/}" class="text-[#00457C] border-b-2 border-[#00457C] px-1 pb-1">Cursos</a>
-            <a sec:authorize="hasRole('ORGANIZADOR')" th:href="@{/organizador/painel}" class="text-amber-600 font-semibold px-1 pb-1">Painel do Organizador</a>
-            <a sec:authorize="hasRole('PARTICIPANTE')" th:href="@{/participante/meus-certificados}" class="text-[#00457C] hover:text-[#00335c] font-semibold px-1 pb-1">
-                <i class="fa-solid fa-award mr-1 text-amber-500"></i> Meus Certificados
+        <nav class="header-nav flex items-center gap-7 text-sm font-medium">
+            <a th:href="@{/}" class="nav-link nav-link-active">Cursos</a>
+            <a sec:authorize="hasRole('ORGANIZADOR')" th:href="@{/organizador/painel}" class="nav-link">Painel do Organizador</a>
+            <a sec:authorize="hasRole('PARTICIPANTE')" th:href="@{/participante/meus-certificados}" class="nav-link">
+                <i class="fa-solid fa-award mr-1 text-amber-300"></i> Meus Certificados
             </a>
         </nav>
 
-        <div class="flex items-center space-x-4">
-            <div sec:authorize="isAnonymous()" class="flex items-center space-x-3">
-                <a th:href="@{/login}" class="text-sm font-medium text-gray-700 hover:text-[#00457C] px-3 py-2 transition-colors">Entrar</a>
-                <a th:href="@{/cadastro}" class="text-sm font-medium bg-[#00457C] hover:bg-[#00335c] text-white px-4 py-2 rounded shadow transition-all focus-ring">Criar Conta</a>
+        <div class="header-actions flex items-center gap-4">
+            <div sec:authorize="isAnonymous()" class="flex items-center gap-3">
+                <a th:href="@{/login}" class="text-sm font-medium text-slate-200 hover:text-white px-2 py-2 transition-colors">Entrar</a>
+                <a th:href="@{/cadastro}" class="text-sm font-semibold bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors focus-ring">Criar Conta</a>
             </div>
 
-            <div sec:authorize="isAuthenticated()" class="flex items-center space-x-4">
-                <span class="text-xs text-gray-600">Olá, <strong class="text-[#00457C]" sec:authentication="name">Usuário</strong></span>
+            <div sec:authorize="isAuthenticated()" class="flex items-center gap-3 flex-wrap">
+                <span class="user-name text-xs">Olá, <strong class="text-white" sec:authentication="name">Usuário</strong></span>
                 <a sec:authorize="hasRole('PARTICIPANTE')"
                    th:href="@{/participante/solicitar-organizador}"
                    th:if="${solicitacaoOrganizadorPendente == false}"
-                   class="text-sm font-medium bg-[#008A4B] hover:bg-[#00703c] text-white px-4 py-2 rounded shadow transition-all focus-ring">
+                   class="primary-button text-sm font-semibold text-white px-3 py-2 rounded-lg focus-ring">
                     <i class="fa-solid fa-user-plus mr-1"></i> Solicitar Organizador
                 </a>
-    <!-- Banner de acesso organizador -->
-    <a th:href="@{/participante/solicitar-organizador}"
-       class="organizer-access-callout organizer-access-button block py-4 text-center">
-        <i class="fa-solid fa-user-plus text-2xl text-[#008A4B] mb-2 block"></i>
-        <span class="text-lg font-medium text-[#00457C]">Solicite acesso de Organizador</span>
-        <span class="text-sm text-[#666666]">Publique seus eventos e gerencie participações</span>
-    </a>
-<div sec:authorize="hasRole('PARTICIPANTE')"
-     th:href="@{/participante/solicitar-organizador}"
-     th:if="${solicitacaoOrganizadorPendente == false}"
-     class="text-sm font-medium bg-[#008A4B] hover:bg-[#00703c] text-white px-4 py-2 rounded shadow transition-all focus-ring">
-    <i class="fa-solid fa-user-plus mr-1"></i> Solicitar Organizador
-</a>
-</div>
-                    <button type="submit" class="text-sm text-red-600 hover:text-red-800 font-medium transition-colors" title="Sair do Sistema">
+                <form th:action="@{/logout}" method="post" class="inline-flex">
+                    <button type="submit" class="text-slate-300 hover:text-white w-9 h-9 rounded-lg hover:bg-white/10 transition-colors" title="Sair do Sistema" aria-label="Sair do Sistema">
                         <i class="fa-solid fa-arrow-right-from-bracket text-base"></i>
                     </button>
                 </form>
@@ -77,23 +104,27 @@
     </div>
 </header>
 
-<section class="bg-gradient-to-r from-[#00457C] to-[#002d52] text-white py-16 px-4 relative overflow-hidden shadow-md">
-    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-[#FDB813] via-transparent to-transparent"></div>
-    <div class="max-w-4xl mx-auto text-center relative z-10">
-        <span class="bg-[#008A4B] text-white text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-4 inline-block">Plataforma Unificada</span>
-        <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4">Cursos e capacitações SEPLAG-MT</h1>
-        <p class="text-gray-200 text-sm md:text-base max-w-2xl mx-auto mb-8 font-light">Encontre um curso, faça sua inscrição e acesse seu certificado após a confirmação da participação.</p>
+<section class="hero px-4 relative">
+    <div class="hero-inner max-w-7xl mx-auto text-center">
+        <span class="hero-kicker text-[11px] font-semibold uppercase mb-4">Plataforma unificada de aprendizagem</span>
+        <h1 class="text-3xl sm:text-4xl lg:text-[2.7rem] font-semibold tracking-tight leading-tight mb-3">Cursos e capacitações SEPLAG-MT</h1>
+        <p class="text-slate-200 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">Encontre oportunidades de aprendizagem, participe de eventos e acompanhe suas capacitações em um só lugar.</p>
+    </div>
+</section>
 
-        <form th:action="@{/}" method="get" class="bg-white p-2 rounded-xl shadow-xl max-w-2xl mx-auto flex flex-col sm:flex-row items-center gap-2">
-            <div class="w-full flex items-center px-3 py-2 text-gray-500 sm:w-auto">
-                <i class="fa-solid fa-magnifying-glass mr-3 text-lg text-gray-400"></i>
-                <input type="text" name="busca" th:value="${param.busca}" placeholder="Buscar cursos..." class="w-full text-sm text-[#333333] placeholder-gray-400 focus:outline-none bg-transparent">
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+    <form th:action="@{/}" method="get" class="search-panel rounded-xl p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_auto] gap-3 items-end">
+        <div>
+            <label for="busca" class="block text-xs font-semibold text-slate-600 mb-1.5">Buscar cursos</label>
+            <div class="search-control flex items-center px-3 gap-2">
+                <i class="fa-solid fa-magnifying-glass text-sm text-slate-400" aria-hidden="true"></i>
+                <input id="busca" type="text" name="busca" th:value="${param.busca}" placeholder="Buscar cursos..." class="w-full text-sm text-[#172b3b] placeholder-gray-400 bg-transparent py-3">
             </div>
-
-            <!-- Filtro Área / Nicho -->
-            <div class="w-full sm:w-auto flex items-center gap-2">
-                <label for="nicho" class="text-xs font-medium text-gray-500 whitespace-nowrap">Área / Nicho</label>
-                <select name="nicho" id="nicho" class="text-sm bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00457C] text-[#333333]">
+        </div>
+        <div>
+            <label for="nicho" class="block text-xs font-semibold text-slate-600 mb-1.5">Área / Nicho</label>
+            <div class="search-control flex items-center px-3">
+                <select name="nicho" id="nicho" class="w-full text-sm text-[#172b3b] bg-transparent py-3">
                     <option value="" th:selected="${param.nicho == null}">Todos</option>
                     <option value="TECNOLOGIA" th:selected="${param.nicho == 'TECNOLOGIA'}">Tecnologia</option>
                     <option value="TECNOLOGIA_E_INOVACAO" th:selected="${param.nicho == 'TECNOLOGIA_E_INOVACAO'}">Tecnologia e Inovação</option>
@@ -102,21 +133,18 @@
                     <option value="OUTROS" th:selected="${param.nicho == 'OUTROS'}">Outros</option>
                 </select>
             </div>
+        </div>
+        <input type="hidden" name="modalidade" th:value="${param.modalidade}">
+        <button type="submit" class="primary-button min-h-12 w-full sm:w-auto text-white text-sm font-semibold px-6 py-3 rounded-lg shadow-sm focus-ring">
+            <i class="fa-solid fa-magnifying-glass mr-2" aria-hidden="true"></i>Pesquisar
+        </button>
+    </form>
+</div>
 
-            <!-- Preservar parâmetro modalidade quando existente -->
-            <input type="hidden" name="modalidade" th:value="${param.modalidade}">
-
-            <button type="submit" class="w-full sm:w-auto bg-[#008A4B] hover:bg-[#00703c] text-white text-sm font-semibold px-6 py-3 rounded-lg transition-colors shadow shrink-0">
-                <span>Pesquisar</span>
-            </button>
-        </form>
-    </div>
-</section>
-
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow w-full">
+<main class="content-wrap max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-14 flex-grow w-full">
 
     <!-- --- ADICIONADO: CARD VERDE DE INSCRIÇÃO REALIZADA COM SUCESSO --- -->
-    <div th:if="${sucesso}" class="mb-6 bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded shadow-sm flex items-center text-sm text-emerald-800">
+    <div th:if="${sucesso}" class="mb-6 bg-emerald-50 border-l-4 border-emerald-600 p-4 rounded-lg shadow-sm flex items-center text-sm text-emerald-900">
         <i class="fa-solid fa-circle-check mr-3 text-xl text-emerald-600"></i>
         <div>
             <span class="font-bold">Excelente!</span>
@@ -125,7 +153,7 @@
     </div>
 
     <!-- --- ADICIONADO: CARD VERMELHO SE O EVENTO ESTIVER EM RASCUNHO OU JÁ INSCRITO --- -->
-    <div th:if="${erroNegocio}" class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded shadow-sm flex items-center text-sm text-red-700">
+    <div th:if="${erroNegocio}" class="mb-6 bg-red-50 border-l-4 border-red-600 p-4 rounded-lg shadow-sm flex items-center text-sm text-red-800">
         <i class="fa-solid fa-triangle-exclamation mr-3 text-xl text-red-500"></i>
         <div>
             <span class="font-bold">Não foi possível prosseguir</span>
@@ -134,9 +162,13 @@
     </div>
 
     <div sec:authorize="hasRole('PARTICIPANTE')" th:if="${solicitacaoOrganizadorPendente}"
-         class="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900" role="status">
-        <p class="font-semibold"><i class="fa-solid fa-clock mr-2"></i>Seu acesso para criar cursos está aguardando aprovação.</p>
-        <p class="mt-1">Você já pode se inscrever em cursos enquanto a administração analisa a solicitação.</p>
+         class="notice-pending mb-6 rounded-xl p-4 sm:p-5 text-sm text-slate-800 flex gap-4 items-start max-w-4xl" role="status">
+        <span class="w-10 h-10 shrink-0 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center"><i class="fa-solid fa-clock" aria-hidden="true"></i></span>
+        <div>
+            <p class="font-semibold text-[#172b3b]">Solicitação de acesso para criar cursos</p>
+            <p class="mt-1 text-xs font-semibold uppercase tracking-wide text-amber-800">Aguardando aprovação</p>
+            <p class="mt-2 text-sm leading-relaxed text-slate-600">Você já pode se inscrever em cursos enquanto a administração analisa a solicitação.</p>
+        </div>
     </div>
 
     <div sec:authorize="hasRole('PARTICIPANTE')" th:if="${solicitacaoOrganizadorEnviada == true}"
@@ -148,53 +180,54 @@
          class="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert"
          th:text="${erroSolicitacaoOrganizador}"></div>
 
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-200 pb-5 mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-slate-200 pb-5 mb-7">
         <div>
-            <h2 class="text-xl font-bold text-[#00457C] tracking-tight">Cursos disponíveis</h2>
-            <p class="text-sm text-gray-500">Cursos e eventos com inscrições abertas.</p>
+            <p class="text-[11px] font-semibold tracking-[.14em] uppercase text-[#08784a] mb-1">Explore oportunidades</p>
+            <h2 class="text-2xl font-semibold text-[#092943] tracking-tight">Cursos disponíveis</h2>
+            <p class="text-sm text-slate-600 mt-1">Cursos e eventos com inscrições abertas.</p>
         </div>
-        <span class="text-xs text-gray-400 font-medium mt-2 sm:mt-0" th:text="${'Total: ' + (eventos != null ? eventos.size() : 0) + ' cadastrados'}">Total: 0</span>
+        <span class="text-xs text-slate-500 font-medium bg-white border border-slate-200 rounded-full px-3 py-1.5 w-fit" th:text="${'Total: ' + (eventos != null ? eventos.size() : 0) + ' cadastrados'}">Total: 0</span>
     </div>
 
-    <div th:if="${eventos == null or eventos.isEmpty()}" class="bg-white rounded-xl p-8 text-center border border-gray-200 shadow-sm max-w-md mx-auto">
-        <div class="text-[#00457C] text-4xl mb-3"><i class="fa-regular fa-calendar-xmark"></i></div>
-        <h3 class="font-bold text-gray-700 mb-1">Nenhum curso localizado</h3>
-        <p class="text-sm text-gray-500">Não há cursos publicados no momento ou a busca não retornou resultados.</p>
+    <div th:if="${eventos == null or eventos.isEmpty()}" class="bg-white rounded-2xl p-9 text-center border border-slate-200 shadow-sm max-w-lg mx-auto">
+        <div class="text-[#00457C] text-3xl mb-3"><i class="fa-regular fa-calendar-xmark"></i></div>
+        <h3 class="font-semibold text-[#172b3b] mb-1">Nenhum curso localizado</h3>
+        <p class="text-sm text-slate-600">Não há cursos publicados no momento ou a busca não retornou resultados.</p>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" th:if="${eventos != null and !eventos.isEmpty()}">
-        <div th:each="evento : ${eventos}" class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md border border-gray-200 transition-all duration-200 flex flex-col group">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-6" th:if="${eventos != null and !eventos.isEmpty()}">
+        <div th:each="evento : ${eventos}" class="event-card bg-white rounded-xl overflow-hidden flex flex-col group min-w-0">
 
-            <div class="h-40 bg-gray-100 relative overflow-hidden shrink-0 border-b border-gray-100 flex items-center justify-center">
+            <div class="event-image bg-slate-100 relative overflow-hidden shrink-0 border-b border-slate-100 flex items-center justify-center">
 
                 <img th:if="${evento.bannerUrl != null}"
                      th:src="${#strings.startsWith(evento.bannerUrl, 'https://res.cloudinary.com/') ? evento.bannerUrl : '/imagens-eventos/' + evento.bannerUrl}"
                      alt="Capa do Evento"
                      onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden')"
-                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                     class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300">
 
                 <div th:class="${evento.bannerUrl == null} ? 'w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center' : 'hidden w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center'">
-                    <i class="fa-solid fa-building-columns text-4xl text-gray-300 group-hover:scale-110 transition-transform duration-200"></i>
+                    <i class="fa-solid fa-building-columns text-4xl text-slate-300 group-hover:scale-105 transition-transform duration-200"></i>
                 </div>
 
-                <span class="absolute top-3 left-3 bg-[#107C41] text-white font-bold text-[10px] uppercase tracking-wider px-2 py-1 rounded shadow-sm">
+                <span class="absolute top-3 left-3 bg-[#08784a] text-white font-semibold text-[10px] uppercase tracking-wider px-2.5 py-1.5 rounded-md shadow-sm">
         <i class="fa-solid fa-gift mr-1"></i>Gratuito
     </span>
             </div>
 
-            <div class="p-5 flex-grow flex flex-col justify-between">
+            <div class="p-4 sm:p-5 flex-grow flex flex-col justify-between">
                 <div>
-                    <h3 class="font-bold text-base text-[#333333] tracking-tight line-clamp-2 min-h-[3rem] group-hover:text-[#00457C] transition-colors" th:text="${evento.titulo}">Título</h3>
-                    <div class="mt-3 flex items-center text-xs text-gray-500 space-x-2">
+                    <h3 class="event-title font-semibold text-base tracking-tight line-clamp-2 min-h-[3rem] group-hover:text-[#00457C] transition-colors" th:text="${evento.titulo}">Título</h3>
+                    <div class="mt-3 flex items-center text-xs text-slate-500 gap-2">
                         <i class="fa-regular fa-calendar text-[#00457C]"></i>
                         <span th:text="${#temporals.format(evento.dataInicio, 'dd/MM/yyyy') + ' - ' + #temporals.format(evento.dataTermino, 'dd/MM/yyyy')}">Data</span>
                     </div>
-                    <p class="text-xs text-gray-600 mt-3 line-clamp-3 leading-relaxed" th:text="${evento.descricao}">Descrição</p>
+                    <p class="text-xs text-slate-600 mt-3 line-clamp-3 leading-relaxed" th:text="${evento.descricao}">Descrição</p>
                 </div>
 
-                <div class="mt-6 pt-4 border-t border-gray-100">
+                <div class="mt-6 pt-4 border-t border-slate-100">
                     <a th:href="@{/eventos/{id}(id=${evento.id})}"
-                       class="w-full bg-[#00457C] hover:bg-[#00335c] text-white text-center text-xs font-semibold py-2.5 px-4 rounded-lg block transition-colors shadow-sm">
+                       class="w-full bg-[#00457c] hover:bg-[#092943] text-white text-center text-xs font-semibold py-3 px-4 rounded-lg block transition-colors">
                         <i class="fa-solid fa-eye mr-1"></i> Ver Detalhes
                     </a>
                 </div>
@@ -203,15 +236,15 @@
     </div>
 </main>
 
-<footer class="bg-[#00457C] text-white border-t-8 border-[#008A4B] mt-auto">
+<footer class="footer text-white mt-auto">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
             <div class="space-y-3">
-                <h4 class="font-bold text-base tracking-tight border-b border-[#002d52] pb-2 text-[#FDB813]">SEPLAG-MT</h4>
-                <p class="text-gray-300 font-light text-xs">Plataforma de eventos e capacitações.</p>
+                <h4 class="font-semibold text-base tracking-tight border-b border-white/15 pb-2 text-amber-300">SEPLAG-MT</h4>
+            <p class="text-slate-300 font-light text-xs">Plataforma de eventos e capacitações.</p>
             </div>
         </div>
-        <div class="border-t border-[#003c6c] mt-8 pt-6 text-center text-xs text-gray-400 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="border-t border-white/10 mt-8 pt-6 text-center text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p>&copy; 2026 SEPLAG-MT — Plataforma de Eventos.</p>
         </div>
     </div>
