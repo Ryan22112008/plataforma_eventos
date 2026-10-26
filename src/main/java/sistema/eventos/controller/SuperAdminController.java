@@ -77,6 +77,7 @@ public class SuperAdminController {
         model.addAttribute("totalUsuarios", usuariosPage.getTotalElements());
         model.addAttribute("totalParticipantes", usuarioService.contarPorPerfil(Perfil.ROLE_PARTICIPANTE));
         model.addAttribute("totalOrganizadores", usuarioService.contarPorPerfil(Perfil.ROLE_ORGANIZADOR));
+        model.addAttribute("totalAvaliadores", usuarioService.contarPorPerfil(Perfil.ROLE_AVALIADOR));
         model.addAttribute("totalSuperAdmins", usuarioService.contarPorPerfil(Perfil.ROLE_SUPER_ADMIN));
         model.addAttribute("totalAtivos", usuarioService.contarPorAtivo(true));
         model.addAttribute("totalInativos", usuarioService.contarPorAtivo(false));

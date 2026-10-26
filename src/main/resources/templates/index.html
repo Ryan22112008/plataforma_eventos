@@ -52,21 +52,6 @@
                     </select>
                 </div>
 
-                <div class="seplag-field">
-                    <label for="data" class="seplag-label">Data</label>
-                    <input id="data" type="date" name="data" th:value="${filtroData}" class="seplag-input">
-                </div>
-
-                <div class="seplag-field">
-                    <label for="vigencia" class="seplag-label">Vigência / Status</label>
-                    <select name="vigencia" id="vigencia" class="seplag-select">
-                        <option value="" th:selected="${filtroVigencia == ''}">Todos</option>
-                        <option value="EM_ANDAMENTO" th:selected="${filtroVigencia == 'EM_ANDAMENTO'}">Em andamento / vigente</option>
-                        <option value="ENCERRADOS" th:selected="${filtroVigencia == 'ENCERRADOS'}">Encerrados</option>
-                        <option value="FUTUROS" th:selected="${filtroVigencia == 'FUTUROS'}">Futuros</option>
-                    </select>
-                </div>
-
                 <button type="submit" class="seplag-btn seplag-btn-primary seplag-public-search__submit">
                     <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                     Pesquisar
@@ -207,10 +192,10 @@
                 <span class="seplag-public-count" th:text="|Página ${currentPage + 1} de ${totalPages} · ${totalElements} eventos|">Página 1 de 1 · 0 eventos</span>
                 <nav class="seplag-pagination" aria-label="Páginas de eventos">
                     <a th:if="${hasPrevious}"
-                       th:href="@{/(page=${currentPage - 1}, busca=${termoBusca}, nicho=${filtroNicho}, modalidade=${filtroModalidade}, data=${filtroData}, vigencia=${filtroVigencia})}">Anterior</a>
+                       th:href="@{/(page=${currentPage - 1}, busca=${termoBusca}, nicho=${filtroNicho}, modalidade=${filtroModalidade})}">Anterior</a>
                     <span class="is-active" aria-current="page" th:text="|${currentPage + 1} / ${totalPages}|">1 / 1</span>
                     <a th:if="${hasNext}"
-                       th:href="@{/(page=${currentPage + 1}, busca=${termoBusca}, nicho=${filtroNicho}, modalidade=${filtroModalidade}, data=${filtroData}, vigencia=${filtroVigencia})}">Próxima</a>
+                       th:href="@{/(page=${currentPage + 1}, busca=${termoBusca}, nicho=${filtroNicho}, modalidade=${filtroModalidade})}">Próxima</a>
                 </nav>
             </div>
         </section>

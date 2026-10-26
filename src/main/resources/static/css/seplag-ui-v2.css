@@ -1433,7 +1433,7 @@ html.v2-root {
 
 .v2 .seplag-public-search {
     display: grid;
-    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) auto;
     gap: 14px;
     align-items: end;
     margin-top: clamp(24px, 4vw, 34px);
