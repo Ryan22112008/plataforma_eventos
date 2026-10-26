@@ -13,6 +13,7 @@ import sistema.eventos.model.ModalidadeEvento;
 import sistema.eventos.model.NichoEvento;
 import sistema.eventos.model.StatusEvento;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,18 +40,30 @@ public interface EventoRepository extends JpaRepository<Evento, Long> {
              "AND (:temBusca = false OR LOWER(e.titulo) LIKE LOWER(CONCAT('%', :busca, '%')) " +
              "OR CAST(e.descricao AS string) LIKE CONCAT('%', :busca, '%')) " +
              "AND (:nicho IS NULL OR e.nicho = :nicho) " +
-             "AND (:modalidade IS NULL OR e.modalidade = :modalidade)",
+             "AND (:modalidade IS NULL OR e.modalidade = :modalidade) " +
+            "AND (:data IS NULL OR e.dataInicio = :data) " +
+            "AND (:vigencia = 'TODOS' OR " +
+            "(:vigencia = 'EM_ANDAMENTO' AND e.dataInicio <= CURRENT_DATE AND e.dataTermino >= CURRENT_DATE) OR " +
+            "(:vigencia = 'ENCERRADOS' AND e.dataTermino < CURRENT_DATE) OR " +
+            "(:vigencia = 'FUTUROS' AND e.dataInicio > CURRENT_DATE))",
              countQuery = "SELECT COUNT(e) FROM Evento e WHERE e.status = :status " +
                      "AND (:temBusca = true OR e.vagasRestantes > 0) " +
                      "AND (:temBusca = false OR LOWER(e.titulo) LIKE LOWER(CONCAT('%', :busca, '%')) " +
                      "OR CAST(e.descricao AS string) LIKE CONCAT('%', :busca, '%')) " +
                      "AND (:nicho IS NULL OR e.nicho = :nicho) " +
-                     "AND (:modalidade IS NULL OR e.modalidade = :modalidade)")
+                     "AND (:modalidade IS NULL OR e.modalidade = :modalidade) " +
+                    "AND (:data IS NULL OR e.dataInicio = :data) " +
+                    "AND (:vigencia = 'TODOS' OR " +
+                    "(:vigencia = 'EM_ANDAMENTO' AND e.dataInicio <= CURRENT_DATE AND e.dataTermino >= CURRENT_DATE) OR " +
+                    "(:vigencia = 'ENCERRADOS' AND e.dataTermino < CURRENT_DATE) OR " +
+                    "(:vigencia = 'FUTUROS' AND e.dataInicio > CURRENT_DATE))")
      Page<Evento> buscarEventosPublicos(@Param("status") StatusEvento status,
                                         @Param("temBusca") boolean temBusca,
                                         @Param("busca") String busca,
                                         @Param("nicho") NichoEvento nicho,
                                         @Param("modalidade") ModalidadeEvento modalidade,
+                                        @Param("data") LocalDate data,
+                                        @Param("vigencia") String vigencia,
                                         Pageable pageable);
 
      // --- Lock Pessimista para evitar overbooking em inscrições simultâneas ---

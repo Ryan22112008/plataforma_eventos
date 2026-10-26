@@ -22,6 +22,7 @@ import sistema.eventos.model.StatusSolicitacao;
 import sistema.eventos.repository.EventoRepository;
 import sistema.eventos.repository.SolicitacaoRepository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 
@@ -38,6 +39,8 @@ public class HomeController {
     public String index(@RequestParam(value = "busca", required = false) String busca,
                         @RequestParam(value = "nicho", required = false) String nicho,
                         @RequestParam(value = "modalidade", required = false) String modalidade,
+                        @RequestParam(value = "data", required = false) LocalDate data,
+                        @RequestParam(value = "vigencia", required = false) String vigencia,
                         @RequestParam(value = "page", defaultValue = "0") int page,
                         Authentication authentication,
                         Model model) {
@@ -50,6 +53,7 @@ public class HomeController {
         boolean temBusca = busca != null && !busca.trim().isEmpty();
         String nichoNormalizado = normalizarFiltro(nicho);
         String modalidadeNormalizada = normalizarFiltro(modalidade);
+        String vigenciaNormalizada = normalizarFiltro(vigencia);
         NichoEvento nichoSelecionado = converterNicho(nichoNormalizado);
         ModalidadeEvento modalidadeSelecionada = converterModalidade(modalidadeNormalizada);
         boolean filtroInvalido = (!nichoNormalizado.isEmpty() && nichoSelecionado == null)
@@ -67,6 +71,8 @@ public class HomeController {
                         temBusca ? busca : "",
                         nichoSelecionado,
                         modalidadeSelecionada,
+                        data,
+                        vigenciaNormalizada,
                         pageable);
 
         model.addAttribute("eventos", eventosPage.getContent());
@@ -79,6 +85,8 @@ public class HomeController {
         model.addAttribute("termoBusca", busca == null ? "" : busca);
         model.addAttribute("filtroNicho", nichoNormalizado);
         model.addAttribute("filtroModalidade", modalidadeNormalizada);
+        model.addAttribute("filtroData", data);
+        model.addAttribute("filtroVigencia", vigenciaNormalizada);
         return "index";
     }
 
