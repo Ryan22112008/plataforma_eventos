@@ -29,7 +29,6 @@ public class TrabalhoCientifico extends EntidadeAuditavel {
     private String titulo;
 
     @NotBlank
-    @Lob
     @Column(nullable = false, columnDefinition = "TEXT")
     private String resumo;
 
@@ -46,7 +45,6 @@ public class TrabalhoCientifico extends EntidadeAuditavel {
     @Column(nullable = false, length = 20)
     private StatusTrabalho status = StatusTrabalho.SUBMETIDO;
 
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String parecer; // Feedback do avaliador quando o status mudar para ACEITO ou REJEITADO
 

@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
  *
  * A exceção é capturada para não impedir o startup da aplicação em ambientes
  * onde o esquema ainda não contém o valor ROLE_ADMIN (ex.: banco H2 de teste
- * com CHECK constraint desatualizado). Em produção (MySQL) o UPDATE executa
+ * com CHECK constraint desatualizado). Em produção (MySQL ou PostgreSQL) o UPDATE executa
  * normalmente e converte as contas administrativas existentes.
  */
 @Component

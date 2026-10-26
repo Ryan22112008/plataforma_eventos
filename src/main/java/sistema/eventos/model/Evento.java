@@ -33,7 +33,6 @@ public class Evento extends EntidadeAuditavel {
     private String titulo;
 
     @NotBlank
-    @Lob
     @Column(nullable = false, columnDefinition = "TEXT")
     private String descricao;
 
