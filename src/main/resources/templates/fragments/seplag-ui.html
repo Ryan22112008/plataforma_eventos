@@ -29,6 +29,19 @@
 </a>
 
 <!-- ======================================================================
+     Avatar do usuário autenticado (foto enviada ou avatar padrão)
+     Reutilizado pelo cabeçalho público e pela topbar do organizador.
+     ====================================================================== -->
+<a th:fragment="avatar(foto, nome)" th:href="@{/perfil}" class="seplag-profile-link"
+   title="Meu perfil" aria-label="Meu perfil">
+    <img th:if="${foto != null}" th:src="${foto}" class="seplag-avatar"
+         th:alt="${nome != null and !#strings.isEmpty(nome) ? 'Foto de perfil de ' + nome : 'Foto de perfil'}">
+    <span th:if="${foto == null}" class="seplag-avatar seplag-avatar--default" aria-hidden="true">
+        <i class="fa-solid fa-user"></i>
+    </span>
+</a>
+
+<!-- ======================================================================
      Cabeçalho público
      active: "cursos" | "" (nenhum item destacado)
      ====================================================================== -->
@@ -45,12 +58,22 @@
         <nav class="seplag-public-nav" aria-label="Navegação principal">
             <a th:href="@{/}" th:classappend="${active == 'cursos'} ? 'is-active'"
                th:attr="aria-current=${active == 'cursos' ? 'page' : null}">Cursos</a>
+            <a sec:authorize="hasRole('SUPER_ADMIN')" th:href="@{/super-admin/usuarios}">
+                <i class="fa-solid fa-user-shield" aria-hidden="true"></i>
+                Painel Super Admin
+            </a>
             <a sec:authorize="hasRole('ORGANIZADOR')" th:href="@{/organizador/painel}">
                 Painel do organizador
             </a>
             <a sec:authorize="hasRole('PARTICIPANTE')" th:href="@{/participante/meus-certificados}">
                 <i class="fa-solid fa-award" aria-hidden="true"></i>
                 Meus certificados
+            </a>
+            <a sec:authorize="isAuthenticated()" th:href="@{/perfil}"
+               th:classappend="${active == 'perfil'} ? 'is-active'"
+               th:attr="aria-current=${active == 'perfil' ? 'page' : null}">
+                <i class="fa-solid fa-user" aria-hidden="true"></i>
+                Meu perfil
             </a>
         </nav>
 
@@ -61,6 +84,7 @@
             </div>
 
             <div sec:authorize="isAuthenticated()" class="seplag-public-header__group">
+                <a th:replace="~{fragments/seplag-ui :: avatar(${fotoPerfilUrl}, ${usuarioLogado != null ? usuarioLogado.nome : null})}"></a>
                 <span class="seplag-public-header__user">
                     Olá, <strong sec:authentication="name">Usuário</strong>
                 </span>
@@ -161,6 +185,7 @@
 
     <div class="seplag-topbar__actions">
         <span class="seplag-badge seplag-badge--role">Organizador</span>
+        <a th:replace="~{fragments/seplag-ui :: avatar(${fotoPerfilUrl}, ${usuarioLogado != null ? usuarioLogado.nome : null})}"></a>
         <span class="seplag-topbar__user" sec:authentication="name">Organizador</span>
     </div>
 </header>

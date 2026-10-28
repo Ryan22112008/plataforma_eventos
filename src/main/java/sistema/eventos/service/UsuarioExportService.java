@@ -10,19 +10,31 @@ import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
+import sistema.eventos.dto.UsuarioEventoTituloProjection;
 import sistema.eventos.model.Perfil;
+import sistema.eventos.model.StatusInscricao;
 import sistema.eventos.model.Usuario;
+import sistema.eventos.repository.EventoRepository;
+import sistema.eventos.repository.InscricaoRepository;
 import sistema.eventos.repository.UsuarioRepository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Service
 @AllArgsConstructor
 public class UsuarioExportService {
 
     private static final String SHEET_NAME = "Usuários";
-    private static final String[] COLUNAS = {"Nome", "E-mail", "Perfil", "Status", "Data de cadastro"};
+    private static final String SEM_EVENTOS = "Nenhum";
+    private static final String[] COLUNAS = {
+            "Nome", "E-mail", "Perfil", "Status", "Data de cadastro",
+            "Eventos Participados", "Eventos Organizados"
+    };
 
     // Paleta da planilha: cabeçalho verde-claro com texto verde-escuro, corpo neutro e discreto.
     private static final byte[] COR_CABECALHO_FUNDO = {(byte) 0xE2, (byte) 0xEF, (byte) 0xDA};
@@ -35,16 +47,24 @@ public class UsuarioExportService {
 
     private static final float ALTURA_CABECALHO = 26f;
     private static final float ALTURA_LINHA = 20f;
-    private static final int[] LARGURA_MINIMA = {18, 30, 14, 12, 20};
-    private static final int[] LARGURA_MAXIMA = {55, 60, 22, 14, 20};
+    private static final int MAX_LINHAS_EVENTOS = 20;
+    private static final int[] LARGURA_MINIMA = {18, 30, 14, 12, 20, 24, 24};
+    private static final int[] LARGURA_MAXIMA = {55, 60, 22, 14, 20, 45, 45};
 
     private final UsuarioRepository usuarioRepository;
+    private final InscricaoRepository inscricaoRepository;
+    private final EventoRepository eventoRepository;
 
     /**
      * Gera um arquivo .xlsx com os usuários filtrados (sem paginação).
      *
-     * Apenas dados não sensíveis são incluídos: nome, e-mail, perfil, status e data de cadastro.
+     * Apenas dados não sensíveis são incluídos: nome, e-mail, perfil, status,
+     * data de cadastro e os títulos dos eventos participados/organizados.
      * Senha, hash e tokens nunca são exportados.
+     *
+     * A participação usa a regra já existente no sistema (inscrição com status
+     * UTILIZADO) e a organização usa o relacionamento real Evento.organizador.
+     * Os eventos são carregados em lote, sem consultas por usuário.
      *
      * @param nome  filtro parcial por nome (ignorado se nulo/vazio)
      * @param email filtro parcial por e-mail (ignorado se nulo/vazio)
@@ -54,6 +74,9 @@ public class UsuarioExportService {
      */
     public byte[] exportarUsuarios(String nome, String email, Perfil perfil, Boolean ativo) {
         List<Usuario> usuarios = usuarioRepository.findFiltrosSemPaginacao(nome, email, perfil, ativo);
+
+        Map<Long, List<String>> eventosParticipados = carregarEventosParticipados(usuarios);
+        Map<Long, List<String>> eventosOrganizados = carregarEventosOrganizados(usuarios);
 
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet(SHEET_NAME);
@@ -69,6 +92,8 @@ public class UsuarioExportService {
             XSSFCellStyle textoCentroZebra = criarEstiloTexto(workbook, fonteCorpo, HorizontalAlignment.CENTER, true);
             XSSFCellStyle dataCentro = criarEstiloData(workbook, fonteCorpo, false);
             XSSFCellStyle dataCentroZebra = criarEstiloData(workbook, fonteCorpo, true);
+            XSSFCellStyle textoEventos = criarEstiloTextoMultilinha(workbook, fonteCorpo, false);
+            XSSFCellStyle textoEventosZebra = criarEstiloTextoMultilinha(workbook, fonteCorpo, true);
 
             // Larguras calculadas a partir do maior conteúdo de cada coluna.
             int[] maioresConteudos = new int[COLUNAS.length];
@@ -82,20 +107,25 @@ public class UsuarioExportService {
             for (int i = 0; i < COLUNAS.length; i++) {
                 Cell cell = headerRow.createCell(i);
                 cell.setCellValue(COLUNAS[i]);
-                cell.setCellStyle(i >= 3 ? cabecalhoCentro : cabecalhoEsquerda);
+                cell.setCellStyle(i == 3 || i == 4 ? cabecalhoCentro : cabecalhoEsquerda);
             }
 
             // Linhas de dados
             int rowNum = 1;
             for (Usuario usuario : usuarios) {
                 Row row = sheet.createRow(rowNum);
-                row.setHeightInPoints(ALTURA_LINHA);
                 boolean zebra = rowNum % 2 == 0;
 
                 String nomeUsuario = valorOuVazio(usuario.getNome());
                 String emailUsuario = valorOuVazio(usuario.getEmail());
                 String perfilUsuario = formatarPerfil(usuario.getPerfil());
                 String statusUsuario = usuario.isAtivo() ? "ATIVO" : "INATIVO";
+                String titulosParticipados = formatarEventos(eventosParticipados.get(usuario.getId()));
+                String titulosOrganizados = formatarEventos(eventosOrganizados.get(usuario.getId()));
+
+                row.setHeightInPoints(ALTURA_LINHA * Math.min(
+                        Math.max(contarLinhas(titulosParticipados), contarLinhas(titulosOrganizados)),
+                        MAX_LINHAS_EVENTOS));
 
                 definirTexto(row, 0, nomeUsuario, zebra ? textoEsquerdaZebra : textoEsquerda);
                 definirTexto(row, 1, emailUsuario, zebra ? textoEsquerdaZebra : textoEsquerda);
@@ -113,10 +143,15 @@ public class UsuarioExportService {
                     celulaData.setCellStyle(zebra ? textoCentroZebra : textoCentro);
                 }
 
+                definirTexto(row, 5, titulosParticipados, zebra ? textoEventosZebra : textoEventos);
+                definirTexto(row, 6, titulosOrganizados, zebra ? textoEventosZebra : textoEventos);
+
                 maioresConteudos[0] = Math.max(maioresConteudos[0], nomeUsuario.length());
                 maioresConteudos[1] = Math.max(maioresConteudos[1], emailUsuario.length());
                 maioresConteudos[2] = Math.max(maioresConteudos[2], perfilUsuario.length());
                 maioresConteudos[3] = Math.max(maioresConteudos[3], statusUsuario.length());
+                maioresConteudos[5] = Math.max(maioresConteudos[5], maiorLinha(titulosParticipados));
+                maioresConteudos[6] = Math.max(maioresConteudos[6], maiorLinha(titulosOrganizados));
                 rowNum++;
             }
 
@@ -189,6 +224,17 @@ public class UsuarioExportService {
         return estilo;
     }
 
+    /**
+     * Estilo das células de eventos: quebra de linha habilitada e alinhamento
+     * superior para que múltiplos títulos fiquem legíveis na mesma célula.
+     */
+    private XSSFCellStyle criarEstiloTextoMultilinha(XSSFWorkbook workbook, XSSFFont fonte, boolean zebra) {
+        XSSFCellStyle estilo = criarEstiloTexto(workbook, fonte, HorizontalAlignment.LEFT, zebra);
+        estilo.setWrapText(true);
+        estilo.setVerticalAlignment(VerticalAlignment.TOP);
+        return estilo;
+    }
+
     private void aplicarBordas(XSSFCellStyle estilo) {
         XSSFColor corBorda = cor(COR_BORDA);
         estilo.setBorderTop(BorderStyle.THIN);
@@ -199,6 +245,85 @@ public class UsuarioExportService {
         estilo.setBottomBorderColor(corBorda);
         estilo.setLeftBorderColor(corBorda);
         estilo.setRightBorderColor(corBorda);
+    }
+
+    /**
+     * Carrega, em uma única consulta, os títulos dos eventos com participação
+     * validada (inscrição com status UTILIZADO) dos usuários exportados.
+     */
+    private Map<Long, List<String>> carregarEventosParticipados(List<Usuario> usuarios) {
+        List<Long> ids = idsDosUsuarios(usuarios);
+        if (ids.isEmpty()) {
+            return new LinkedHashMap<>();
+        }
+        return agruparPorUsuario(inscricaoRepository
+                .findTitulosEventosPorParticipantes(ids, StatusInscricao.UTILIZADO));
+    }
+
+    /**
+     * Carrega, em uma única consulta, os títulos dos eventos organizados pelos
+     * usuários exportados, usando o relacionamento real Evento.organizador.
+     */
+    private Map<Long, List<String>> carregarEventosOrganizados(List<Usuario> usuarios) {
+        List<Long> ids = idsDosUsuarios(usuarios);
+        if (ids.isEmpty()) {
+            return new LinkedHashMap<>();
+        }
+        return agruparPorUsuario(eventoRepository.findTitulosEventosOrganizadosPorUsuarios(ids));
+    }
+
+    private List<Long> idsDosUsuarios(List<Usuario> usuarios) {
+        return usuarios.stream()
+                .map(Usuario::getId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+    }
+
+    private Map<Long, List<String>> agruparPorUsuario(List<UsuarioEventoTituloProjection> projecoes) {
+        Map<Long, List<String>> porUsuario = new LinkedHashMap<>();
+        if (projecoes == null) {
+            return porUsuario;
+        }
+        for (UsuarioEventoTituloProjection projecao : projecoes) {
+            if (projecao == null || projecao.getUsuarioId() == null) {
+                continue;
+            }
+            String titulo = projecao.getTitulo();
+            if (titulo == null || titulo.isBlank()) {
+                continue;
+            }
+            List<String> titulos = porUsuario.computeIfAbsent(projecao.getUsuarioId(), id -> new ArrayList<>());
+            if (!titulos.contains(titulo)) {
+                titulos.add(titulo);
+            }
+        }
+        return porUsuario;
+    }
+
+    private String formatarEventos(List<String> titulos) {
+        if (titulos == null || titulos.isEmpty()) {
+            return SEM_EVENTOS;
+        }
+        return String.join("\n", titulos);
+    }
+
+    private int contarLinhas(String texto) {
+        if (texto == null || texto.isEmpty()) {
+            return 1;
+        }
+        return texto.split("\n", -1).length;
+    }
+
+    private int maiorLinha(String texto) {
+        if (texto == null || texto.isEmpty()) {
+            return 0;
+        }
+        int maior = 0;
+        for (String linha : texto.split("\n", -1)) {
+            maior = Math.max(maior, linha.length());
+        }
+        return maior;
     }
 
     private void definirTexto(Row row, int coluna, String valor, XSSFCellStyle estilo) {

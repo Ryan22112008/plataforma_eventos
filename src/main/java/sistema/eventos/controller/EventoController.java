@@ -13,11 +13,13 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import sistema.eventos.dto.InscritoFrequenciaDto;
 import sistema.eventos.dto.RequestEventoDto;
 import sistema.eventos.exception.NegocioException;
 import sistema.eventos.model.Evento;
@@ -139,7 +141,7 @@ public class EventoController {
                                           RedirectAttributes redirectAttributes) {
         try {
             Evento evento = exigirAcessoAoEvento(id, org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication());
-            List<Inscricao> listaInscritos = inscricaoService.listarPorEvento(id);
+            List<InscritoFrequenciaDto> listaInscritos = inscricaoService.listarInscritosComFrequencia(id);
 
             model.addAttribute("evento", evento);
             model.addAttribute("inscritos", listaInscritos);
@@ -156,6 +158,36 @@ public class EventoController {
             redirectAttributes.addFlashAttribute("erroNegocio", "Não foi possível acessar a lista de inscritos.");
             return "redirect:/organizador/painel";
         }
+    }
+
+    /**
+     * Valida a participação de um inscrito do evento. A autorização é feita
+     * pelo organizador autenticado (ou SUPER_ADMIN) dono do evento e pelo
+     * vínculo real entre inscrição, evento e participante no banco.
+     * Nenhum percentual ou status é aceito do navegador.
+     */
+    @PreAuthorize("hasAnyRole('ORGANIZADOR', 'SUPER_ADMIN')")
+    @PostMapping("/eventos/{eventoId}/inscricoes/{inscricaoId}/validar-participacao")
+    public String validarParticipacaoDoInscrito(@PathVariable("eventoId") Long eventoId,
+                                                @PathVariable("inscricaoId") Long inscricaoId,
+                                                Authentication authentication,
+                                                RedirectAttributes redirectAttributes) {
+        try {
+            exigirAcessoAoEvento(eventoId, authentication);
+            inscricaoService.validarParticipacaoDoParticipante(eventoId, inscricaoId);
+            redirectAttributes.addFlashAttribute("sucesso",
+                    "Participação validada! O certificado do participante foi liberado.");
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            throw e;
+        } catch (NegocioException e) {
+            redirectAttributes.addFlashAttribute("erroNegocio", e.getMessage());
+        } catch (Exception e) {
+            log.error("Erro ao validar a participação da inscrição {} no evento {}.",
+                    inscricaoId, eventoId, e);
+            redirectAttributes.addFlashAttribute("erroNegocio",
+                    "Não foi possível validar a participação neste momento.");
+        }
+        return "redirect:/organizador/eventos/" + eventoId + "/inscritos";
     }
 
     @PostMapping("/inscricoes/{inscricaoId}/checkin")

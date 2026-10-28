@@ -20,6 +20,9 @@
                 <a th:href="@{/super-admin/usuarios}" class="rounded-lg px-3 py-2 text-white/85 transition hover:bg-white/10 hover:text-white">Usuários</a>
                 <a th:href="@{/super-admin/organizadores}" class="rounded-lg px-3 py-2 text-white/85 transition hover:bg-white/10 hover:text-white">Organizadores</a>
                 <a th:href="@{/super-admin/solicitacoes}" aria-current="page" class="rounded-lg border border-white/20 bg-white/15 px-3 py-2 text-white">Solicitações</a>
+                <a th:href="@{/}" class="rounded-lg border border-[#FDB813]/40 bg-[#FDB813]/10 px-3 py-2 text-[#FDE68A] transition hover:bg-[#FDB813]/20 hover:text-white">
+                    <i class="fa-solid fa-house mr-1.5 text-xs" aria-hidden="true"></i>Voltar ao menu principal
+                </a>
             </nav>
             <form th:action="@{/logout}" method="post" class="inline-flex">
                 <button type="submit" class="rounded-lg border border-white/20 px-3 py-2 text-sm font-semibold text-white/90 transition hover:bg-white/10">Sair</button>

@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import sistema.eventos.dto.UsuarioEventoTituloProjection;
 import sistema.eventos.model.Inscricao;
 import sistema.eventos.model.Presenca;
 import sistema.eventos.model.StatusInscricao;
@@ -46,5 +47,20 @@ public interface InscricaoRepository extends JpaRepository<Inscricao, Long> {
 
     @Query("SELECT i FROM Inscricao i JOIN FETCH i.evento WHERE i.participante.id = :participanteId AND i.status = :status")
     List<Inscricao> findByParticipanteIdAndStatus(@Param("participanteId") Long participanteId, @Param("status") StatusInscricao status);
+
+    /**
+     * Carrega em lote os títulos dos eventos em que os usuários informados têm
+     * inscrição com o status recebido. Usado pela exportação do Super Admin
+     * para montar a coluna "Eventos Participados" sem N+1.
+     * A regra de participação continua sendo a já existente no sistema
+     * (status UTILIZADO), apenas parametrizada.
+     */
+    @Query("SELECT i.participante.id AS usuarioId, i.evento.titulo AS titulo " +
+            "FROM Inscricao i " +
+            "WHERE i.participante.id IN :usuarioIds AND i.status = :status " +
+            "ORDER BY i.participante.id, i.evento.titulo")
+    List<UsuarioEventoTituloProjection> findTitulosEventosPorParticipantes(
+            @Param("usuarioIds") List<Long> usuarioIds,
+            @Param("status") StatusInscricao status);
 
 }

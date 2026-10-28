@@ -71,11 +71,7 @@ public class CertificadoService {
 
             // 3. Gera dinamicamente o QR Code do Verso
             String tokenValidacao = "EV3-" + inscricao.getTokenIngresso();
-            UriComponentsBuilder urlBase = urlPublicaConfigurada == null || urlPublicaConfigurada.isBlank()
-                    ? ServletUriComponentsBuilder.fromCurrentContextPath()
-                    : UriComponentsBuilder.fromUriString(urlPublicaConfigurada.trim().replaceAll("/+$", ""));
-            String urlValidacao = urlBase.path("/certificados/validar")
-                    .queryParam("codigo", tokenValidacao).build().encode().toUriString();
+            String urlValidacao = construirUrlValidacao(tokenValidacao);
             String base64QRCode = gerarQRCodeBase64(urlValidacao);
 
             // 4. Monta o Contexto de variáveis do Thymeleaf
@@ -104,6 +100,14 @@ public class CertificadoService {
             log.error("Falha interna ao renderizar o certificado da inscrição {}.", inscricao.getId(), e);
             throw new NegocioException("Não foi possível gerar o certificado no momento.");
         }
+    }
+
+    private String construirUrlValidacao(String codigo) {
+        UriComponentsBuilder urlBase = urlPublicaConfigurada == null || urlPublicaConfigurada.isBlank()
+                ? ServletUriComponentsBuilder.fromCurrentContextPath()
+                : UriComponentsBuilder.fromUriString(urlPublicaConfigurada.trim().replaceAll("/+$", ""));
+        return urlBase.path("/certificados/validar")
+                .queryParam("codigo", codigo).build().encode().toUriString();
     }
 
     private String gerarQRCodeBase64(String texto) throws Exception {

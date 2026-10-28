@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/seplag-ui :: head('Meu perfil')}">
+    <title>Meu perfil | SEPLAG-MT</title>
+</head>
+<body class="v2 seplag-public">
+
+<a class="seplag-skip-link" href="#conteudo">Ir para o conteúdo</a>
+
+<header th:replace="~{fragments/seplag-ui :: public-header('perfil')}"></header>
+
+<main class="seplag-public-main seplag-public-main--narrow" id="conteudo">
+    <nav class="seplag-breadcrumb" aria-label="Trilha de navegação">
+        <ol>
+            <li><a th:href="@{/}">Início</a></li>
+            <li aria-current="page">Meu perfil</li>
+        </ol>
+    </nav>
+
+    <section class="seplag-page-head">
+        <div class="seplag-page-head__copy">
+            <p class="seplag-eyebrow">Minha conta</p>
+            <h1>Meu perfil</h1>
+            <p>Atualize sua foto de perfil. A imagem aparece no cabeçalho da plataforma e nesta página.</p>
+        </div>
+    </section>
+
+    <div th:if="${sucessoPerfil}" class="seplag-flash">
+        <div class="seplag-alert seplag-alert--success" role="status">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            <span th:text="${sucessoPerfil}">Foto de perfil atualizada com sucesso.</span>
+        </div>
+    </div>
+
+    <div th:if="${erroPerfil}" class="seplag-flash">
+        <div class="seplag-alert seplag-alert--error" role="alert">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            <span th:text="${erroPerfil}">Não foi possível atualizar a foto.</span>
+        </div>
+    </div>
+
+    <section class="seplag-card seplag-profile-card" aria-labelledby="perfil-foto-titulo">
+        <div class="seplag-card__header">
+            <div>
+                <h2 class="seplag-card__title" id="perfil-foto-titulo">Foto de perfil</h2>
+                <p class="seplag-card__hint">Uma imagem quadrada funciona melhor. Formatos aceitos: PNG ou JPG, até 2 MB.</p>
+            </div>
+        </div>
+
+        <div class="seplag-card__body">
+            <div class="seplag-profile">
+                <div class="seplag-profile__photo">
+                    <img th:if="${fotoPerfilUrl != null}" th:src="${fotoPerfilUrl}" class="seplag-avatar seplag-avatar--lg"
+                         th:alt="${usuario != null and usuario.nome != null ? 'Foto de perfil de ' + usuario.nome : 'Sua foto de perfil'}">
+                    <span th:if="${fotoPerfilUrl == null}" class="seplag-avatar seplag-avatar--lg seplag-avatar--default" aria-hidden="true">
+                        <i class="fa-solid fa-user"></i>
+                    </span>
+                    <p class="seplag-profile__photo-caption" th:text="${fotoPerfilUrl != null ? 'Sua foto atual' : 'Avatar padrão'}">Avatar padrão</p>
+                </div>
+
+                <div class="seplag-profile__content">
+                    <dl class="seplag-facts">
+                        <div>
+                            <dt>Nome</dt>
+                            <dd th:text="${usuario.nome}">Nome do usuário</dd>
+                        </div>
+                        <div>
+                            <dt>E-mail</dt>
+                            <dd th:text="${usuario.email}">usuario@exemplo.com</dd>
+                        </div>
+                    </dl>
+
+                    <form th:action="@{/perfil/foto}" method="post" enctype="multipart/form-data"
+                          class="seplag-profile__form" data-seplag-avatar-form>
+                        <div class="seplag-upload-block">
+                            <label class="seplag-label" for="fotoPerfilInput">Selecionar nova imagem</label>
+                            <div class="seplag-upload">
+                                <i class="fa-solid fa-camera seplag-upload__icon" aria-hidden="true"></i>
+                                <label for="fotoPerfilInput" class="seplag-upload__label">Escolher imagem</label>
+                                <input id="fotoPerfilInput" name="foto" type="file" class="seplag-sr-only"
+                                       accept="image/png,image/jpeg,.png,.jpg,.jpeg"
+                                       aria-describedby="fotoPerfilAjuda fotoPerfilNome"
+                                       data-seplag-avatar-input>
+                                <p id="fotoPerfilAjuda" class="seplag-upload__hint">PNG ou JPG · até 2 MB · a imagem é processada e salva em formato seguro.</p>
+                                <p id="fotoPerfilNome" class="hidden seplag-file-ok" role="status" aria-live="polite">
+                                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                                    <span data-seplag-avatar-filename></span>
+                                </p>
+                                <p id="fotoPerfilErro" class="hidden seplag-file-error" role="alert"></p>
+                            </div>
+                        </div>
+
+                        <div class="seplag-form-actions">
+                            <button type="submit" class="seplag-btn seplag-btn-primary">
+                                <i class="fa-solid fa-upload" aria-hidden="true"></i>
+                                <span th:text="${fotoPerfilUrl != null ? 'Salvar nova foto' : 'Enviar foto'}">Enviar foto</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <form th:if="${fotoPerfilUrl != null}" th:action="@{/perfil/foto/remover}" method="post"
+                          class="seplag-profile__remove"
+                          onsubmit="return confirm('Remover a foto de perfil e voltar ao avatar padrão?');">
+                        <button type="submit" class="seplag-btn seplag-btn-danger seplag-btn--sm">
+                            <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                            <span>Remover foto</span>
+                        </button>
+                    </form>
+
+                    <p class="seplag-form-note">
+                        <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                        <span>A foto é vinculada somente à sua conta autenticada.</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/seplag-ui :: public-footer}"></footer>
+
+<script th:src="@{/js/seplag-shell.js}" defer></script>
+<script>
+    (function () {
+        'use strict';
+
+        var form = document.querySelector('[data-seplag-avatar-form]');
+        if (!form) {
+            return;
+        }
+
+        var input = form.querySelector('[data-seplag-avatar-input]');
+        var nome = form.querySelector('#fotoPerfilNome');
+        var texto = form.querySelector('[data-seplag-avatar-filename]');
+        var erro = form.querySelector('#fotoPerfilErro');
+        var LIMITE = 2 * 1024 * 1024;
+        var TIPOS = ['image/png', 'image/jpeg'];
+
+        if (!input) {
+            return;
+        }
+
+        input.addEventListener('change', function () {
+            erro.classList.add('hidden');
+            erro.textContent = '';
+            nome.classList.add('hidden');
+            texto.textContent = '';
+
+            var arquivo = input.files && input.files[0];
+            if (!arquivo) {
+                return;
+            }
+
+            if (TIPOS.indexOf(arquivo.type) === -1) {
+                erro.textContent = 'Formato inválido. Selecione uma imagem PNG ou JPG.';
+                erro.classList.remove('hidden');
+                input.value = '';
+                return;
+            }
+
+            if (arquivo.size > LIMITE) {
+                erro.textContent = 'A imagem deve ter no máximo 2 MB.';
+                erro.classList.remove('hidden');
+                input.value = '';
+                return;
+            }
+
+            texto.textContent = arquivo.name + ' selecionada';
+            nome.classList.remove('hidden');
+        });
+    })();
+</script>
+</body>
+</html>

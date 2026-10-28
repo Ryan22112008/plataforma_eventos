@@ -38,14 +38,31 @@
 
                     <div class="seplag-field">
                         <label for="senha" class="seplag-label">Senha</label>
-                        <input type="password" th:field="*{senha}" id="senha" minlength="12" maxlength="72" autocomplete="new-password" required class="seplag-input">
+                        <div class="seplag-password">
+                            <input type="password" th:field="*{senha}" id="senha" minlength="12" maxlength="72" autocomplete="new-password" required class="seplag-input">
+                            <button type="button" class="seplag-password__toggle"
+                                    data-seplag-password-toggle aria-controls="senha"
+                                    aria-label="Mostrar senha" aria-pressed="false" title="Mostrar senha">
+                                <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                            </button>
+                        </div>
                         <p class="seplag-hint">Use de 12 a 72 caracteres.</p>
                         <p th:if="${#fields.hasErrors('senha')}" th:errors="*{senha}" class="seplag-error"></p>
                     </div>
 
                     <div class="seplag-field">
                         <label for="confirmacaoSenha" class="seplag-label">Confirme sua Senha</label>
-                        <input type="password" th:field="*{confirmacaoSenha}" id="confirmacaoSenha" minlength="12" maxlength="72" autocomplete="new-password" required class="seplag-input">
+                        <div class="seplag-password">
+                            <input type="password" th:field="*{confirmacaoSenha}" id="confirmacaoSenha" minlength="12" maxlength="72" autocomplete="new-password" required class="seplag-input">
+                            <button type="button" class="seplag-password__toggle"
+                                    data-seplag-password-toggle aria-controls="confirmacaoSenha"
+                                    data-label-show="Mostrar confirmação de senha"
+                                    data-label-hide="Ocultar confirmação de senha"
+                                    aria-label="Mostrar confirmação de senha" aria-pressed="false"
+                                    title="Mostrar confirmação de senha">
+                                <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                            </button>
+                        </div>
                         <p th:if="${#fields.hasErrors('confirmacaoSenha')}" th:errors="*{confirmacaoSenha}" class="seplag-error"></p>
                     </div>
 
@@ -58,5 +75,6 @@
             </section>
         </div>
     </main>
+    <script th:src="@{/js/seplag-shell.js}" defer></script>
 </body>
 </html>

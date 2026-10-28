@@ -29,6 +29,7 @@ public class SecurityConfig {
 
                         // LINHA ATUALIZADA: Liberando explicitamente a pasta das imagens estáticas do sistema
                         .requestMatchers(HttpMethod.POST, "/eventos/*/inscrever").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/eventos/*/avaliacoes", "/eventos/*/avaliacoes/**").authenticated()
                         .requestMatchers("/", "/login", "/cadastro", "/error", "/erro/**", "/eventos/**", "/imagens-eventos/**", "/certificados/validar").permitAll()
                         .requestMatchers("/super-admin/**").hasRole("SUPER_ADMIN")
                         .requestMatchers("/presencas/checkin").hasRole("PARTICIPANTE")

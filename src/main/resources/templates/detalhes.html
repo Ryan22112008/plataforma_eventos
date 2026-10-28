@@ -152,6 +152,252 @@
             </section>
         </div>
     </div>
+
+    <section class="seplag-card seplag-avaliacoes" id="avaliacoes" aria-labelledby="avaliacoes-titulo">
+        <div class="seplag-card__header">
+            <div>
+                <h2 class="seplag-card__title" id="avaliacoes-titulo">Avaliações</h2>
+                <p class="seplag-card__hint">O que os participantes estão dizendo sobre este curso.</p>
+            </div>
+        </div>
+        <div class="seplag-card__body">
+
+            <div th:if="${sucessoAvaliacao}" class="seplag-flash">
+                <div class="seplag-alert seplag-alert--success" role="status">
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                    <span th:text="${sucessoAvaliacao}">Sua avaliação foi registrada com sucesso!</span>
+                </div>
+            </div>
+
+            <div th:if="${erroAvaliacao}" class="seplag-flash">
+                <div class="seplag-alert seplag-alert--error" role="alert">
+                    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                    <span th:text="${erroAvaliacao}">Não foi possível salvar sua avaliação.</span>
+                </div>
+            </div>
+
+            <div class="seplag-avaliacoes__resumo">
+                <div th:if="${avaliacaoResumo.temAvaliacoes}" class="seplag-avaliacoes__media">
+                    <strong class="seplag-avaliacoes__nota" th:text="${avaliacaoResumo.mediaFormatada}">4,8</strong>
+                    <span class="seplag-avaliacoes__nota-estrela" aria-hidden="true">&#9733;</span>
+                </div>
+
+                <div th:if="${avaliacaoResumo.temAvaliacoes}" class="seplag-avaliacoes__media-info">
+                    <span class="seplag-avaliacoes__stars" role="img"
+                          th:attr="aria-label=${avaliacaoResumo.mediaFormatada + ' de 5 estrelas'}">
+                        <span class="seplag-avaliacoes__stars-base" aria-hidden="true">
+                            <i class="fa-regular fa-star"></i>
+                            <i class="fa-regular fa-star"></i>
+                            <i class="fa-regular fa-star"></i>
+                            <i class="fa-regular fa-star"></i>
+                            <i class="fa-regular fa-star"></i>
+                        </span>
+                        <span class="seplag-avaliacoes__stars-fill"
+                              th:style="|width: ${avaliacaoResumo.percentualEstrelas}%|" aria-hidden="true">
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                        </span>
+                    </span>
+                    <span class="seplag-avaliacoes__quantidade"
+                          th:text="${avaliacaoResumo.quantidade == 1 ? '1 avaliação' : avaliacaoResumo.quantidade + ' avaliações'}">127 avaliações</span>
+                </div>
+
+                <div th:unless="${avaliacaoResumo.temAvaliacoes}" class="seplag-avaliacoes__vazio">
+                    <i class="fa-regular fa-star" aria-hidden="true"></i>
+                    <span>Ainda não há avaliações.</span>
+                </div>
+            </div>
+
+            <div th:if="${!usuarioAutenticado}" class="seplag-avaliacoes__aviso">
+                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                <p><a th:href="@{/login}">Entre na plataforma</a> para avaliar este evento.</p>
+            </div>
+
+            <div th:if="${usuarioAutenticado and ehOrganizador}" class="seplag-avaliacoes__aviso">
+                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                <p>Você organiza este evento e não pode avaliá-lo.</p>
+            </div>
+
+            <div th:if="${usuarioAutenticado and !ehOrganizador and !usuarioPodeAvaliar and avaliacaoDoUsuario == null}"
+                 class="seplag-avaliacoes__aviso">
+                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                <p>Apenas participantes com presença confirmada podem avaliar este evento.</p>
+            </div>
+
+            <div th:if="${usuarioPodeAvaliar}" class="seplag-avaliacoes__form">
+                <h3 class="seplag-avaliacoes__subtitulo">Avalie este evento</h3>
+                <form th:action="@{/eventos/{id}/avaliacoes(id=${evento.id})}" method="post"
+                      class="seplag-avaliacoes__form-inner">
+                    <fieldset class="seplag-avaliacoes__fieldset">
+                        <legend class="seplag-label">Sua nota</legend>
+                        <div class="seplag-star-input">
+                            <input type="radio" id="nota-5" name="nota" value="5" required>
+                            <label for="nota-5" title="5 estrelas">
+                                <i class="fa-solid fa-star" aria-hidden="true"></i>
+                                <span class="seplag-sr-only">5 estrelas</span>
+                            </label>
+                            <input type="radio" id="nota-4" name="nota" value="4" required>
+                            <label for="nota-4" title="4 estrelas">
+                                <i class="fa-solid fa-star" aria-hidden="true"></i>
+                                <span class="seplag-sr-only">4 estrelas</span>
+                            </label>
+                            <input type="radio" id="nota-3" name="nota" value="3" required>
+                            <label for="nota-3" title="3 estrelas">
+                                <i class="fa-solid fa-star" aria-hidden="true"></i>
+                                <span class="seplag-sr-only">3 estrelas</span>
+                            </label>
+                            <input type="radio" id="nota-2" name="nota" value="2" required>
+                            <label for="nota-2" title="2 estrelas">
+                                <i class="fa-solid fa-star" aria-hidden="true"></i>
+                                <span class="seplag-sr-only">2 estrelas</span>
+                            </label>
+                            <input type="radio" id="nota-1" name="nota" value="1" required>
+                            <label for="nota-1" title="1 estrela">
+                                <i class="fa-solid fa-star" aria-hidden="true"></i>
+                                <span class="seplag-sr-only">1 estrela</span>
+                            </label>
+                        </div>
+                    </fieldset>
+
+                    <div class="seplag-avaliacoes__campo">
+                        <label class="seplag-label" for="comentario">Comentário</label>
+                        <textarea class="seplag-input seplag-textarea" id="comentario" name="comentario"
+                                  rows="4" maxlength="1000" required
+                                  placeholder="Conte como foi sua experiência..."></textarea>
+                        <span class="seplag-avaliacoes__contador">Máximo de 1000 caracteres.</span>
+                    </div>
+
+                    <div class="seplag-form-actions">
+                        <button type="submit" class="seplag-btn seplag-btn-primary">
+                            <i class="fa-regular fa-paper-plane" aria-hidden="true"></i>
+                            Enviar avaliação
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div th:if="${avaliacaoDoUsuario != null}" class="seplag-avaliacoes__propria">
+                <div class="seplag-avaliacoes__propria-topo">
+                    <div>
+                        <h3 class="seplag-avaliacoes__subtitulo">Sua avaliação</h3>
+                        <p class="seplag-avaliacoes__hint">Você já avaliou este evento.</p>
+                    </div>
+                    <time class="seplag-avaliacoes__data"
+                          th:datetime="${#temporals.format(avaliacaoDoUsuario.dataAvaliacao, 'yyyy-MM-dd')}"
+                          th:text="${#temporals.format(avaliacaoDoUsuario.dataAvaliacao, 'dd/MM/yyyy')}">10/10/2026</time>
+                </div>
+
+                <div class="seplag-avaliacoes__estrelas" role="img"
+                     th:attr="aria-label=${avaliacaoDoUsuario.nota + ' de 5 estrelas'}">
+                    <i th:each="i : ${#numbers.sequence(1, 5)}"
+                       th:class="${i <= avaliacaoDoUsuario.nota} ? 'fa-solid fa-star is-filled' : 'fa-regular fa-star'"
+                       aria-hidden="true"></i>
+                </div>
+                <p class="seplag-avaliacoes__comentario" th:text="${avaliacaoDoUsuario.comentario}">Comentário</p>
+
+                <details class="seplag-avaliacoes__editar">
+                    <summary>Editar avaliação</summary>
+                    <form th:action="@{/eventos/{id}/avaliacoes/editar(id=${evento.id})}" method="post"
+                          class="seplag-avaliacoes__form-inner">
+                        <fieldset class="seplag-avaliacoes__fieldset">
+                            <legend class="seplag-label">Sua nota</legend>
+                            <div class="seplag-star-input">
+                                <input type="radio" id="editar-nota-5" name="nota" value="5" required
+                                       th:checked="${avaliacaoDto.nota == 5}">
+                                <label for="editar-nota-5" title="5 estrelas">
+                                    <i class="fa-solid fa-star" aria-hidden="true"></i>
+                                    <span class="seplag-sr-only">5 estrelas</span>
+                                </label>
+                                <input type="radio" id="editar-nota-4" name="nota" value="4" required
+                                       th:checked="${avaliacaoDto.nota == 4}">
+                                <label for="editar-nota-4" title="4 estrelas">
+                                    <i class="fa-solid fa-star" aria-hidden="true"></i>
+                                    <span class="seplag-sr-only">4 estrelas</span>
+                                </label>
+                                <input type="radio" id="editar-nota-3" name="nota" value="3" required
+                                       th:checked="${avaliacaoDto.nota == 3}">
+                                <label for="editar-nota-3" title="3 estrelas">
+                                    <i class="fa-solid fa-star" aria-hidden="true"></i>
+                                    <span class="seplag-sr-only">3 estrelas</span>
+                                </label>
+                                <input type="radio" id="editar-nota-2" name="nota" value="2" required
+                                       th:checked="${avaliacaoDto.nota == 2}">
+                                <label for="editar-nota-2" title="2 estrelas">
+                                    <i class="fa-solid fa-star" aria-hidden="true"></i>
+                                    <span class="seplag-sr-only">2 estrelas</span>
+                                </label>
+                                <input type="radio" id="editar-nota-1" name="nota" value="1" required
+                                       th:checked="${avaliacaoDto.nota == 1}">
+                                <label for="editar-nota-1" title="1 estrela">
+                                    <i class="fa-solid fa-star" aria-hidden="true"></i>
+                                    <span class="seplag-sr-only">1 estrela</span>
+                                </label>
+                            </div>
+                        </fieldset>
+
+                        <div class="seplag-avaliacoes__campo">
+                            <label class="seplag-label" for="editar-comentario">Comentário</label>
+                            <textarea class="seplag-input seplag-textarea" id="editar-comentario" name="comentario"
+                                      rows="4" maxlength="1000" required
+                                      th:text="${avaliacaoDto.comentario}"></textarea>
+                            <span class="seplag-avaliacoes__contador">Máximo de 1000 caracteres.</span>
+                        </div>
+
+                        <div class="seplag-form-actions">
+                            <button type="submit" class="seplag-btn seplag-btn-primary">
+                                <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+                                Salvar alterações
+                            </button>
+                        </div>
+                    </form>
+                </details>
+
+                <form th:action="@{/eventos/{id}/avaliacoes/excluir(id=${evento.id})}" method="post"
+                      class="seplag-avaliacoes__excluir"
+                      onsubmit="return confirm('Deseja realmente excluir sua avaliação?');">
+                    <button type="submit" class="seplag-btn seplag-btn-danger seplag-btn--sm">
+                        <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                        Excluir minha avaliação
+                    </button>
+                </form>
+            </div>
+
+            <div th:if="${!avaliacoes.isEmpty()}" class="seplag-avaliacoes__lista">
+                <h3 class="seplag-avaliacoes__subtitulo">Avaliações dos participantes</h3>
+
+                <article th:each="avaliacao : ${avaliacoes}" class="seplag-avaliacoes__item">
+                    <div class="seplag-avaliacoes__item-topo">
+                        <span class="seplag-avaliacoes__usuario" th:text="${avaliacao.nomeUsuario}">Participante</span>
+                        <time class="seplag-avaliacoes__data"
+                              th:datetime="${#temporals.format(avaliacao.dataAvaliacao, 'yyyy-MM-dd')}"
+                              th:text="${#temporals.format(avaliacao.dataAvaliacao, 'dd/MM/yyyy')}">10/10/2026</time>
+                    </div>
+                    <div class="seplag-avaliacoes__estrelas" role="img"
+                         th:attr="aria-label=${avaliacao.nota + ' de 5 estrelas'}">
+                        <i th:each="i : ${#numbers.sequence(1, 5)}"
+                           th:class="${i <= avaliacao.nota} ? 'fa-solid fa-star is-filled' : 'fa-regular fa-star'"
+                           aria-hidden="true"></i>
+                    </div>
+                    <p class="seplag-avaliacoes__comentario" th:text="${avaliacao.comentario}">Comentário</p>
+                </article>
+
+                <nav th:if="${totalPaginasAvaliacoes > 1}" class="seplag-pagination seplag-avaliacoes__paginacao"
+                     aria-label="Páginas de avaliações">
+                    <a th:if="${temPaginaAnteriorAvaliacoes}"
+                       th:href="@{/eventos/{id}(id=${evento.id}, paginaAvaliacoes=${paginaAtualAvaliacoes - 1})} + '#avaliacoes'">Anterior</a>
+                    <span th:unless="${temPaginaAnteriorAvaliacoes}" class="is-disabled">Anterior</span>
+                    <span class="is-active"
+                          th:text="|${paginaAtualAvaliacoes + 1} de ${totalPaginasAvaliacoes}|">1 de 3</span>
+                    <a th:if="${temProximaPaginaAvaliacoes}"
+                       th:href="@{/eventos/{id}(id=${evento.id}, paginaAvaliacoes=${paginaAtualAvaliacoes + 1})} + '#avaliacoes'">Próxima</a>
+                    <span th:unless="${temProximaPaginaAvaliacoes}" class="is-disabled">Próxima</span>
+                </nav>
+            </div>
+        </div>
+    </section>
 </main>
 
 <footer th:replace="~{fragments/seplag-ui :: public-footer}"></footer>

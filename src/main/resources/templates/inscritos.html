@@ -40,11 +40,25 @@
             </a>
         </nav>
 
+        <div th:if="${sucesso}" class="seplag-flash">
+            <div class="seplag-alert seplag-alert--success" role="status">
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                <span th:text="${sucesso}">Participação validada com sucesso.</span>
+            </div>
+        </div>
+
+        <div th:if="${erroNegocio}" class="seplag-flash">
+            <div class="seplag-alert seplag-alert--error" role="alert">
+                <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+                <span th:text="${erroNegocio}">Não foi possível validar a participação.</span>
+            </div>
+        </div>
+
         <div class="seplag-page-head">
             <div class="seplag-page-head__copy">
                 <p class="seplag-eyebrow">Organizador</p>
                 <h1 th:text="${evento.titulo}">Evento</h1>
-                <p>Confira abaixo todos os usuários que realizaram inscrição neste evento.</p>
+                <p>Confira a frequência de cada participante e valide a participação para liberar o certificado.</p>
             </div>
 
             <div class="seplag-toolbar">
@@ -59,11 +73,6 @@
                     <i class="fa-solid fa-qrcode" aria-hidden="true"></i>
                     Projetar QR Code de Presença
                 </a>
-
-                <button type="button" onclick="toggleModoEdicao()" class="seplag-btn seplag-btn--warning">
-                    <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
-                    <span id="textoBotaoEdicao">Ativar Edição de Presença</span>
-                </button>
             </div>
         </div>
 
@@ -71,127 +80,131 @@
             <div class="seplag-card__header">
                 <div>
                     <h2 class="seplag-card__title" id="titulo-inscritos">Participantes do evento</h2>
-                    <p class="seplag-card__hint">Ative a edição para marcar presenças e consolidar o diário.</p>
+                    <p class="seplag-card__hint">A frequência é calculada pelas presenças registradas nas sessões do evento.</p>
                 </div>
             </div>
 
-            <form th:action="@{/organizador/eventos/{id}/consolidar-presencas(id=${evento.id})}" method="POST">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="seplag-table-wrap">
+                <table class="seplag-table">
+                    <thead>
+                    <tr>
+                        <th scope="col">Inscrição</th>
+                        <th scope="col">Participante</th>
+                        <th scope="col">Frequência</th>
+                        <th scope="col">Certificado</th>
+                        <th scope="col" class="seplag-table__center">Ações</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${inscritos == null or inscritos.isEmpty()}">
+                        <td colspan="5" class="seplag-table__empty">
+                            <div class="seplag-empty">
+                                <i class="fa-solid fa-folder-open" aria-hidden="true"></i>
+                                <strong>Nenhum participante inscrito</strong>
+                                <p>Nenhum participante inscrito neste evento até o momento.</p>
+                            </div>
+                        </td>
+                    </tr>
 
-                <div class="seplag-table-wrap">
-                    <table class="seplag-table">
-                        <thead>
-                        <tr>
-                            <th scope="col">ID Inscrição</th>
-                            <th scope="col">Nome do Participante</th>
-                            <th scope="col">E-mail</th>
-                            <th scope="col">Status / Inscrição</th>
-                            <th scope="col" class="seplag-table__center">
-                                <div class="campos-edicao hidden seplag-check-inline">
-                                    <input type="checkbox" id="checkboxMestre" onclick="toggleTodos(this)"
-                                           class="seplag-checkbox">
-                                    <label for="checkboxMestre" class="seplag-check-label">
-                                        Selecionar Todos
-                                    </label>
-                                </div>
-                                <span class="status-visual">Validação</span>
-                            </th>
-                            <th scope="col" class="seplag-table__center">Ações</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr th:if="${inscritos == null or inscritos.isEmpty()}">
-                            <td colspan="6" class="seplag-table__empty">
-                                <div class="seplag-empty">
-                                    <i class="fa-solid fa-folder-open" aria-hidden="true"></i>
-                                    <strong>Nenhum participante inscrito</strong>
-                                    <p>Nenhum participante inscrito neste evento até o momento.</p>
-                                </div>
-                            </td>
-                        </tr>
+                    <tr th:each="i : ${inscritos}">
+                        <td data-label="Inscrição" class="seplag-table__title" th:text="${i.inscricaoId}">1</td>
 
-                        <tr th:each="i : ${inscritos}">
-                            <td data-label="ID Inscrição" class="seplag-table__title" th:text="${i.id}">1</td>
+                        <td data-label="Participante">
+                            <div class="seplag-cell-user">
+                                <span th:text="${i.nomeParticipante}">Nome do Usuário</span>
+                                <button type="button"
+                                        th:data-id="${i.inscricaoId}"
+                                        th:data-nome="${i.nomeParticipante}"
+                                        onclick="promptEditarNome(this)"
+                                        class="seplag-icon-btn seplag-icon-btn--sm"
+                                        aria-label="Editar nome do participante">
+                                    <i class="fa-solid fa-user-pen" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            <div class="seplag-cell-muted" th:text="${i.emailParticipante != null ? i.emailParticipante : '-'}">—</div>
+                        </td>
 
-                            <td data-label="Participante">
-                                <div class="seplag-cell-user">
-                                    <span th:text="${i.participante != null ? i.participante.nome : 'Usuário sem nome'}">Nome do Usuário</span>
-                                    <button type="button"
-                                            th:data-id="${i.id}"
-                                            th:data-nome="${i.participante != null ? i.participante.nome : ''}"
-                                            onclick="promptEditarNome(this)"
-                                            class="seplag-icon-btn seplag-icon-btn--sm"
-                                            aria-label="Editar nome do participante">
-                                        <i class="fa-solid fa-user-pen" aria-hidden="true"></i>
+                        <td data-label="Frequência">
+                            <span th:if="${i.percentualFrequencia != null}"
+                                  class="seplag-badge seplag-badge--neutral"
+                                  th:text="${i.frequenciaFormatada}">75%</span>
+                            <span th:unless="${i.percentualFrequencia != null}"
+                                  class="seplag-badge seplag-badge--neutral">Não aplicável</span>
+
+                            <div class="seplag-cell-muted" th:if="${i.totalSessoes > 0}"
+                                 th:text="|${i.presencasPresentes} de ${i.totalSessoes} sessões com presença|">
+                                3 de 4 sessões com presença
+                            </div>
+                            <div class="seplag-cell-muted" th:unless="${i.totalSessoes > 0}">
+                                Evento sem sessões cadastradas
+                            </div>
+                        </td>
+
+                        <td data-label="Certificado">
+                            <span th:if="${i.certificadoLiberado}" class="seplag-badge seplag-badge--success">
+                                <i class="fa-solid fa-check" aria-hidden="true"></i> Liberado
+                            </span>
+                            <span th:unless="${i.certificadoLiberado}" class="seplag-badge seplag-badge--warning">
+                                <i class="fa-regular fa-clock" aria-hidden="true"></i> Pendente
+                            </span>
+                        </td>
+
+                        <td data-label="Ações" class="seplag-table__actions">
+                            <div class="seplag-row-actions">
+                                <a th:href="@{/organizador/certificado-preview/{id}(id=${evento.id})}"
+                                   target="_blank"
+                                   class="seplag-action">
+                                    <i class="fa-solid fa-eye" aria-hidden="true"></i> Pré-visualizar
+                                </a>
+
+                                <form th:if="${!i.certificadoLiberado and !i.inscricaoCancelada}"
+                                      th:action="@{/organizador/eventos/{eventoId}/inscricoes/{inscricaoId}/validar-participacao(eventoId=${evento.id}, inscricaoId=${i.inscricaoId})}"
+                                      method="POST"
+                                      class="seplag-inline-form">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <button type="submit" class="seplag-action seplag-action--success">
+                                        <i class="fa-solid fa-user-check" aria-hidden="true"></i>
+                                        Validar participação
                                     </button>
-                                </div>
-                            </td>
+                                </form>
 
-                            <td data-label="E-mail" class="seplag-cell-muted"
-                                th:text="${i.participante != null ? i.participante.email : '-'}">—
-                            </td>
-
-                            <td data-label="Status">
-                                <span th:if="${i.status.name() == 'ATIVO'}" class="seplag-badge seplag-badge--warning">
-                                    <i class="fa-regular fa-clock" aria-hidden="true"></i> Pendente
+                                <span th:if="${i.certificadoLiberado}"
+                                      class="seplag-action seplag-action--success">
+                                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                                    Participação validada
                                 </span>
-                                <span th:if="${i.status.name() == 'UTILIZADO'}" class="seplag-badge seplag-badge--success">
-                                    <i class="fa-solid fa-check" aria-hidden="true"></i> Confirmado
+
+                                <span th:if="${i.inscricaoCancelada}"
+                                      class="seplag-action seplag-action--disabled">
+                                    <i class="fa-solid fa-ban" aria-hidden="true"></i>
+                                    Inscrição cancelada
                                 </span>
-                            </td>
 
-                            <td data-label="Presença" class="seplag-table__center">
-                                <div class="campos-edicao hidden seplag-check-inline">
-                                    <input type="checkbox" name="inscricoesPresentes" th:value="${i.id}"
-                                           th:checked="${i.status.name() == 'UTILIZADO'}"
-                                           class="check-aluno seplag-checkbox">
-                                </div>
-                                <div class="status-visual">
-                                    <span class="seplag-status"
-                                          th:classappend="${i.status.name() == 'UTILIZADO' ? 'seplag-status--present' : 'seplag-status--absent'}"
-                                          th:text="${i.status.name() == 'UTILIZADO' ? 'Presente' : 'Ausente'}"></span>
-                                </div>
-                            </td>
+                                <a th:if="${i.certificadoLiberado}"
+                                   th:href="@{/organizador/inscricoes/{inscricaoId}/certificado(inscricaoId=${i.inscricaoId})}"
+                                   target="_blank"
+                                   class="seplag-action seplag-action--success">
+                                    <i class="fa-solid fa-download" aria-hidden="true"></i> Baixar Oficial
+                                </a>
 
-                            <td data-label="Ações" class="seplag-table__actions">
-                                <div class="seplag-row-actions">
-                                    <a th:href="@{/organizador/certificado-preview/{id}(id=${evento.id})}"
-                                       target="_blank"
-                                       class="seplag-action">
-                                        <i class="fa-solid fa-eye" aria-hidden="true"></i> Pré-visualizar
-                                    </a>
+                                <span th:unless="${i.certificadoLiberado}"
+                                      class="seplag-action seplag-action--disabled"
+                                      title="Disponível após a validação da participação pelo organizador.">
+                                    <i class="fa-solid fa-download" aria-hidden="true"></i> Baixar Oficial
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
 
-                                    <a th:if="${i.status.name() == 'UTILIZADO'}"
-                                       th:href="@{/organizador/inscricoes/{inscricaoId}/certificado(inscricaoId=${i.id})}"
-                                       target="_blank"
-                                       class="seplag-action seplag-action--success">
-                                        <i class="fa-solid fa-download" aria-hidden="true"></i> Baixar Oficial
-                                    </a>
-
-                                    <span th:unless="${i.status.name() == 'UTILIZADO'}"
-                                          class="seplag-action seplag-action--disabled"
-                                          title="Disponível apenas para participantes com presença confirmada.">
-                                        <i class="fa-solid fa-download" aria-hidden="true"></i> Baixar Oficial
-                                    </span>
-                                </div>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="seplag-card__footer">
-                    <p class="seplag-form-note">
-                        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
-                        <span>Marque os alunos presentes. Quem ficar desmarcado receberá falta.</span>
-                    </p>
-
-                    <button type="submit" class="seplag-btn seplag-btn--success">
-                        <i class="fa-solid fa-lock" aria-hidden="true"></i>
-                        <span>Consolidar Diário e Liberar Certificados</span>
-                    </button>
-                </div>
-            </form>
+            <div class="seplag-card__footer">
+                <p class="seplag-form-note">
+                    <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                    <span>A validação da participação é uma decisão do organizador e libera o certificado do participante.</span>
+                </p>
+            </div>
         </section>
 
     </main>
@@ -203,15 +216,6 @@
 </div>
 
 <script>
-    function toggleTodos(masterCheckbox) {
-        const checkboxesAlunos = document.querySelectorAll('.check-aluno');
-        checkboxesAlunos.forEach(cb => {
-            if (!cb.disabled) {
-                cb.checked = masterCheckbox.checked;
-            }
-        });
-    }
-
     function promptEditarNome(botaoElemento) {
         const inscricaoId = botaoElemento.getAttribute('data-id');
         const nomeAtual = botaoElemento.getAttribute('data-nome');
@@ -231,21 +235,6 @@
     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
     <input type="hidden" id="payloadNovoNome" name="novoNome">
 </form>
-
-<script>
-    function toggleModoEdicao() {
-        const camposEdicao = document.querySelectorAll('.campos-edicao');
-        const statusVisual = document.querySelectorAll('.status-visual');
-        const botaoTexto = document.getElementById('textoBotaoEdicao');
-
-        camposEdicao.forEach(el => el.classList.toggle('hidden'));
-        statusVisual.forEach(el => el.classList.toggle('hidden'));
-
-        botaoTexto.innerText = (botaoTexto.innerText === "Ativar Edição de Presença")
-            ? "Sair do Modo Edição"
-            : "Ativar Edição de Presença";
-    }
-</script>
 
 <script th:src="@{/js/seplag-shell.js}" defer></script>
 

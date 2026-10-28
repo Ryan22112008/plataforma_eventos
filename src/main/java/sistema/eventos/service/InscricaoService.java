@@ -2,27 +2,39 @@ package sistema.eventos.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import sistema.eventos.dto.InscritoFrequenciaDto;
+import sistema.eventos.dto.PresencaPorAlunoProjection;
 import sistema.eventos.exception.NegocioException;
 import sistema.eventos.model.Evento;
 import sistema.eventos.model.Inscricao;
-import sistema.eventos.model.StatusEvento;
 import sistema.eventos.model.StatusInscricao;
+import sistema.eventos.model.StatusPresenca;
 import sistema.eventos.model.Usuario;
 import sistema.eventos.repository.EventoRepository;
 import sistema.eventos.repository.InscricaoRepository;
+import sistema.eventos.repository.PresencaRepository;
+import sistema.eventos.repository.SessaoRepository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class InscricaoService {
 
     private final InscricaoRepository inscricaoRepository;
     private final EventoRepository eventoRepository;
+    private final SessaoRepository sessaoRepository;
+    private final PresencaRepository presencaRepository;
 
-    public InscricaoService(InscricaoRepository inscricaoRepository, EventoRepository eventoRepository) {
+    public InscricaoService(InscricaoRepository inscricaoRepository, EventoRepository eventoRepository,
+                            SessaoRepository sessaoRepository, PresencaRepository presencaRepository) {
         this.inscricaoRepository = inscricaoRepository;
         this.eventoRepository = eventoRepository;
+        this.sessaoRepository = sessaoRepository;
+        this.presencaRepository = presencaRepository;
     }
 
     @Transactional
@@ -151,6 +163,92 @@ public class InscricaoService {
         // CORRIGIDO: Chama o método do repositório que busca por ID do Evento
         return inscricaoRepository.findByEventoId(eventoId);
     }
+
+    /**
+     * Monta a lista de inscritos com a frequência calculada no backend.
+     * Usa três consultas no total (inscrições, contagem de sessões e presenças
+     * agrupadas por aluno), independentemente da quantidade de participantes.
+     */
+    @Transactional(readOnly = true)
+    public List<InscritoFrequenciaDto> listarInscritosComFrequencia(Long eventoId) {
+        List<Inscricao> inscricoes = inscricaoRepository.findByEventoId(eventoId);
+        long totalSessoes = sessaoRepository.countByEventoId(eventoId);
+
+        Map<Long, Long> presencasPorAluno = presencaRepository
+                .contarPresencasPresentesPorAluno(eventoId, StatusPresenca.PRESENTE)
+                .stream()
+                .filter(projecao -> projecao.getAlunoId() != null)
+                .collect(Collectors.toMap(
+                        PresencaPorAlunoProjection::getAlunoId,
+                        PresencaPorAlunoProjection::getTotalPresentes));
+
+        return inscricoes.stream()
+                .map(inscricao -> montarInscritoFrequencia(inscricao, totalSessoes, presencasPorAluno))
+                .toList();
+    }
+
+    private InscritoFrequenciaDto montarInscritoFrequencia(Inscricao inscricao,
+                                                           long totalSessoes,
+                                                           Map<Long, Long> presencasPorAluno) {
+        Usuario participante = inscricao.getParticipante();
+        Long participanteId = participante != null ? participante.getId() : null;
+        long presencasPresentes = participanteId != null
+                ? presencasPorAluno.getOrDefault(participanteId, 0L)
+                : 0L;
+
+        Double percentualFrequencia = totalSessoes > 0
+                ? (presencasPresentes * 100.0) / totalSessoes
+                : null;
+
+        StatusInscricao status = inscricao.getStatus();
+
+        return InscritoFrequenciaDto.builder()
+                .inscricaoId(inscricao.getId())
+                .participanteId(participanteId)
+                .nomeParticipante(participante != null ? participante.getNome() : "Usuário sem nome")
+                .emailParticipante(participante != null ? participante.getEmail() : null)
+                .statusInscricao(status)
+                .presencasPresentes(presencasPresentes)
+                .totalSessoes(totalSessoes)
+                .percentualFrequencia(percentualFrequencia)
+                .certificadoLiberado(status == StatusInscricao.UTILIZADO)
+                .inscricaoCancelada(status == StatusInscricao.CANCELADO)
+                .build();
+    }
+
+    /**
+     * Valida a participação de um inscrito. A inscrição é resolvida no banco
+     * pelo seu ID e precisa pertencer ao evento informado; nenhum dado crítico
+     * (participante, percentual ou status) é aceito do navegador.
+     * A liberação do certificado reutiliza a regra existente:
+     * Inscricao.status == UTILIZADO.
+     */
+    @Transactional
+    public Inscricao validarParticipacaoDoParticipante(Long eventoId, Long inscricaoId) {
+        Inscricao inscricao = inscricaoRepository.findById(inscricaoId)
+                .orElseThrow(() -> new NegocioException("Inscrição não encontrada no sistema."));
+
+        if (inscricao.getEvento() == null || !eventoId.equals(inscricao.getEvento().getId())) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Inscrição não pertence a este evento.");
+        }
+        if (inscricao.getParticipante() == null) {
+            throw new NegocioException("A inscrição não possui participante vinculado.");
+        }
+        if (inscricao.getStatus() == StatusInscricao.CANCELADO) {
+            throw new NegocioException("Não é possível validar uma inscrição cancelada.");
+        }
+
+        if (inscricao.getStatus() != StatusInscricao.UTILIZADO) {
+            inscricao.setStatus(StatusInscricao.UTILIZADO);
+            if (inscricao.getDataCheckIn() == null) {
+                inscricao.setDataCheckIn(LocalDateTime.now());
+            }
+            inscricaoRepository.save(inscricao);
+        }
+        return inscricao;
+    }
+
     @Transactional
     public void fecharDiarioClasse(Long eventoId, List<Long> idsPresentes) {
         // 1. Recupera o evento ou lança erro se não existir

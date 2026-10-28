@@ -47,8 +47,15 @@
 
                 <div class="seplag-field">
                     <label for="senha" class="seplag-label">Sua senha</label>
-                    <input type="password" name="password" id="senha" autocomplete="current-password" required
-                           class="seplag-input">
+                    <div class="seplag-password">
+                        <input type="password" name="password" id="senha" autocomplete="current-password" required
+                               class="seplag-input">
+                        <button type="button" class="seplag-password__toggle"
+                                data-seplag-password-toggle aria-controls="senha"
+                                aria-label="Mostrar senha" aria-pressed="false" title="Mostrar senha">
+                            <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <button type="submit" class="seplag-btn seplag-btn-primary seplag-btn--block">
@@ -68,5 +75,6 @@
     </div>
 </main>
 
+<script th:src="@{/js/seplag-shell.js}" defer></script>
 </body>
 </html>

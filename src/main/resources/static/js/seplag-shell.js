@@ -1,8 +1,50 @@
 /* ==========================================================================
    SEPLAG Eventos — shell v2
-   Controla apenas o drawer de navegação em telas menores.
-   Sem dependências, sem build. Não interfere em formulários ou links.
+   Controla o drawer de navegação em telas menores e o botão de
+   mostrar/ocultar senha. Sem dependências, sem build. Não interfere em
+   formulários, validação ou envio.
    ========================================================================== */
+
+/* Mostrar/ocultar senha — um botão independente por campo. */
+(function () {
+    'use strict';
+
+    var toggles = document.querySelectorAll('[data-seplag-password-toggle]');
+
+    Array.prototype.forEach.call(toggles, function (toggle) {
+        var inputId = toggle.getAttribute('aria-controls');
+        var input = inputId ? document.getElementById(inputId) : null;
+        var rotuloMostrar = toggle.getAttribute('data-label-show') || 'Mostrar senha';
+        var rotuloOcultar = toggle.getAttribute('data-label-hide') || 'Ocultar senha';
+
+        if (!input) {
+            var wrapper = toggle.closest('.seplag-password');
+            input = wrapper ? wrapper.querySelector('input') : null;
+        }
+
+        if (!input) {
+            return;
+        }
+
+        toggle.addEventListener('click', function () {
+            var visivel = input.type === 'password';
+
+            input.type = visivel ? 'text' : 'password';
+
+            var rotulo = visivel ? rotuloOcultar : rotuloMostrar;
+            toggle.setAttribute('aria-label', rotulo);
+            toggle.setAttribute('aria-pressed', visivel ? 'true' : 'false');
+            toggle.setAttribute('title', rotulo);
+
+            var icone = toggle.querySelector('i');
+            if (icone) {
+                icone.classList.toggle('fa-eye', !visivel);
+                icone.classList.toggle('fa-eye-slash', visivel);
+            }
+        });
+    });
+})();
+
 (function () {
     'use strict';
 

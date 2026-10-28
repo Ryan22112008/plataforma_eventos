@@ -26,6 +26,9 @@
             <a th:href="@{/super-admin/usuarios}" th:classappend="${!ehOrganizador} ? ' bg-white/15 text-white' : ' text-white/85'" th:attr="aria-current=${!ehOrganizador ? 'page' : null}" class="rounded-lg px-3 py-2 transition hover:bg-white/10 hover:text-white">Usuários</a>
             <a th:href="@{/super-admin/organizadores}" th:classappend="${ehOrganizador} ? ' bg-white/15 text-white' : ' text-white/85'" th:attr="aria-current=${ehOrganizador ? 'page' : null}" class="rounded-lg px-3 py-2 transition hover:bg-white/20">Organizadores</a>
             <a th:href="@{/super-admin/solicitacoes}" class="rounded-lg px-3 py-2 text-white/85 transition hover:bg-white/10 hover:text-white">Solicitações de Organizador</a>
+            <a th:href="@{/}" class="rounded-lg border border-[#FDB813]/40 bg-[#FDB813]/10 px-3 py-2 text-[#FDE68A] transition hover:bg-[#FDB813]/20 hover:text-white">
+                <i class="fa-solid fa-house mr-1.5 text-xs" aria-hidden="true"></i>Voltar ao menu principal
+            </a>
         </nav>
         <span class="hidden text-sm font-light lg:inline" sec:authentication="name">Usuário</span>
         <form th:action="@{/logout}" method="POST" class="inline">

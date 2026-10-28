@@ -46,6 +46,9 @@ public class Usuario extends EntidadeAuditavel {
     @Column(nullable = false, length = 30)
     private Perfil perfil;
 
+    @Column(name = "foto_perfil", length = 500)
+    private String fotoPerfil;
+
     @Builder.Default
     @Column(nullable = false)
     private boolean ativo = true; // Permite desativar usuários/bots sem apagar o histórico de eventos
