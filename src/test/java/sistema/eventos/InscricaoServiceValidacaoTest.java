@@ -18,6 +18,7 @@ import sistema.eventos.repository.SessaoRepository;
 import sistema.eventos.service.InscricaoService;
 
 import java.util.Optional;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -113,6 +114,66 @@ class InscricaoServiceValidacaoTest {
 
         assertThat(resultado.getStatus()).isEqualTo(StatusInscricao.UTILIZADO);
         verify(inscricaoRepository, never()).save(inscricao);
+    }
+
+    @Test
+    void loteSemSelecionadosNaoConsultaBanco() {
+        assertThat(inscricaoService.validarParticipacoesEmLote(EVENTO_ID, List.of())).isZero();
+        verify(inscricaoRepository, never()).findAllByIdComRelacoes(org.mockito.ArgumentMatchers.anyList());
+    }
+
+    @Test
+    void loteValidaUmaInscricaoEPreencheDataCheckIn() {
+        Inscricao inscricao = inscricao(EVENTO_ID, StatusInscricao.ATIVO);
+        when(inscricaoRepository.findAllByIdComRelacoes(List.of(INSCRICAO_ID))).thenReturn(List.of(inscricao));
+
+        assertThat(inscricaoService.validarParticipacoesEmLote(EVENTO_ID, List.of(INSCRICAO_ID))).isEqualTo(1);
+
+        assertThat(inscricao.getStatus()).isEqualTo(StatusInscricao.UTILIZADO);
+        assertThat(inscricao.getDataCheckIn()).isNotNull();
+        verify(inscricaoRepository).saveAll(List.of(inscricao));
+    }
+
+    @Test
+    void loteValidaMultiplasInscricoesEmUmaPersistencia() {
+        Inscricao primeira = inscricao(EVENTO_ID, StatusInscricao.ATIVO);
+        Inscricao segunda = inscricao(EVENTO_ID, StatusInscricao.ATIVO);
+        segunda.setId(102L);
+        when(inscricaoRepository.findAllByIdComRelacoes(List.of(INSCRICAO_ID, 102L)))
+                .thenReturn(List.of(primeira, segunda));
+
+        assertThat(inscricaoService.validarParticipacoesEmLote(EVENTO_ID, List.of(INSCRICAO_ID, 102L)))
+                .isEqualTo(2);
+        verify(inscricaoRepository).saveAll(List.of(primeira, segunda));
+    }
+
+    @Test
+    void loteIgnoraJaUtilizadaCanceladaOutroEventoEParticipanteInconsistente() {
+        Inscricao utilizada = inscricao(EVENTO_ID, StatusInscricao.UTILIZADO);
+        Inscricao cancelada = inscricao(EVENTO_ID, StatusInscricao.CANCELADO);
+        Inscricao deOutroEvento = inscricao(OUTRO_EVENTO_ID, StatusInscricao.ATIVO);
+        Inscricao semParticipante = inscricao(EVENTO_ID, StatusInscricao.ATIVO);
+        semParticipante.setParticipante(null);
+        when(inscricaoRepository.findAllByIdComRelacoes(List.of(1L, 2L, 3L, 4L)))
+                .thenReturn(List.of(utilizada, cancelada, deOutroEvento, semParticipante));
+
+        assertThat(inscricaoService.validarParticipacoesEmLote(EVENTO_ID, List.of(1L, 2L, 3L, 4L))).isZero();
+        verify(inscricaoRepository, never()).saveAll(org.mockito.ArgumentMatchers.anyList());
+    }
+
+    @Test
+    void loteEhIdempotenteEPreservaDataCheckInJaExistente() {
+        Inscricao inscricao = inscricao(EVENTO_ID, StatusInscricao.ATIVO);
+        java.time.LocalDateTime checkIn = java.time.LocalDateTime.of(2026, 1, 2, 3, 4);
+        inscricao.setDataCheckIn(checkIn);
+        when(inscricaoRepository.findAllByIdComRelacoes(List.of(INSCRICAO_ID)))
+                .thenReturn(List.of(inscricao));
+
+        assertThat(inscricaoService.validarParticipacoesEmLote(EVENTO_ID, List.of(INSCRICAO_ID))).isEqualTo(1);
+        assertThat(inscricao.getDataCheckIn()).isEqualTo(checkIn);
+        when(inscricaoRepository.findAllByIdComRelacoes(List.of(INSCRICAO_ID)))
+                .thenReturn(List.of(inscricao));
+        assertThat(inscricaoService.validarParticipacoesEmLote(EVENTO_ID, List.of(INSCRICAO_ID))).isZero();
     }
 
     private Inscricao inscricao(Long eventoId, StatusInscricao status) {

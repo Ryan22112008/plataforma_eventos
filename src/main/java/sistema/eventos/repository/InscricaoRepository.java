@@ -23,6 +23,9 @@ public interface InscricaoRepository extends JpaRepository<Inscricao, Long> {
     @Query("SELECT i FROM Inscricao i JOIN FETCH i.participante WHERE i.evento.id = :eventoId")
     List<Inscricao> findByEventoId(@Param("eventoId") Long eventoId);
 
+    @Query("SELECT i FROM Inscricao i LEFT JOIN FETCH i.participante LEFT JOIN FETCH i.evento WHERE i.id IN :ids")
+    List<Inscricao> findAllByIdComRelacoes(@Param("ids") List<Long> ids);
+
     boolean existsByParticipanteIdAndEventoId(Long participanteId, Long eventoId);
 
     boolean existsByParticipanteIdAndEventoIdAndStatusNot(Long participanteId, Long eventoId, StatusInscricao status);

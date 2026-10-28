@@ -22,6 +22,10 @@ class InscritosTemplateTest {
         assertThat(template).contains("/validar-participacao");
         assertThat(template).contains("Pendente");
         assertThat(template).contains("Liberado");
+        assertThat(template).contains("Validar selecionados");
+        assertThat(template).contains("selecionarTodos");
+        assertThat(template).contains("inscricaoIds");
+        assertThat(template).contains("Selecione ao menos um participante");
     }
 
     @Test

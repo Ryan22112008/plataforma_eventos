@@ -190,6 +190,22 @@ public class EventoController {
         return "redirect:/organizador/eventos/" + eventoId + "/inscritos";
     }
 
+    @PreAuthorize("hasAnyRole('ORGANIZADOR', 'SUPER_ADMIN')")
+    @PostMapping("/eventos/{eventoId}/inscricoes/validar-participacoes")
+    public String validarParticipacoesEmLote(@PathVariable Long eventoId,
+                                             @RequestParam(value = "inscricaoIds", required = false) List<Long> inscricaoIds,
+                                             Authentication authentication,
+                                             RedirectAttributes redirectAttributes) {
+        exigirAcessoAoEvento(eventoId, authentication);
+        if (inscricaoIds == null || inscricaoIds.isEmpty()) {
+            redirectAttributes.addFlashAttribute("erroNegocio", "Selecione ao menos um participante para validar.");
+        } else {
+            int validadas = inscricaoService.validarParticipacoesEmLote(eventoId, inscricaoIds);
+            redirectAttributes.addFlashAttribute("sucesso", validadas + " participante(s) validado(s). Certificados liberados.");
+        }
+        return "redirect:/organizador/eventos/" + eventoId + "/inscritos";
+    }
+
     @PostMapping("/inscricoes/{inscricaoId}/checkin")
     public String confirmarPresencaDoAluno(@PathVariable("inscricaoId") Long inscricaoId,
                                            @RequestParam("eventoId") Long eventoId,

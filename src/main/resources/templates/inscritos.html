@@ -82,12 +82,26 @@
                     <h2 class="seplag-card__title" id="titulo-inscritos">Participantes do evento</h2>
                     <p class="seplag-card__hint">A frequência é calculada pelas presenças registradas nas sessões do evento.</p>
                 </div>
+                <div class="seplag-row-actions">
+                    <button type="submit" form="formValidarSelecionados" class="seplag-btn seplag-btn-primary">
+                        <i class="fa-solid fa-user-check" aria-hidden="true"></i> Validar selecionados
+                    </button>
+                </div>
             </div>
+
+            <form id="formValidarSelecionados" method="post"
+                  th:action="@{/organizador/eventos/{eventoId}/inscricoes/validar-participacoes(eventoId=${evento.id})}"
+                  onsubmit="return validarSelecaoEmLote()">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            </form>
 
             <div class="seplag-table-wrap">
                 <table class="seplag-table">
                     <thead>
                     <tr>
+                        <th scope="col" aria-label="Selecionar participantes">
+                            <input type="checkbox" id="selecionarTodos" aria-label="Selecionar todos os participantes elegíveis" />
+                        </th>
                         <th scope="col">Inscrição</th>
                         <th scope="col">Participante</th>
                         <th scope="col">Frequência</th>
@@ -97,7 +111,7 @@
                     </thead>
                     <tbody>
                     <tr th:if="${inscritos == null or inscritos.isEmpty()}">
-                        <td colspan="5" class="seplag-table__empty">
+                        <td colspan="6" class="seplag-table__empty">
                             <div class="seplag-empty">
                                 <i class="fa-solid fa-folder-open" aria-hidden="true"></i>
                                 <strong>Nenhum participante inscrito</strong>
@@ -107,6 +121,12 @@
                     </tr>
 
                     <tr th:each="i : ${inscritos}">
+                        <td data-label="Selecionar">
+                            <input type="checkbox" class="inscricao-selecao" name="inscricaoIds"
+                                   th:value="${i.inscricaoId}" form="formValidarSelecionados"
+                                   th:disabled="${i.participanteId == null or i.inscricaoCancelada or i.certificadoLiberado}"
+                                   aria-label="Selecionar participante para validação em lote" />
+                        </td>
                         <td data-label="Inscrição" class="seplag-table__title" th:text="${i.inscricaoId}">1</td>
 
                         <td data-label="Participante">
@@ -216,6 +236,30 @@
 </div>
 
 <script>
+    const selecaoTodos = document.getElementById('selecionarTodos');
+    const caixasInscricoes = () => Array.from(document.querySelectorAll('.inscricao-selecao:not(:disabled)'));
+
+    selecaoTodos?.addEventListener('change', () => {
+        caixasInscricoes().forEach(caixa => caixa.checked = selecaoTodos.checked);
+    });
+
+    document.querySelectorAll('.inscricao-selecao').forEach(caixa => {
+        caixa.addEventListener('change', () => {
+            const elegiveis = caixasInscricoes();
+            selecaoTodos.checked = elegiveis.length > 0 && elegiveis.every(item => item.checked);
+            selecaoTodos.indeterminate = elegiveis.some(item => item.checked) && !selecaoTodos.checked;
+        });
+    });
+
+    function validarSelecaoEmLote() {
+        const selecionadas = caixasInscricoes().filter(caixa => caixa.checked);
+        if (selecionadas.length === 0) {
+            alert('Selecione ao menos um participante para validar.');
+            return false;
+        }
+        return true;
+    }
+
     function promptEditarNome(botaoElemento) {
         const inscricaoId = botaoElemento.getAttribute('data-id');
         const nomeAtual = botaoElemento.getAttribute('data-nome');
