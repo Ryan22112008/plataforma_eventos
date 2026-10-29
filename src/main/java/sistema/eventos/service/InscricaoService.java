@@ -19,6 +19,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -254,6 +255,7 @@ public class InscricaoService {
         return inscricao;
     }
 
+<<<<<<< HEAD
     /**
      * Valida em lote somente as inscrições selecionadas. Todas precisam existir,
      * pertencer ao evento informado e não estar canceladas; a validação completa
@@ -313,6 +315,32 @@ public class InscricaoService {
             inscricaoRepository.saveAll(paraAtualizar);
         }
         return paraAtualizar.size();
+=======
+    /** Valida um conjunto de inscrições numa única transação e persiste válidas em lote. */
+    @Transactional
+    public int validarParticipacoesEmLote(Long eventoId, List<Long> inscricaoIds) {
+        if (inscricaoIds == null || inscricaoIds.isEmpty()) return 0;
+        List<Long> ids = new LinkedHashSet<>(inscricaoIds).stream().filter(java.util.Objects::nonNull).toList();
+        if (ids.isEmpty()) return 0;
+
+        LocalDateTime agora = LocalDateTime.now();
+        List<Inscricao> validas = inscricaoRepository.findAllByIdComRelacoes(ids).stream()
+                .filter(inscricao -> inscricao.getEvento() != null
+                        && eventoId.equals(inscricao.getEvento().getId()))
+                .filter(inscricao -> inscricao.getParticipante() != null
+                        && inscricao.getParticipante().getId() != null)
+                .filter(inscricao -> inscricao.getStatus() != null
+                        && inscricao.getStatus() != StatusInscricao.CANCELADO
+                        && inscricao.getStatus() != StatusInscricao.UTILIZADO)
+                .toList();
+
+        validas.forEach(inscricao -> {
+            inscricao.setStatus(StatusInscricao.UTILIZADO);
+            if (inscricao.getDataCheckIn() == null) inscricao.setDataCheckIn(agora);
+        });
+        if (!validas.isEmpty()) inscricaoRepository.saveAll(validas);
+        return validas.size();
+>>>>>>> 7d51a2089e3b427023e048f997b6ae651023803a
     }
 
     @Transactional

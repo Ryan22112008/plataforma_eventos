@@ -557,6 +557,14 @@ html.v2-root {
     gap: 4px 10px;
 }
 
+/* Ações dos inscritos ficam empilhadas e alinhadas para evitar quebras irregulares. */
+.v2 .inscritos-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2px;
+}
+
 .v2 .seplag-inline-form {
     display: inline-flex;
     margin: 0;
