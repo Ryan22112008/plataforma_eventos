@@ -48,10 +48,9 @@
             <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-300">Consulte os dados da conta, os eventos vinculados e o histórico registrado na plataforma.</p>
         </div>
         <div class="flex flex-wrap gap-2">
-        <a th:href="@{/super-admin/organizadores}" class="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#365477] bg-[#14294A] px-3 py-2 text-sm font-semibold text-slate-200 transition hover:border-[#60A5FA] hover:text-white">
-            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Organizadores
+        <a th:href="${ehOrganizador} ? @{/super-admin/organizadores} : @{/super-admin/usuarios}" class="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#365477] bg-[#14294A] px-3 py-2 text-sm font-semibold text-slate-200 transition hover:border-[#60A5FA] hover:text-white">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Voltar
         </a>
-        <a th:href="@{/super-admin/usuarios}" class="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#365477] px-3 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/5 hover:text-white">Usuários</a>
         </div>
     </div>
 
@@ -187,6 +186,24 @@
                     </div>
                     <button type="submit" class="mt-4 min-h-10 w-full rounded-lg border border-amber-300/25 bg-amber-400/15 px-4 py-2 text-sm font-semibold text-amber-100 transition hover:bg-amber-400/25">
                         Confirmar revogação
+                    </button>
+                </form>
+            </div>
+
+            <!-- Promover para Super Admin -->
+            <div th:if="${usuario.perfil.name() != 'ROLE_SUPER_ADMIN' and !ehPropriaConta}">
+                <form th:action="@{/super-admin/usuarios/{id}/promover-super-admin(id=${usuario.id})}" method="POST"
+                      onsubmit="return confirm('Promover este usuário para SUPER_ADMIN? A conta manterá o mesmo e-mail, histórico, inscrições, eventos e certificados. Esta ação concede acesso total à Super Administração.');"
+                      class="h-full rounded-xl border border-blue-300/25 bg-[#0B1F3A]/60 p-4">
+                    <div class="flex items-start gap-3">
+                        <i class="fa-solid fa-crown mt-0.5 text-blue-300"></i>
+                        <div>
+                            <h3 class="text-sm font-bold text-white">Promover para Super Admin</h3>
+                            <p class="mt-1 text-xs leading-5 text-slate-400">Altera o perfil desta conta para ROLE_SUPER_ADMIN sem criar uma nova conta. E-mail, histórico, inscrições, eventos e certificados são preservados.</p>
+                        </div>
+                    </div>
+                    <button type="submit" class="mt-4 min-h-10 w-full rounded-lg border border-blue-300/25 bg-blue-500/15 px-4 py-2 text-sm font-semibold text-blue-100 transition hover:bg-blue-500/25">
+                        Confirmar promoção
                     </button>
                 </form>
             </div>

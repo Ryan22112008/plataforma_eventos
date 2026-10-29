@@ -17,12 +17,17 @@ import sistema.eventos.repository.SessaoRepository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
 public class InscricaoService {
+
+    /** Limite defensivo para o lote de validação de participação. */
+    private static final int LIMITE_VALIDACOES_POR_LOTE = 1000;
 
     private final InscricaoRepository inscricaoRepository;
     private final EventoRepository eventoRepository;
@@ -247,6 +252,67 @@ public class InscricaoService {
             inscricaoRepository.save(inscricao);
         }
         return inscricao;
+    }
+
+    /**
+     * Valida em lote somente as inscrições selecionadas. Todas precisam existir,
+     * pertencer ao evento informado e não estar canceladas; a validação completa
+     * acontece antes de qualquer alteração, para não liberar certificados
+     * parcialmente quando o lote contém um item inválido.
+     */
+    @Transactional
+    public int validarParticipacaoEmLote(Long eventoId, List<Long> inscricaoIds) {
+        if (eventoId == null) {
+            throw new NegocioException("Evento não informado.");
+        }
+        if (inscricaoIds == null || inscricaoIds.isEmpty()) {
+            throw new NegocioException("Selecione ao menos um participante para validar.");
+        }
+
+        List<Long> ids = inscricaoIds.stream()
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        if (ids.isEmpty()) {
+            throw new NegocioException("Selecione ao menos um participante para validar.");
+        }
+        if (ids.size() > LIMITE_VALIDACOES_POR_LOTE) {
+            throw new NegocioException("O lote de validação excede o limite permitido.");
+        }
+
+        List<Inscricao> selecionadas = inscricaoRepository.findAllById(ids);
+        if (selecionadas.size() != ids.size()) {
+            throw new NegocioException("Uma ou mais inscrições selecionadas não foram encontradas.");
+        }
+
+        List<Inscricao> paraAtualizar = new ArrayList<>();
+        for (Inscricao inscricao : selecionadas) {
+            if (inscricao.getEvento() == null || !eventoId.equals(inscricao.getEvento().getId())) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "Inscrição não pertence a este evento.");
+            }
+            if (inscricao.getParticipante() == null) {
+                throw new NegocioException("A inscrição não possui participante vinculado.");
+            }
+            if (inscricao.getStatus() == StatusInscricao.CANCELADO) {
+                throw new NegocioException("Não é possível validar uma inscrição cancelada.");
+            }
+            if (inscricao.getStatus() != StatusInscricao.UTILIZADO) {
+                paraAtualizar.add(inscricao);
+            }
+        }
+
+        LocalDateTime agora = LocalDateTime.now();
+        for (Inscricao inscricao : paraAtualizar) {
+            inscricao.setStatus(StatusInscricao.UTILIZADO);
+            if (inscricao.getDataCheckIn() == null) {
+                inscricao.setDataCheckIn(agora);
+            }
+        }
+        if (!paraAtualizar.isEmpty()) {
+            inscricaoRepository.saveAll(paraAtualizar);
+        }
+        return paraAtualizar.size();
     }
 
     @Transactional

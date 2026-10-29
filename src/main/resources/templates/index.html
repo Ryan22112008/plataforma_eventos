@@ -21,56 +21,60 @@
             </p>
 
             <form th:action="@{/}" method="get" class="seplag-public-search" role="search">
-                <div class="seplag-field">
-                    <label for="busca" class="seplag-label">Buscar cursos</label>
-                    <div class="seplag-search-input">
+                <div class="seplag-public-search__main">
+                    <div class="seplag-field seplag-public-search__query">
+                        <label for="busca" class="seplag-label">Buscar cursos</label>
+                        <div class="seplag-search-input">
+                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                            <input id="busca" type="text" name="busca" th:value="${termoBusca}"
+                                   placeholder="Digite o nome ou tema do curso..." class="seplag-input" autocomplete="off">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="seplag-btn seplag-btn-primary seplag-public-search__submit">
                         <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                        <input id="busca" type="text" name="busca" th:value="${termoBusca}"
-                               placeholder="Buscar cursos..." class="seplag-input" autocomplete="off">
+                        Pesquisar
+                    </button>
+                </div>
+
+                <div class="seplag-public-search__filters" role="group" aria-label="Filtros de busca">
+                    <div class="seplag-field">
+                        <label for="nicho" class="seplag-label">Área / Nicho</label>
+                        <select name="nicho" id="nicho" class="seplag-select">
+                            <option value="" th:selected="${filtroNicho == ''}">Todos</option>
+                            <option value="TECNOLOGIA" th:selected="${filtroNicho == 'TECNOLOGIA'}">Tecnologia</option>
+                            <option value="TECNOLOGIA_E_INOVACAO" th:selected="${filtroNicho == 'TECNOLOGIA_E_INOVACAO'}">Tecnologia e Inovação</option>
+                            <option value="GESTAO_PUBLICA" th:selected="${filtroNicho == 'GESTAO_PUBLICA'}">Gestão Pública</option>
+                            <option value="SAUDE" th:selected="${filtroNicho == 'SAUDE'}">Saúde</option>
+                            <option value="OUTROS" th:selected="${filtroNicho == 'OUTROS'}">Outros</option>
+                        </select>
+                    </div>
+
+                    <div class="seplag-field">
+                        <label for="modalidade" class="seplag-label">Modalidade</label>
+                        <select name="modalidade" id="modalidade" class="seplag-select">
+                            <option value="" th:selected="${filtroModalidade == ''}">Todas</option>
+                            <option value="PRESENCIAL" th:selected="${filtroModalidade == 'PRESENCIAL'}">Presencial</option>
+                            <option value="ONLINE" th:selected="${filtroModalidade == 'ONLINE'}">Online</option>
+                            <option value="HIBRIDO" th:selected="${filtroModalidade == 'HIBRIDO'}">Híbrido</option>
+                        </select>
+                    </div>
+
+                    <div class="seplag-field">
+                        <label for="data" class="seplag-label">Data</label>
+                        <input type="date" id="data" name="data" th:value="${filtroData}" class="seplag-input">
+                    </div>
+
+                    <div class="seplag-field">
+                        <label for="vigencia" class="seplag-label">Vigência</label>
+                        <select name="vigencia" id="vigencia" class="seplag-select">
+                            <option value="" th:selected="${filtroVigencia == ''}">Todas</option>
+                            <option value="FUTUROS" th:selected="${filtroVigencia == 'FUTUROS'}">Futuros</option>
+                            <option value="EM_ANDAMENTO" th:selected="${filtroVigencia == 'EM_ANDAMENTO'}">Em andamento</option>
+                            <option value="ENCERRADOS" th:selected="${filtroVigencia == 'ENCERRADOS'}">Encerrados</option>
+                        </select>
                     </div>
                 </div>
-
-                <div class="seplag-field">
-                    <label for="nicho" class="seplag-label">Área / Nicho</label>
-                    <select name="nicho" id="nicho" class="seplag-select">
-                        <option value="" th:selected="${filtroNicho == ''}">Todos</option>
-                        <option value="TECNOLOGIA" th:selected="${filtroNicho == 'TECNOLOGIA'}">Tecnologia</option>
-                        <option value="TECNOLOGIA_E_INOVACAO" th:selected="${filtroNicho == 'TECNOLOGIA_E_INOVACAO'}">Tecnologia e Inovação</option>
-                        <option value="GESTAO_PUBLICA" th:selected="${filtroNicho == 'GESTAO_PUBLICA'}">Gestão Pública</option>
-                        <option value="SAUDE" th:selected="${filtroNicho == 'SAUDE'}">Saúde</option>
-                        <option value="OUTROS" th:selected="${filtroNicho == 'OUTROS'}">Outros</option>
-                    </select>
-                </div>
-
-                <div class="seplag-field">
-                    <label for="modalidade" class="seplag-label">Modalidade</label>
-                    <select name="modalidade" id="modalidade" class="seplag-select">
-                        <option value="" th:selected="${filtroModalidade == ''}">Todas</option>
-                        <option value="PRESENCIAL" th:selected="${filtroModalidade == 'PRESENCIAL'}">Presencial</option>
-                        <option value="ONLINE" th:selected="${filtroModalidade == 'ONLINE'}">Online</option>
-                        <option value="HIBRIDO" th:selected="${filtroModalidade == 'HIBRIDO'}">Híbrido</option>
-                    </select>
-                </div>
-
-                <div class="seplag-field">
-                    <label for="data" class="seplag-label">Data</label>
-                    <input type="date" id="data" name="data" th:value="${filtroData}" class="seplag-input">
-                </div>
-
-                <div class="seplag-field">
-                    <label for="vigencia" class="seplag-label">Vigência</label>
-                    <select name="vigencia" id="vigencia" class="seplag-select">
-                        <option value="" th:selected="${filtroVigencia == ''}">Todas</option>
-                        <option value="FUTUROS" th:selected="${filtroVigencia == 'FUTUROS'}">Futuros</option>
-                        <option value="EM_ANDAMENTO" th:selected="${filtroVigencia == 'EM_ANDAMENTO'}">Em andamento</option>
-                        <option value="ENCERRADOS" th:selected="${filtroVigencia == 'ENCERRADOS'}">Encerrados</option>
-                    </select>
-                </div>
-
-                <button type="submit" class="seplag-btn seplag-btn-primary seplag-public-search__submit">
-                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                    Pesquisar
-                </button>
             </form>
         </div>
     </section>

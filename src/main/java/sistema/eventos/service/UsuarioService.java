@@ -208,6 +208,39 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
     }
 
+    /**
+     * Promove uma conta existente ao perfil ROLE_SUPER_ADMIN.
+     *
+     * <p>Apenas o perfil da conta é alterado: nenhum registro é criado, duplicado
+     * ou excluído, e e-mail, inscrições, eventos, certificados e histórico são
+     * preservados. A verificação do solicitante é repetida no backend, além da
+     * proteção de rota já existente para /super-admin/**.</p>
+     *
+     * @param id            ID da conta a ser promovida
+     * @param idSolicitante ID do SUPER_ADMIN autenticado que executa a ação
+     * @throws NegocioException se o solicitante não for SUPER_ADMIN, se o usuário
+     *                          não existir ou se a conta já for SUPER_ADMIN
+     */
+    @Transactional
+    public void promoverParaSuperAdmin(Long id, Long idSolicitante) {
+        if (idSolicitante == null) {
+            throw new NegocioException("Não foi possível identificar o Super Admin autenticado.");
+        }
+
+        Usuario solicitante = buscarPorId(idSolicitante);
+        if (solicitante.getPerfil() != Perfil.ROLE_SUPER_ADMIN) {
+            throw new NegocioException("Apenas um Super Admin pode promover usuários.");
+        }
+
+        Usuario usuario = buscarPorId(id);
+        if (usuario.getPerfil() == Perfil.ROLE_SUPER_ADMIN) {
+            throw new NegocioException("Este usuário já é SUPER_ADMIN.");
+        }
+
+        usuario.setPerfil(Perfil.ROLE_SUPER_ADMIN);
+        usuarioRepository.save(usuario);
+    }
+
     @Transactional
     public void solicitarAcessoOrganizador(String email, RequestSolicitacaoOrganizadorDto dto) {
         Usuario usuario = buscarPorEmail(email);

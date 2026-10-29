@@ -57,8 +57,21 @@
                 <button type="button" onclick="toggleEdicao()" class="seplag-btn seplag-btn--warning">
                     <i class="fa-solid fa-pen" aria-hidden="true"></i> Alterar Presença
                 </button>
+                <span class="seplag-count-chip" id="statusAlteracoes" aria-live="polite">
+                    Nenhuma alteração pendente
+                </span>
+                <button type="button"
+                        id="btnSalvarPresencas"
+                        class="seplag-btn seplag-btn--success"
+                        th:data-evento-id="${evento.id}"
+                        disabled>
+                    <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+                    Salvar alterações
+                </button>
             </div>
         </div>
+
+        <div id="feedbackPresencas" class="seplag-flash seplag-feedback" role="status" aria-live="polite"></div>
 
         <section class="seplag-card" aria-labelledby="titulo-desempenho">
             <div class="seplag-card__header">
@@ -67,14 +80,17 @@
                     <p class="seplag-card__hint">Percentual de presença consolidado em todas as sessões.</p>
                 </div>
                 <span class="seplag-badge seplag-badge--role"
+                      id="percentualGlobalBadge"
                       th:text="${percentualGlobal} + '% de presença geral'">0% de presença geral</span>
             </div>
 
             <div class="seplag-card__body">
                 <div class="seplag-progress" role="progressbar"
+                     id="percentualGlobalProgress"
                      aria-label="Percentual de presença geral"
                      th:attr="aria-valuenow=${percentualGlobal}">
                     <div class="seplag-progress__bar"
+                         id="percentualGlobalBar"
                          th:style="'width: ' + ${percentualGlobal} + '%'"></div>
                 </div>
             </div>
@@ -117,22 +133,24 @@
                             Nome do Aluno
                         </td>
 
-                        <td th:each="s : ${sessoes}" class="seplag-matrix__cell">
+                        <td th:each="s : ${sessoes}" class="seplag-matrix__cell"
+                            th:with="statusAtual=${mapaPresencas.get(i.participante.id + '_' + s.id) != null ? mapaPresencas.get(i.participante.id + '_' + s.id) : 'FALTA'}">
                             <div class="status-visual">
-                                <span th:with="status=${mapaPresencas.get(i.participante.id + '_' + s.id)}"
-                                      th:classappend="${status == 'PRESENTE' ? 'seplag-status--present' : 'seplag-status--absent'}"
-                                      class="seplag-status">
-                                    <span th:text="${status != null ? status : 'FALTA'}">FALTA</span>
-                                </span>
+                                <span class="seplag-status"
+                                      th:classappend="${statusAtual == 'PRESENTE' ? 'seplag-status--present' : (statusAtual == 'JUSTIFICADA' ? 'seplag-status--justified' : 'seplag-status--absent')}"
+                                      th:text="${statusAtual}">FALTA</span>
                             </div>
 
                             <div class="campos-edicao hidden">
-                                <select onchange="atualizarStatus(this)"
+                                <select class="seplag-select seplag-select--compact presenca-select"
+                                        onchange="marcarAlteracao(this)"
                                         th:data-aluno-id="${i.participante.id}"
                                         th:data-sessao-id="${s.id}"
-                                        class="seplag-select seplag-select--compact">
-                                    <option value="FALTA" th:selected="${mapaPresencas.get(i.participante.id + '_' + s.id) != 'PRESENTE'}">FALTA</option>
-                                    <option value="PRESENTE" th:selected="${mapaPresencas.get(i.participante.id + '_' + s.id) == 'PRESENTE'}">PRESENTE</option>
+                                        th:data-original="${statusAtual}"
+                                        th:aria-label="|Presença de ${i.participante.nome} na sessão ${s.nome}|">
+                                    <option value="FALTA" th:selected="${statusAtual == 'FALTA'}">FALTA</option>
+                                    <option value="PRESENTE" th:selected="${statusAtual == 'PRESENTE'}">PRESENTE</option>
+                                    <option value="JUSTIFICADA" th:selected="${statusAtual == 'JUSTIFICADA'}">JUSTIFICADA</option>
                                 </select>
                             </div>
                         </td>
@@ -151,22 +169,211 @@
 </div>
 
 <script>
-    function toggleEdicao() {
-        document.querySelectorAll('.status-visual, .campos-edicao').forEach(el => el.classList.toggle('hidden'));
-    }
+    (function () {
+        const btnSalvar = document.getElementById('btnSalvarPresencas');
+        const statusAlteracoes = document.getElementById('statusAlteracoes');
+        const feedback = document.getElementById('feedbackPresencas');
+        const eventoId = btnSalvar ? btnSalvar.getAttribute('data-evento-id') : null;
 
-    function atualizarStatus(select) {
-        const alunoId = select.getAttribute('data-aluno-id');
-        const sessaoId = select.getAttribute('data-sessao-id');
-        const novoStatus = select.value;
-        const token = document.querySelector("meta[name='_csrf']").content;
-        const header = document.querySelector("meta[name='_csrf_header']").content;
+        function selects() {
+            return Array.from(document.querySelectorAll('select.presenca-select'));
+        }
 
-        fetch(`/presencas/alterar-status?alunoId=${alunoId}&sessaoId=${sessaoId}&novoStatus=${novoStatus}`, {
-            method: 'POST',
-            headers: { [header]: token }
-        }).then(() => window.location.reload());
-    }
+        function alteracoesPendentes() {
+            return selects()
+                .filter(function (select) {
+                    return select.value !== select.getAttribute('data-original');
+                })
+                .map(function (select) {
+                    return {
+                        alunoId: Number(select.getAttribute('data-aluno-id')),
+                        sessaoId: Number(select.getAttribute('data-sessao-id')),
+                        status: select.value
+                    };
+                });
+        }
+
+        function atualizarVisual(select) {
+            const celula = select.closest('.seplag-matrix__cell');
+            const badge = celula ? celula.querySelector('.status-visual .seplag-status') : null;
+            if (!badge) {
+                return;
+            }
+
+            badge.textContent = select.value;
+            badge.classList.remove(
+                'seplag-status--present',
+                'seplag-status--absent',
+                'seplag-status--justified'
+            );
+            if (select.value === 'PRESENTE') {
+                badge.classList.add('seplag-status--present');
+            } else if (select.value === 'JUSTIFICADA') {
+                badge.classList.add('seplag-status--justified');
+            } else {
+                badge.classList.add('seplag-status--absent');
+            }
+        }
+
+        function atualizarEstadoSalvamento() {
+            const pendentes = alteracoesPendentes().length;
+
+            if (btnSalvar) {
+                btnSalvar.disabled = pendentes === 0;
+                btnSalvar.setAttribute('aria-disabled', String(pendentes === 0));
+            }
+            if (statusAlteracoes) {
+                statusAlteracoes.classList.toggle('seplag-count-chip--warning', pendentes > 0);
+                if (pendentes === 0) {
+                    statusAlteracoes.textContent = 'Nenhuma alteração pendente';
+                } else if (pendentes === 1) {
+                    statusAlteracoes.textContent = '1 alteração não salva';
+                } else {
+                    statusAlteracoes.textContent = pendentes + ' alterações não salvas';
+                }
+            }
+        }
+
+        function atualizarPercentualGlobal() {
+            const todos = selects();
+            const total = todos.length;
+            const presentes = todos.filter(function (select) {
+                return select.value === 'PRESENTE';
+            }).length;
+            const percentual = total > 0 ? Math.round((presentes / total) * 100) : 0;
+
+            const badge = document.getElementById('percentualGlobalBadge');
+            const barra = document.getElementById('percentualGlobalBar');
+            const progresso = document.getElementById('percentualGlobalProgress');
+
+            if (badge) {
+                badge.textContent = percentual + '% de presença geral';
+            }
+            if (barra) {
+                barra.style.width = percentual + '%';
+            }
+            if (progresso) {
+                progresso.setAttribute('aria-valuenow', String(percentual));
+            }
+        }
+
+        function mostrarFeedback(tipo, mensagem) {
+            if (!feedback) {
+                return;
+            }
+
+            feedback.innerHTML = '';
+            const alerta = document.createElement('div');
+            alerta.className = 'seplag-alert seplag-alert--' + tipo;
+            alerta.setAttribute('role', tipo === 'error' ? 'alert' : 'status');
+
+            const icone = document.createElement('i');
+            icone.className = tipo === 'success'
+                ? 'fa-solid fa-circle-check'
+                : 'fa-solid fa-circle-exclamation';
+            icone.setAttribute('aria-hidden', 'true');
+
+            const texto = document.createElement('span');
+            texto.textContent = mensagem;
+
+            alerta.appendChild(icone);
+            alerta.appendChild(texto);
+            feedback.appendChild(alerta);
+        }
+
+        async function salvarAlteracoes() {
+            const alteracoes = alteracoesPendentes();
+            if (alteracoes.length === 0) {
+                return;
+            }
+
+            const metaToken = document.querySelector("meta[name='_csrf']");
+            const metaHeader = document.querySelector("meta[name='_csrf_header']");
+            const rotuloOriginal = btnSalvar.innerHTML;
+
+            btnSalvar.disabled = true;
+            btnSalvar.innerHTML = '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Salvando...';
+
+            try {
+                const cabecalhos = { 'Content-Type': 'application/json' };
+                if (metaToken && metaHeader) {
+                    cabecalhos[metaHeader.content] = metaToken.content;
+                }
+
+                const resposta = await fetch('/presencas/' + encodeURIComponent(eventoId) + '/alterar-status-lote', {
+                    method: 'POST',
+                    headers: cabecalhos,
+                    body: JSON.stringify(alteracoes)
+                });
+
+                if (!resposta.ok) {
+                    let mensagem = 'Não foi possível salvar as alterações de presença.';
+                    try {
+                        const dados = await resposta.json();
+                        if (dados && dados.erro) {
+                            mensagem = dados.erro;
+                        }
+                    } catch (ignorado) {
+                        // Mantém a mensagem genérica quando o corpo não é JSON.
+                    }
+                    throw new Error(mensagem);
+                }
+
+                alteracoes.forEach(function (alteracao) {
+                    const select = document.querySelector(
+                        'select.presenca-select[data-aluno-id="' + alteracao.alunoId +
+                        '"][data-sessao-id="' + alteracao.sessaoId + '"]'
+                    );
+                    if (select) {
+                        select.setAttribute('data-original', alteracao.status);
+                        const celula = select.closest('.seplag-matrix__cell');
+                        if (celula) {
+                            celula.classList.remove('is-dirty');
+                        }
+                    }
+                });
+
+                atualizarPercentualGlobal();
+                mostrarFeedback('success', 'Alterações de presença salvas com sucesso.');
+            } catch (erro) {
+                // As alterações locais permanecem intactas para nova tentativa.
+                mostrarFeedback('error', erro.message || 'Não foi possível salvar as alterações de presença.');
+            } finally {
+                btnSalvar.innerHTML = rotuloOriginal;
+                atualizarEstadoSalvamento();
+            }
+        }
+
+        window.marcarAlteracao = function (select) {
+            const celula = select.closest('.seplag-matrix__cell');
+            const alterado = select.value !== select.getAttribute('data-original');
+
+            if (celula) {
+                celula.classList.toggle('is-dirty', alterado);
+            }
+            atualizarVisual(select);
+            atualizarEstadoSalvamento();
+        };
+
+        window.toggleEdicao = function () {
+            document.querySelectorAll('.status-visual, .campos-edicao').forEach(function (elemento) {
+                elemento.classList.toggle('hidden');
+            });
+        };
+
+        if (btnSalvar) {
+            btnSalvar.addEventListener('click', salvarAlteracoes);
+        }
+
+        window.addEventListener('beforeunload', function (evento) {
+            if (alteracoesPendentes().length > 0) {
+                evento.preventDefault();
+                evento.returnValue = '';
+            }
+        });
+
+        atualizarEstadoSalvamento();
+    })();
 </script>
 
 <script th:src="@{/js/seplag-shell.js}" defer></script>

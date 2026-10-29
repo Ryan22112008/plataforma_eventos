@@ -1587,30 +1587,64 @@ html.v2-root {
 
 .v2 .seplag-public-search {
     display: grid;
-    grid-template-columns: minmax(0, 1.6fr) repeat(4, minmax(0, .95fr)) auto;
-    gap: 14px;
-    align-items: end;
+    gap: 18px;
     margin-top: clamp(24px, 4vw, 34px);
-    padding: 16px;
+    padding: clamp(16px, 2.4vw, 22px);
     border: 1px solid var(--line-strong);
-    border-radius: var(--radius-card);
-    background: var(--public-surface-soft);
-    box-shadow: var(--shadow-md);
+    border-radius: calc(var(--radius-card) + 2px);
+    background: linear-gradient(180deg, rgba(15, 42, 68, .66), rgba(9, 28, 46, .78));
+    box-shadow: 0 16px 36px rgba(2, 10, 20, .18);
+}
+
+.v2 .seplag-public-search__main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 12px;
+}
+
+.v2 .seplag-public-search__filters {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+}
+
+.v2 .seplag-public-search__main,
+.v2 .seplag-public-search__filters,
+.v2 .seplag-public-search .seplag-field {
+    min-width: 0;
 }
 
 .v2 .seplag-public-search input[type="date"] {
+    min-width: 0;
     color-scheme: dark;
 }
 
 .v2 .seplag-public-search .seplag-label {
     color: var(--muted);
-    font-size: .72rem;
-    letter-spacing: .08em;
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
     text-transform: uppercase;
 }
 
+.v2 .seplag-public-search .seplag-input,
+.v2 .seplag-public-search .seplag-select {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.v2 .seplag-public-search__query .seplag-input {
+    min-height: 50px;
+    background: rgba(4, 17, 30, .55);
+}
+
 .v2 .seplag-public-search .seplag-btn {
-    min-height: 46px;
+    min-height: 50px;
+    padding-right: clamp(18px, 2.4vw, 26px);
+    padding-left: clamp(18px, 2.4vw, 26px);
     white-space: nowrap;
 }
 
@@ -1621,7 +1655,7 @@ html.v2-root {
 .v2 .seplag-search-input > i {
     position: absolute;
     top: 50%;
-    left: 14px;
+    left: 16px;
     color: var(--muted);
     font-size: .86rem;
     transform: translateY(-50%);
@@ -1629,7 +1663,7 @@ html.v2-root {
 }
 
 .v2 .seplag-search-input .seplag-input {
-    padding-left: 38px;
+    padding-left: 42px;
 }
 
 /* --------------------------------------------------------------------------
@@ -2274,16 +2308,8 @@ html.v2-root {
    -------------------------------------------------------------------------- */
 
 @media (max-width: 1023px) {
-    .v2 .seplag-public-search {
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    }
-
-    .v2 .seplag-public-search > .seplag-field:first-child {
-        grid-column: 1 / -1;
-    }
-
-    .v2 .seplag-public-search__submit {
-        grid-column: 1 / -1;
+    .v2 .seplag-public-search__filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .v2 .seplag-event-layout {
@@ -2310,9 +2336,16 @@ html.v2-root {
     }
 
     .v2 .seplag-public-search {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 12px;
+        gap: 14px;
         padding: 14px;
+    }
+
+    .v2 .seplag-public-search__main {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .v2 .seplag-public-search__submit {
+        width: 100%;
     }
 
     .v2 .seplag-public-section {
@@ -2362,6 +2395,12 @@ html.v2-root {
 }
 
 @media (max-width: 560px) {
+    .v2 .seplag-public-search__filters {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+        padding-top: 14px;
+    }
+
     .v2 .seplag-public-header__user {
         display: none;
     }
@@ -4339,4 +4378,488 @@ html.v2-root {
    Mantido por último para prevalecer sobre os componentes acima. */
 .v2 .hidden {
     display: none;
+}
+
+/* --------------------------------------------------------------------------
+   Inscritos: filtro de frequência, seleção em lote e grade editável
+   -------------------------------------------------------------------------- */
+
+.v2 .seplag-table-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+}
+
+.v2 .seplag-field--inline {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
+.v2 .seplag-table-tools .seplag-label {
+    margin: 0;
+    color: var(--muted);
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.v2 .seplag-table-tools .seplag-select {
+    width: auto;
+    min-width: 160px;
+}
+
+.v2 .seplag-table th.seplag-table__check,
+.v2 .seplag-table td.seplag-table__check {
+    width: 52px;
+    padding-right: 8px;
+    padding-left: 20px;
+    text-align: left;
+}
+
+.v2 .seplag-table td.seplag-table__check {
+    white-space: nowrap;
+}
+
+.v2 .seplag-table tbody tr[hidden] {
+    display: none;
+}
+
+.v2 .seplag-matrix td.seplag-matrix__cell.is-dirty {
+    background: rgba(217, 164, 65, .1);
+    box-shadow: inset 0 0 0 1px rgba(217, 164, 65, .42);
+}
+
+.v2 .seplag-status--justified {
+    border-color: rgba(217, 164, 65, .34);
+    background: rgba(217, 164, 65, .14);
+    color: #F0D6A4;
+}
+
+.v2 .seplag-count-chip--warning {
+    border-color: rgba(217, 164, 65, .42);
+    color: #F0D6A4;
+}
+
+.v2 .seplag-count-chip--warning strong {
+    color: #FBE3B4;
+}
+
+.v2 .seplag-save-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.v2 .seplag-feedback:empty {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    .v2 .seplag-table-tools {
+        width: 100%;
+    }
+
+    .v2 .seplag-table-tools .seplag-field--inline {
+        flex: 1 1 100%;
+    }
+
+    .v2 .seplag-table-tools .seplag-select {
+        width: 100%;
+    }
+
+    .v2 .seplag-table-tools .seplag-count-chip {
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+
+    .v2 .seplag-table-tools .seplag-inline-form {
+        flex: 1 1 auto;
+    }
+
+    .v2 .seplag-table-tools .seplag-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .v2 .seplag-save-toolbar {
+        width: 100%;
+    }
+
+    .v2 .seplag-save-toolbar .seplag-btn,
+    .v2 .seplag-save-toolbar .seplag-count-chip {
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+}
+
+/* ==========================================================================
+   Área do participante — Meus certificados
+   ========================================================================== */
+
+.v2 .seplag-cert-page .seplag-page-head {
+    align-items: flex-end;
+    margin-bottom: 26px;
+}
+
+.v2 .seplag-cert-page .seplag-page-head h1 {
+    margin-top: 8px;
+    font-size: clamp(2rem, 3.6vw, 2.6rem);
+}
+
+.v2 .seplag-cert-page .seplag-page-head__copy {
+    max-width: 64ch;
+}
+
+.v2 .seplag-cert-context {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    max-width: 330px;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    background: rgba(255, 255, 255, .025);
+    color: var(--ink-2);
+    font-size: .8rem;
+    line-height: 1.45;
+}
+
+.v2 .seplag-cert-context i {
+    flex: 0 0 auto;
+    color: var(--accent-400);
+    font-size: .95rem;
+}
+
+.v2 .seplag-cert-overview {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px 24px;
+    margin-bottom: 22px;
+    padding: 18px 22px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    background: var(--public-surface-soft);
+    box-shadow: var(--shadow-sm);
+}
+
+.v2 .seplag-cert-overview__heading {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.v2 .seplag-cert-overview__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 46px;
+    height: 46px;
+    border: 1px solid rgba(99, 179, 230, .24);
+    border-radius: 50%;
+    background: rgba(20, 118, 184, .12);
+    color: var(--accent-400);
+    font-size: 1.1rem;
+}
+
+.v2 .seplag-cert-overview h2 {
+    font-size: 1.02rem;
+}
+
+.v2 .seplag-cert-overview__heading p {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: .84rem;
+}
+
+.v2 .seplag-cert-overview__count {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 7px 14px;
+    border: 1px solid rgba(47, 158, 107, .28);
+    border-radius: 999px;
+    background: rgba(47, 158, 107, .1);
+    color: #A9E4C8;
+    font-size: .8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.v2 .seplag-cert-overview__count strong {
+    font-size: 1.05rem;
+    line-height: 1;
+}
+
+.v2 .seplag-cert-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+    gap: clamp(16px, 2vw, 24px);
+}
+
+.v2 .seplag-cert-grid--single {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.v2 .seplag-cert-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    background:
+        radial-gradient(120% 100% at 100% 0%, rgba(20, 118, 184, .1), transparent 58%),
+        var(--navy-800);
+    box-shadow: var(--shadow-sm), inset 3px 0 0 rgba(47, 158, 107, .42);
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.v2 .seplag-cert-card:hover {
+    border-color: var(--line-strong);
+    box-shadow: var(--shadow-md), inset 3px 0 0 rgba(47, 158, 107, .58);
+}
+
+.v2 .seplag-cert-card__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 20px 24px 0;
+}
+
+.v2 .seplag-cert-card__status {
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.v2 .seplag-cert-card__seal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .025);
+    color: var(--accent-400);
+    font-size: .95rem;
+}
+
+.v2 .seplag-cert-card__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px 24px 24px;
+}
+
+.v2 .seplag-cert-card__identity {
+    min-width: 0;
+}
+
+.v2 .seplag-cert-card__kicker {
+    color: var(--muted);
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.v2 .seplag-cert-card__title {
+    margin-top: 7px;
+    color: var(--ink);
+    font-size: clamp(1.22rem, 2vw, 1.5rem);
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.v2 .seplag-cert-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 32px;
+    margin: 0;
+    padding: 0;
+}
+
+.v2 .seplag-cert-card__meta-item {
+    min-width: 0;
+    padding-left: 14px;
+    border-left: 1px solid var(--line);
+}
+
+.v2 .seplag-cert-card__meta-item:first-child {
+    padding-left: 0;
+    border-left: 0;
+}
+
+.v2 .seplag-cert-card__meta dt {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.v2 .seplag-cert-card__meta dt i {
+    color: var(--accent-400);
+    font-size: .8rem;
+}
+
+.v2 .seplag-cert-card__meta dd {
+    margin: 5px 0 0;
+    color: var(--ink);
+    font-size: .95rem;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.v2 .seplag-cert-card__footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 18px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--line);
+    background: rgba(255, 255, 255, .018);
+}
+
+.v2 .seplag-cert-card__format {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--muted);
+    font-size: .78rem;
+    white-space: nowrap;
+}
+
+.v2 .seplag-cert-empty {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: clamp(36px, 6vw, 58px) clamp(22px, 5vw, 48px);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    background: var(--public-surface-soft);
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+}
+
+.v2 .seplag-cert-empty__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    border: 1px solid rgba(99, 179, 230, .24);
+    border-radius: 50%;
+    background: rgba(20, 118, 184, .12);
+    color: var(--accent-400);
+    font-size: 1.8rem;
+}
+
+.v2 .seplag-cert-empty h2 {
+    margin-top: 22px;
+    font-size: clamp(1.35rem, 2.6vw, 1.7rem);
+}
+
+.v2 .seplag-cert-empty__text {
+    max-width: 52ch;
+    margin: 10px auto 0;
+    color: var(--muted);
+    font-size: .92rem;
+}
+
+.v2 .seplag-cert-empty .seplag-btn {
+    margin-top: 24px;
+}
+
+@media (min-width: 900px) {
+    .v2 .seplag-cert-grid--single .seplag-cert-card__body {
+        flex-direction: row;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 40px;
+    }
+
+    .v2 .seplag-cert-grid--single .seplag-cert-card__identity {
+        flex: 1 1 auto;
+        max-width: 62ch;
+    }
+
+    .v2 .seplag-cert-grid--single .seplag-cert-card__meta {
+        flex: 0 0 auto;
+        justify-content: flex-end;
+    }
+
+    .v2 .seplag-cert-grid--single .seplag-cert-card__title {
+        font-size: clamp(1.5rem, 2.4vw, 1.9rem);
+    }
+}
+
+@media (max-width: 767px) {
+    .v2 .seplag-cert-page .seplag-page-head {
+        align-items: flex-start;
+    }
+
+    .v2 .seplag-cert-context {
+        width: 100%;
+        max-width: none;
+    }
+
+    .v2 .seplag-cert-overview {
+        padding: 16px 18px;
+    }
+
+    .v2 .seplag-cert-overview__count {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .v2 .seplag-cert-card__top {
+        padding: 18px 18px 0;
+    }
+
+    .v2 .seplag-cert-card__body {
+        padding: 18px 18px 20px;
+    }
+
+    .v2 .seplag-cert-card__footer {
+        padding: 15px 18px;
+    }
+
+    .v2 .seplag-cert-card__footer .seplag-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .v2 .seplag-cert-overview__heading {
+        align-items: flex-start;
+    }
+
+    .v2 .seplag-cert-card__meta {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .v2 .seplag-cert-card__meta-item {
+        padding-left: 0;
+        border-left: 0;
+    }
 }

@@ -1,12 +1,17 @@
 package sistema.eventos.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import sistema.eventos.dto.AlteracaoPresencaRequestDto;
+import sistema.eventos.exception.NegocioException;
 import sistema.eventos.model.StatusPresenca;
 import sistema.eventos.model.Usuario;
 import sistema.eventos.repository.EventoRepository;
@@ -16,6 +21,7 @@ import sistema.eventos.repository.SessaoRepository;
 import sistema.eventos.repository.UsuarioRepository;
 import sistema.eventos.service.PresencaService;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -83,6 +89,37 @@ public class PresencaController {
 
         return ResponseEntity.ok().build();
     }
+
+    /**
+     * Salva todas as alterações de presença da grade em uma única requisição.
+     * O evento vem da rota; o service confere o vínculo de cada sessão e de
+     * cada participante com ele antes de gravar o lote de forma transacional.
+     */
+    @PreAuthorize("hasAnyRole('ORGANIZADOR', 'SUPER_ADMIN')")
+    @PostMapping("/{eventoId}/alterar-status-lote")
+    public ResponseEntity<Map<String, Object>> alterarStatusEmLote(
+            @PathVariable Long eventoId,
+            @RequestBody(required = false) List<AlteracaoPresencaRequestDto> alteracoes,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("erro", "Usuário não autenticado."));
+        }
+
+        try {
+            int salvas = presencaService.atualizarStatusPresencasEmLote(
+                    eventoId, alteracoes, userDetails.getUsername());
+            return ResponseEntity.ok(Map.of("salvas", salvas));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("erro", "Você não tem acesso a este evento."));
+        } catch (NegocioException | IllegalArgumentException e) {
+            String mensagem = e.getMessage() != null ? e.getMessage() : "Alteração de presença inválida.";
+            return ResponseEntity.badRequest().body(Map.of("erro", mensagem));
+        }
+    }
+
     @GetMapping("/{eventoId}/frequencia")
     public String exibirGradeFrequencia(@PathVariable Long eventoId, Model model) {
         var autenticado = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();

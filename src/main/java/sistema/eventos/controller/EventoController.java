@@ -190,6 +190,39 @@ public class EventoController {
         return "redirect:/organizador/eventos/" + eventoId + "/inscritos";
     }
 
+    /**
+     * Valida em lote apenas as inscrições selecionadas na tela de inscritos.
+     * O vínculo com o evento é conferido no service para cada ID recebido.
+     */
+    @PreAuthorize("hasAnyRole('ORGANIZADOR', 'SUPER_ADMIN')")
+    @PostMapping("/eventos/{eventoId}/inscricoes/validar-participacao-lote")
+    public String validarParticipacaoEmLote(@PathVariable("eventoId") Long eventoId,
+                                            @RequestParam(value = "inscricoesSelecionadas", required = false)
+                                            List<Long> inscricoesSelecionadas,
+                                            Authentication authentication,
+                                            RedirectAttributes redirectAttributes) {
+        try {
+            exigirAcessoAoEvento(eventoId, authentication);
+            int validadas = inscricaoService.validarParticipacaoEmLote(eventoId, inscricoesSelecionadas);
+            if (validadas > 0) {
+                redirectAttributes.addFlashAttribute("sucesso",
+                        "Participação validada em lote! Os certificados dos participantes selecionados foram liberados.");
+            } else {
+                redirectAttributes.addFlashAttribute("sucesso",
+                        "As participações selecionadas já estavam validadas.");
+            }
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            throw e;
+        } catch (NegocioException e) {
+            redirectAttributes.addFlashAttribute("erroNegocio", e.getMessage());
+        } catch (Exception e) {
+            log.error("Erro ao validar em lote as inscrições do evento {}.", eventoId, e);
+            redirectAttributes.addFlashAttribute("erroNegocio",
+                    "Não foi possível validar as participações selecionadas neste momento.");
+        }
+        return "redirect:/organizador/eventos/" + eventoId + "/inscritos";
+    }
+
     @PostMapping("/inscricoes/{inscricaoId}/checkin")
     public String confirmarPresencaDoAluno(@PathVariable("inscricaoId") Long inscricaoId,
                                            @RequestParam("eventoId") Long eventoId,

@@ -82,12 +82,54 @@
                     <h2 class="seplag-card__title" id="titulo-inscritos">Participantes do evento</h2>
                     <p class="seplag-card__hint">A frequência é calculada pelas presenças registradas nas sessões do evento.</p>
                 </div>
+
+                <div class="seplag-table-tools">
+                    <div class="seplag-field seplag-field--inline">
+                        <label for="filtroFrequencia" class="seplag-label">Frequência</label>
+                        <select id="filtroFrequencia" class="seplag-select seplag-select--compact">
+                            <option value="">Todas</option>
+                            <option value="50">50% ou mais</option>
+                            <option value="55">55% ou mais</option>
+                            <option value="60">60% ou mais</option>
+                            <option value="65">65% ou mais</option>
+                            <option value="70">70% ou mais</option>
+                            <option value="75">75% ou mais</option>
+                            <option value="80">80% ou mais</option>
+                            <option value="85">85% ou mais</option>
+                            <option value="90">90% ou mais</option>
+                            <option value="95">95% ou mais</option>
+                            <option value="100">100%</option>
+                        </select>
+                    </div>
+
+                    <span class="seplag-count-chip" id="contadorExibidos" aria-live="polite">
+                        Exibindo
+                        <strong id="contadorValor" th:text="${inscritos != null ? inscritos.size() : 0}">0</strong>
+                        de
+                        <strong id="contadorTotal" th:text="${inscritos != null ? inscritos.size() : 0}">0</strong>
+                    </span>
+
+                    <form id="formValidarLote"
+                          th:action="@{/organizador/eventos/{id}/inscricoes/validar-participacao-lote(id=${evento.id})}"
+                          method="POST"
+                          class="seplag-inline-form">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <button type="submit" id="btnValidarLote" class="seplag-btn seplag-btn--success" disabled>
+                            <i class="fa-solid fa-user-check" aria-hidden="true"></i>
+                            Validar selecionados
+                        </button>
+                    </form>
+                </div>
             </div>
 
             <div class="seplag-table-wrap">
                 <table class="seplag-table">
                     <thead>
                     <tr>
+                        <th scope="col" class="seplag-table__check">
+                            <input type="checkbox" id="selecionarTodos" class="seplag-checkbox"
+                                   aria-label="Selecionar todos os participantes exibidos">
+                        </th>
                         <th scope="col">Inscrição</th>
                         <th scope="col">Participante</th>
                         <th scope="col">Frequência</th>
@@ -95,9 +137,9 @@
                         <th scope="col" class="seplag-table__center">Ações</th>
                     </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="corpoInscritos">
                     <tr th:if="${inscritos == null or inscritos.isEmpty()}">
-                        <td colspan="5" class="seplag-table__empty">
+                        <td colspan="6" class="seplag-table__empty">
                             <div class="seplag-empty">
                                 <i class="fa-solid fa-folder-open" aria-hidden="true"></i>
                                 <strong>Nenhum participante inscrito</strong>
@@ -106,7 +148,18 @@
                         </td>
                     </tr>
 
-                    <tr th:each="i : ${inscritos}">
+                    <tr th:each="i : ${inscritos}"
+                        th:attr="data-frequencia=${i.percentualFrequencia != null ? i.percentualFrequencia : ''}">
+                        <td data-label="Selecionar" class="seplag-table__check">
+                            <input type="checkbox"
+                                   class="seplag-checkbox selecao-inscrito"
+                                   form="formValidarLote"
+                                   name="inscricoesSelecionadas"
+                                   th:value="${i.inscricaoId}"
+                                   th:disabled="${i.certificadoLiberado or i.inscricaoCancelada}"
+                                   th:aria-label="|Selecionar ${i.nomeParticipante}|">
+                        </td>
+
                         <td data-label="Inscrição" class="seplag-table__title" th:text="${i.inscricaoId}">1</td>
 
                         <td data-label="Participante">
@@ -195,6 +248,16 @@
                             </div>
                         </td>
                     </tr>
+
+                    <tr id="linhaSemResultados" hidden>
+                        <td colspan="6" class="seplag-table__empty">
+                            <div class="seplag-empty">
+                                <i class="fa-solid fa-filter" aria-hidden="true"></i>
+                                <strong>Nenhum participante nesta faixa de frequência</strong>
+                                <p>Ajuste o filtro para visualizar outros participantes.</p>
+                            </div>
+                        </td>
+                    </tr>
                     </tbody>
                 </table>
             </div>
@@ -235,6 +298,123 @@
     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
     <input type="hidden" id="payloadNovoNome" name="novoNome">
 </form>
+
+<script>
+    (function () {
+        const filtro = document.getElementById('filtroFrequencia');
+        const corpo = document.getElementById('corpoInscritos');
+        const selecionarTodos = document.getElementById('selecionarTodos');
+        const btnValidarLote = document.getElementById('btnValidarLote');
+        const formValidarLote = document.getElementById('formValidarLote');
+        const contadorValor = document.getElementById('contadorValor');
+        const contadorTotal = document.getElementById('contadorTotal');
+        const linhaSemResultados = document.getElementById('linhaSemResultados');
+
+        if (!filtro || !corpo || !selecionarTodos || !btnValidarLote) {
+            return;
+        }
+
+        function linhas() {
+            return Array.from(corpo.querySelectorAll('tr[data-frequencia]'));
+        }
+
+        function linhasVisiveis() {
+            return linhas().filter(function (linha) {
+                return !linha.hidden;
+            });
+        }
+
+        function checkboxesVisiveis() {
+            return linhasVisiveis().flatMap(function (linha) {
+                return Array.from(linha.querySelectorAll('input.selecao-inscrito'));
+            }).filter(function (checkbox) {
+                return !checkbox.disabled;
+            });
+        }
+
+        function totalSelecionados() {
+            return linhasVisiveis().flatMap(function (linha) {
+                return Array.from(linha.querySelectorAll('input.selecao-inscrito:checked'));
+            }).length;
+        }
+
+        function atualizarEstadoSelecao() {
+            const visiveis = checkboxesVisiveis();
+            const marcados = totalSelecionados();
+
+            btnValidarLote.disabled = marcados === 0;
+            btnValidarLote.setAttribute('aria-disabled', String(marcados === 0));
+
+            selecionarTodos.disabled = visiveis.length === 0;
+            selecionarTodos.checked = visiveis.length > 0 && visiveis.every(function (checkbox) {
+                return checkbox.checked;
+            });
+            selecionarTodos.indeterminate = visiveis.some(function (checkbox) {
+                return checkbox.checked;
+            }) && !selecionarTodos.checked;
+        }
+
+        function aplicarFiltro() {
+            const minimo = filtro.value === '' ? null : Number(filtro.value);
+            let exibidos = 0;
+
+            linhas().forEach(function (linha) {
+                const valor = linha.getAttribute('data-frequencia');
+                const percentual = valor === null || valor === '' ? null : Number(valor);
+                const visivel = minimo === null
+                    || (percentual !== null && !Number.isNaN(percentual) && percentual >= minimo);
+
+                linha.hidden = !visivel;
+                if (visivel) {
+                    exibidos += 1;
+                } else {
+                    linha.querySelectorAll('input.selecao-inscrito').forEach(function (checkbox) {
+                        checkbox.checked = false;
+                    });
+                }
+            });
+
+            if (contadorValor) {
+                contadorValor.textContent = String(exibidos);
+            }
+            if (contadorTotal) {
+                contadorTotal.textContent = String(linhas().length);
+            }
+            if (linhaSemResultados) {
+                linhaSemResultados.hidden = !(minimo !== null && linhas().length > 0 && exibidos === 0);
+            }
+
+            atualizarEstadoSelecao();
+        }
+
+        selecionarTodos.addEventListener('change', function () {
+            checkboxesVisiveis().forEach(function (checkbox) {
+                checkbox.checked = selecionarTodos.checked;
+            });
+            atualizarEstadoSelecao();
+        });
+
+        corpo.addEventListener('change', function (evento) {
+            if (evento.target.classList.contains('selecao-inscrito')) {
+                atualizarEstadoSelecao();
+            }
+        });
+
+        filtro.addEventListener('change', aplicarFiltro);
+
+        formValidarLote.addEventListener('submit', function (evento) {
+            if (totalSelecionados() === 0) {
+                evento.preventDefault();
+                atualizarEstadoSelecao();
+                return;
+            }
+            btnValidarLote.disabled = true;
+            btnValidarLote.innerHTML = '<i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Validando...';
+        });
+
+        aplicarFiltro();
+    })();
+</script>
 
 <script th:src="@{/js/seplag-shell.js}" defer></script>
 

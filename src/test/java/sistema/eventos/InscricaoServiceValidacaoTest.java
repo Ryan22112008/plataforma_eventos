@@ -2,6 +2,7 @@ package sistema.eventos;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -17,10 +18,12 @@ import sistema.eventos.repository.PresencaRepository;
 import sistema.eventos.repository.SessaoRepository;
 import sistema.eventos.service.InscricaoService;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -115,6 +118,114 @@ class InscricaoServiceValidacaoTest {
         verify(inscricaoRepository, never()).save(inscricao);
     }
 
+    @Test
+    void validaEmLoteSomenteAsInscricoesSelecionadas() {
+        Inscricao primeira = inscricao(EVENTO_ID, StatusInscricao.ATIVO);
+        primeira.setId(101L);
+        Inscricao segunda = inscricao(EVENTO_ID, StatusInscricao.ATIVO);
+        segunda.setId(102L);
+
+        when(inscricaoRepository.findAllById(List.of(101L, 102L)))
+                .thenReturn(List.of(primeira, segunda));
+
+        int validadas = inscricaoService.validarParticipacaoEmLote(EVENTO_ID, List.of(101L, 102L));
+
+        assertThat(validadas).isEqualTo(2);
+        assertThat(primeira.getStatus()).isEqualTo(StatusInscricao.UTILIZADO);
+        assertThat(segunda.getStatus()).isEqualTo(StatusInscricao.UTILIZADO);
+        assertThat(primeira.getDataCheckIn()).isNotNull();
+        assertThat(segunda.getDataCheckIn()).isNotNull();
+
+        ArgumentCaptor<List<Inscricao>> captor = captorDeInscricoes();
+        verify(inscricaoRepository).saveAll(captor.capture());
+        assertThat(captor.getValue()).containsExactly(primeira, segunda);
+    }
+
+    @Test
+    void naoValidaParcialmenteQuandoUmaInscricaoPertenceAOutroEvento() {
+        Inscricao doEvento = inscricao(EVENTO_ID, StatusInscricao.ATIVO);
+        doEvento.setId(101L);
+        Inscricao deOutroEvento = inscricao(OUTRO_EVENTO_ID, StatusInscricao.ATIVO);
+        deOutroEvento.setId(102L);
+
+        when(inscricaoRepository.findAllById(List.of(101L, 102L)))
+                .thenReturn(List.of(doEvento, deOutroEvento));
+
+        assertThatThrownBy(() -> inscricaoService.validarParticipacaoEmLote(EVENTO_ID, List.of(101L, 102L)))
+                .isInstanceOf(AccessDeniedException.class);
+
+        assertThat(doEvento.getStatus()).isEqualTo(StatusInscricao.ATIVO);
+        assertThat(deOutroEvento.getStatus()).isEqualTo(StatusInscricao.ATIVO);
+        verify(inscricaoRepository, never()).saveAll(any());
+    }
+
+    @Test
+    void rejeitaLoteComInscricaoCanceladaSemSalvarNenhuma() {
+        Inscricao ativa = inscricao(EVENTO_ID, StatusInscricao.ATIVO);
+        ativa.setId(101L);
+        Inscricao cancelada = inscricao(EVENTO_ID, StatusInscricao.CANCELADO);
+        cancelada.setId(102L);
+
+        when(inscricaoRepository.findAllById(List.of(101L, 102L)))
+                .thenReturn(List.of(ativa, cancelada));
+
+        assertThatThrownBy(() -> inscricaoService.validarParticipacaoEmLote(EVENTO_ID, List.of(101L, 102L)))
+                .isInstanceOf(NegocioException.class)
+                .hasMessageContaining("cancelada");
+
+        assertThat(ativa.getStatus()).isEqualTo(StatusInscricao.ATIVO);
+        verify(inscricaoRepository, never()).saveAll(any());
+    }
+
+    @Test
+    void rejeitaLoteQuandoAlgumaInscricaoNaoExiste() {
+        Inscricao existente = inscricao(EVENTO_ID, StatusInscricao.ATIVO);
+        existente.setId(101L);
+
+        when(inscricaoRepository.findAllById(List.of(101L, 102L)))
+                .thenReturn(List.of(existente));
+
+        assertThatThrownBy(() -> inscricaoService.validarParticipacaoEmLote(EVENTO_ID, List.of(101L, 102L)))
+                .isInstanceOf(NegocioException.class)
+                .hasMessageContaining("não foram encontradas");
+
+        verify(inscricaoRepository, never()).saveAll(any());
+    }
+
+    @Test
+    void loteComTodasAsInscricoesJaUtilizadasEhIdempotente() {
+        Inscricao primeira = inscricao(EVENTO_ID, StatusInscricao.UTILIZADO);
+        primeira.setId(101L);
+        Inscricao segunda = inscricao(EVENTO_ID, StatusInscricao.UTILIZADO);
+        segunda.setId(102L);
+
+        when(inscricaoRepository.findAllById(List.of(101L, 102L)))
+                .thenReturn(List.of(primeira, segunda));
+
+        int validadas = inscricaoService.validarParticipacaoEmLote(EVENTO_ID, List.of(101L, 102L));
+
+        assertThat(validadas).isZero();
+        verify(inscricaoRepository, never()).saveAll(any());
+    }
+
+    @Test
+    void rejeitaListaDeSelecaoVazia() {
+        assertThatThrownBy(() -> inscricaoService.validarParticipacaoEmLote(EVENTO_ID, List.of()))
+                .isInstanceOf(NegocioException.class)
+                .hasMessageContaining("Selecione ao menos um participante");
+
+        verify(inscricaoRepository, never()).saveAll(any());
+    }
+
+    @Test
+    void validacaoEmLoteEhTransacional() throws NoSuchMethodException {
+        var metodo = InscricaoService.class.getMethod(
+                "validarParticipacaoEmLote", Long.class, List.class);
+
+        assertThat(metodo.isAnnotationPresent(
+                org.springframework.transaction.annotation.Transactional.class)).isTrue();
+    }
+
     private Inscricao inscricao(Long eventoId, StatusInscricao status) {
         Evento evento = new Evento();
         evento.setId(eventoId);
@@ -130,5 +241,10 @@ class InscricaoServiceValidacaoTest {
                 .participante(participante)
                 .status(status)
                 .build();
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private ArgumentCaptor<List<Inscricao>> captorDeInscricoes() {
+        return (ArgumentCaptor) ArgumentCaptor.forClass(List.class);
     }
 }

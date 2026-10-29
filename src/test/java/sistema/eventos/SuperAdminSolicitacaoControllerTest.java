@@ -100,14 +100,16 @@ class SuperAdminSolicitacaoControllerTest {
         SolicitacaoOrganizador solicitacao = solicitacaoPendenteCompleta();
         Usuario usuario = solicitacao.getUsuario();
         when(solicitacaoRepository.findById(1L)).thenReturn(Optional.of(solicitacao));
+        when(solicitacaoRepository.atualizarStatus(
+                1L, StatusSolicitacao.REJEITADO, StatusSolicitacao.PENDENTE)).thenReturn(1);
 
         RedirectAttributesModelMap attributes = new RedirectAttributesModelMap();
         String view = controller.rejeitarSolicitacao(1L, attributes);
 
         assertEquals("redirect:/super-admin/solicitacoes", view);
-        assertEquals(StatusSolicitacao.REJEITADO, solicitacao.getStatus());
         assertEquals(Perfil.ROLE_PARTICIPANTE, usuario.getPerfil());
-        verify(solicitacaoRepository).save(solicitacao);
+        verify(solicitacaoRepository).atualizarStatus(
+                1L, StatusSolicitacao.REJEITADO, StatusSolicitacao.PENDENTE);
         verify(emailService).enviarSolicitacaoRejeitada(usuario);
         verifyNoInteractions(usuarioRepository);
     }

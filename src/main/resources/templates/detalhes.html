@@ -35,7 +35,7 @@
 
     <!-- CASO A: O EVENTO POSSUI IMAGEM DE BANNER -->
     <div th:if="${evento.bannerUrl != null}" class="seplag-event-hero"
-         th:style="'background-image: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.75)), url(' + (${#strings.startsWith(evento.bannerUrl, 'https://res.cloudinary.com/')} ? evento.bannerUrl : '/imagens-eventos/' + evento.bannerUrl) + ');'">
+         th:style="|background-image: linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.75)), url('${#strings.startsWith(evento.bannerUrl, 'https://res.cloudinary.com/') ? evento.bannerUrl : '/imagens-eventos/' + evento.bannerUrl}');|">
         <div class="seplag-event-hero__content">
             <p th:if="${evento.nicho != null}" class="seplag-eyebrow">
                 <th:block th:replace="~{fragments/seplag-ui :: nicho(${evento.nicho})}"></th:block>

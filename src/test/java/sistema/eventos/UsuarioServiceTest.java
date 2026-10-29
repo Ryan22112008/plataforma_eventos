@@ -176,6 +176,96 @@ class UsuarioServiceTest {
         verify(usuarioRepository).save(usuario);
     }
 
+    // --- Testes de Promoção para Super Admin ---
+
+    @Test
+    void devePromoverParticipanteParaSuperAdminPreservandoDadosDaConta() {
+        Usuario superAdmin = usuario(1L, "admin@seplag.mt.gov.br", "Admin", Perfil.ROLE_SUPER_ADMIN);
+        Usuario participante = usuario(2L, "maria@seplag.mt.gov.br", "Maria", Perfil.ROLE_PARTICIPANTE);
+        participante.setFotoPerfil("foto-maria.png");
+
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(superAdmin));
+        when(usuarioRepository.findById(2L)).thenReturn(Optional.of(participante));
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        usuarioService.promoverParaSuperAdmin(2L, 1L);
+
+        assertEquals(Perfil.ROLE_SUPER_ADMIN, participante.getPerfil());
+        assertEquals("maria@seplag.mt.gov.br", participante.getEmail());
+        assertEquals("Maria", participante.getNome());
+        assertEquals("foto-maria.png", participante.getFotoPerfil());
+        verify(usuarioRepository).save(participante);
+    }
+
+    @Test
+    void devePromoverOrganizadorEAvaliadorParaSuperAdmin() {
+        Usuario superAdmin = usuario(1L, "admin@seplag.mt.gov.br", "Admin", Perfil.ROLE_SUPER_ADMIN);
+        Usuario organizador = usuario(2L, "org@seplag.mt.gov.br", "Org", Perfil.ROLE_ORGANIZADOR);
+        Usuario avaliador = usuario(3L, "aval@seplag.mt.gov.br", "Aval", Perfil.ROLE_AVALIADOR);
+
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(superAdmin));
+        when(usuarioRepository.findById(2L)).thenReturn(Optional.of(organizador));
+        when(usuarioRepository.findById(3L)).thenReturn(Optional.of(avaliador));
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        usuarioService.promoverParaSuperAdmin(2L, 1L);
+        usuarioService.promoverParaSuperAdmin(3L, 1L);
+
+        assertEquals(Perfil.ROLE_SUPER_ADMIN, organizador.getPerfil());
+        assertEquals(Perfil.ROLE_SUPER_ADMIN, avaliador.getPerfil());
+    }
+
+    @Test
+    void naoDevePromoverUsuarioQueJaESuperAdmin() {
+        Usuario superAdmin = usuario(1L, "admin@seplag.mt.gov.br", "Admin", Perfil.ROLE_SUPER_ADMIN);
+        Usuario outroSuperAdmin = usuario(2L, "admin2@seplag.mt.gov.br", "Admin 2", Perfil.ROLE_SUPER_ADMIN);
+
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(superAdmin));
+        when(usuarioRepository.findById(2L)).thenReturn(Optional.of(outroSuperAdmin));
+
+        NegocioException ex = assertThrows(NegocioException.class,
+                () -> usuarioService.promoverParaSuperAdmin(2L, 1L));
+
+        assertEquals("Este usuário já é SUPER_ADMIN.", ex.getMessage());
+        verify(usuarioRepository, never()).save(any());
+    }
+
+    @Test
+    void participanteNaoPodePromoverUsuario() {
+        Usuario participante = usuario(2L, "participante@seplag.mt.gov.br", "Participante", Perfil.ROLE_PARTICIPANTE);
+
+        when(usuarioRepository.findById(2L)).thenReturn(Optional.of(participante));
+
+        NegocioException ex = assertThrows(NegocioException.class,
+                () -> usuarioService.promoverParaSuperAdmin(3L, 2L));
+
+        assertEquals("Apenas um Super Admin pode promover usuários.", ex.getMessage());
+        verify(usuarioRepository, never()).save(any());
+    }
+
+    @Test
+    void superAdminNaoPodePromoverAPropriaContaNovamente() {
+        Usuario superAdmin = usuario(1L, "admin@seplag.mt.gov.br", "Admin", Perfil.ROLE_SUPER_ADMIN);
+
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(superAdmin));
+
+        NegocioException ex = assertThrows(NegocioException.class,
+                () -> usuarioService.promoverParaSuperAdmin(1L, 1L));
+
+        assertEquals("Este usuário já é SUPER_ADMIN.", ex.getMessage());
+        verify(usuarioRepository, never()).save(any());
+    }
+
+    private static Usuario usuario(Long id, String email, String nome, Perfil perfil) {
+        Usuario usuario = new Usuario();
+        usuario.setId(id);
+        usuario.setEmail(email);
+        usuario.setNome(nome);
+        usuario.setPerfil(perfil);
+        usuario.setAtivo(true);
+        return usuario;
+    }
+
     // --- Testes de Histórico de Participação ---
 
     @Test

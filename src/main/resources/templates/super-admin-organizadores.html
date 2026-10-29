@@ -99,7 +99,11 @@
                 <tr th:each="organizador : ${organizadores}" class="transition-colors hover:bg-[#1A3558]">
                     <td data-label="Organizador" class="px-5 py-4">
                         <div class="flex items-center gap-3">
-                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#3B5B80] bg-[#00457C]/30 text-xs font-bold text-[#BFDBFE]" th:text="${#strings.substring(organizador.nome, 0, 1).toUpperCase()}">O</span>
+                            <img th:if="${fotosOrganizadores[organizador.id] != null}"
+                                 th:src="${fotosOrganizadores[organizador.id]}"
+                                 th:alt="${'Foto de perfil de ' + organizador.nome}"
+                                 class="h-9 w-9 shrink-0 rounded-full border border-[#3B5B80] object-cover">
+                            <span th:if="${fotosOrganizadores[organizador.id] == null}" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#3B5B80] bg-[#00457C]/30 text-xs font-bold text-[#BFDBFE]" th:text="${#strings.substring(organizador.nome, 0, 1).toUpperCase()}">O</span>
                             <span class="font-semibold text-white" th:text="${organizador.nome}">Nome do organizador</span>
                         </div>
                     </td>
