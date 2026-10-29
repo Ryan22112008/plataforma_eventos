@@ -255,7 +255,6 @@ public class InscricaoService {
         return inscricao;
     }
 
-<<<<<<< HEAD
     /**
      * Valida em lote somente as inscrições selecionadas. Todas precisam existir,
      * pertencer ao evento informado e não estar canceladas; a validação completa
@@ -315,7 +314,8 @@ public class InscricaoService {
             inscricaoRepository.saveAll(paraAtualizar);
         }
         return paraAtualizar.size();
-=======
+    }
+
     /** Valida um conjunto de inscrições numa única transação e persiste válidas em lote. */
     @Transactional
     public int validarParticipacoesEmLote(Long eventoId, List<Long> inscricaoIds) {
@@ -340,7 +340,6 @@ public class InscricaoService {
         });
         if (!validas.isEmpty()) inscricaoRepository.saveAll(validas);
         return validas.size();
->>>>>>> 7d51a2089e3b427023e048f997b6ae651023803a
     }
 
     @Transactional

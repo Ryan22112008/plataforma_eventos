@@ -190,7 +190,6 @@ public class EventoController {
         return "redirect:/organizador/eventos/" + eventoId + "/inscritos";
     }
 
-<<<<<<< HEAD
     /**
      * Valida em lote apenas as inscrições selecionadas na tela de inscritos.
      * O vínculo com o evento é conferido no service para cada ID recebido.
@@ -220,7 +219,10 @@ public class EventoController {
             log.error("Erro ao validar em lote as inscrições do evento {}.", eventoId, e);
             redirectAttributes.addFlashAttribute("erroNegocio",
                     "Não foi possível validar as participações selecionadas neste momento.");
-=======
+        }
+        return "redirect:/organizador/eventos/" + eventoId + "/inscritos";
+    }
+
     @PreAuthorize("hasAnyRole('ORGANIZADOR', 'SUPER_ADMIN')")
     @PostMapping("/eventos/{eventoId}/inscricoes/validar-participacoes")
     public String validarParticipacoesEmLote(@PathVariable Long eventoId,
@@ -233,7 +235,6 @@ public class EventoController {
         } else {
             int validadas = inscricaoService.validarParticipacoesEmLote(eventoId, inscricaoIds);
             redirectAttributes.addFlashAttribute("sucesso", validadas + " participante(s) validado(s). Certificados liberados.");
->>>>>>> 7d51a2089e3b427023e048f997b6ae651023803a
         }
         return "redirect:/organizador/eventos/" + eventoId + "/inscritos";
     }

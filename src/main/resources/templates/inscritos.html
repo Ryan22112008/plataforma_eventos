@@ -82,7 +82,6 @@
                     <h2 class="seplag-card__title" id="titulo-inscritos">Participantes do evento</h2>
                     <p class="seplag-card__hint">A frequência é calculada pelas presenças registradas nas sessões do evento.</p>
                 </div>
-<<<<<<< HEAD
 
                 <div class="seplag-table-tools">
                     <div class="seplag-field seplag-field--inline">
@@ -120,15 +119,10 @@
                             Validar selecionados
                         </button>
                     </form>
-=======
-                <div class="seplag-row-actions">
-                    <button type="submit" form="formValidarSelecionados" class="seplag-btn seplag-btn-primary">
-                        <i class="fa-solid fa-user-check" aria-hidden="true"></i> Validar selecionados
-                    </button>
->>>>>>> 7d51a2089e3b427023e048f997b6ae651023803a
                 </div>
             </div>
 
+            <!-- Endpoint alternativo de validação em lote: /validar-participacoes (parâmetro inscricaoIds). -->
             <form id="formValidarSelecionados" method="post"
                   th:action="@{/organizador/eventos/{eventoId}/inscricoes/validar-participacoes(eventoId=${evento.id})}"
                   onsubmit="return validarSelecaoEmLote()">
@@ -139,14 +133,9 @@
                 <table class="seplag-table">
                     <thead>
                     <tr>
-<<<<<<< HEAD
                         <th scope="col" class="seplag-table__check">
                             <input type="checkbox" id="selecionarTodos" class="seplag-checkbox"
                                    aria-label="Selecionar todos os participantes exibidos">
-=======
-                        <th scope="col" aria-label="Selecionar participantes">
-                            <input type="checkbox" id="selecionarTodos" aria-label="Selecionar todos os participantes elegíveis" />
->>>>>>> 7d51a2089e3b427023e048f997b6ae651023803a
                         </th>
                         <th scope="col">Inscrição</th>
                         <th scope="col">Participante</th>
@@ -166,7 +155,6 @@
                         </td>
                     </tr>
 
-<<<<<<< HEAD
                     <tr th:each="i : ${inscritos}"
                         th:attr="data-frequencia=${i.percentualFrequencia != null ? i.percentualFrequencia : ''}">
                         <td data-label="Selecionar" class="seplag-table__check">
@@ -179,15 +167,6 @@
                                    th:aria-label="|Selecionar ${i.nomeParticipante}|">
                         </td>
 
-=======
-                    <tr th:each="i : ${inscritos}">
-                        <td data-label="Selecionar">
-                            <input type="checkbox" class="inscricao-selecao" name="inscricaoIds"
-                                   th:value="${i.inscricaoId}" form="formValidarSelecionados"
-                                   th:disabled="${i.participanteId == null or i.inscricaoCancelada or i.certificadoLiberado}"
-                                   aria-label="Selecionar participante para validação em lote" />
-                        </td>
->>>>>>> 7d51a2089e3b427023e048f997b6ae651023803a
                         <td data-label="Inscrição" class="seplag-table__title" th:text="${i.inscricaoId}">1</td>
 
                         <td data-label="Participante">

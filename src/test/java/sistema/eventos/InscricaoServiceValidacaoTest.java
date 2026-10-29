@@ -120,7 +120,6 @@ class InscricaoServiceValidacaoTest {
     }
 
     @Test
-<<<<<<< HEAD
     void validaEmLoteSomenteAsInscricoesSelecionadas() {
         Inscricao primeira = inscricao(EVENTO_ID, StatusInscricao.ATIVO);
         primeira.setId(101L);
@@ -226,7 +225,9 @@ class InscricaoServiceValidacaoTest {
 
         assertThat(metodo.isAnnotationPresent(
                 org.springframework.transaction.annotation.Transactional.class)).isTrue();
-=======
+    }
+
+    @Test
     void loteSemSelecionadosNaoConsultaBanco() {
         assertThat(inscricaoService.validarParticipacoesEmLote(EVENTO_ID, List.of())).isZero();
         verify(inscricaoRepository, never()).findAllByIdComRelacoes(org.mockito.ArgumentMatchers.anyList());
@@ -284,7 +285,6 @@ class InscricaoServiceValidacaoTest {
         when(inscricaoRepository.findAllByIdComRelacoes(List.of(INSCRICAO_ID)))
                 .thenReturn(List.of(inscricao));
         assertThat(inscricaoService.validarParticipacoesEmLote(EVENTO_ID, List.of(INSCRICAO_ID))).isZero();
->>>>>>> 7d51a2089e3b427023e048f997b6ae651023803a
     }
 
     private Inscricao inscricao(Long eventoId, StatusInscricao status) {
