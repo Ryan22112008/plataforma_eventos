@@ -12,29 +12,7 @@
 </head>
 <body class="v2 bg-[#0B1F3A] min-h-screen flex flex-col text-slate-200">
 
-<header class="bg-[#00457C] text-white py-4 px-4 sm:px-6 shadow flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 border-b-4 border-[#FDB813]">
-    <div class="flex items-center space-x-3">
-        <img th:src="@{/images/logo-seplag-branco.png}" alt="Logotipo SEPLAG-MT" class="h-10 w-auto object-contain select-none">
-        <div class="flex items-center space-x-2 border-l border-white/20 pl-3">
-            <a th:href="@{/}" class="font-bold text-lg tracking-tight hover:text-gray-200 transition-colors">Painel Corporativo SEPLAG</a>
-            <span class="bg-[#008A4B] text-[10px] text-white font-bold uppercase px-2 py-0.5 rounded">Super Administrador</span>
-        </div>
-    </div>
-    <div class="flex flex-wrap items-center justify-end gap-2 sm:gap-4">
-        <nav aria-label="Navegação do Super Admin" class="flex flex-wrap items-center gap-1 text-sm font-semibold">
-            <a th:href="@{/super-admin/usuarios}" aria-current="page" class="rounded-lg border border-white/20 bg-white/15 px-3 py-2 text-white">Usuários</a>
-            <a th:href="@{/super-admin/organizadores}" class="rounded-lg px-3 py-2 text-white/85 transition hover:bg-white/10 hover:text-white">Organizadores</a>
-            <a th:href="@{/super-admin/solicitacoes}" class="rounded-lg px-3 py-2 text-white/85 transition hover:bg-white/10 hover:text-white">Solicitações de Organizador</a>
-            <a th:href="@{/}" class="rounded-lg border border-[#FDB813]/40 bg-[#FDB813]/10 px-3 py-2 text-[#FDE68A] transition hover:bg-[#FDB813]/20 hover:text-white">
-                <i class="fa-solid fa-house mr-1.5 text-xs" aria-hidden="true"></i>Voltar ao menu principal
-            </a>
-        </nav>
-        <span class="hidden text-sm font-light lg:inline" sec:authentication="name">Usuário</span>
-        <form th:action="@{/logout}" method="POST" class="inline">
-            <button type="submit" class="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded transition-colors">Sair</button>
-        </form>
-    </div>
-</header>
+<header th:replace="~{fragments/super-admin-header :: header('usuarios')}"></header>
 
 <main class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 lg:py-10 flex-grow">
 

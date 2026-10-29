@@ -946,6 +946,250 @@ html.v2-root {
     border-color: rgba(190, 214, 235, .34);
 }
 
+/* --------------------------------------------------------------------------
+   Cabeçalho do Super Admin
+   Componente único para todas as páginas /super-admin/*
+   -------------------------------------------------------------------------- */
+
+.v2 .seplag-admin-header {
+    position: sticky;
+    top: 0;
+    z-index: 45;
+    border-bottom: 3px solid #FDB813;
+    background: linear-gradient(115deg, #062A4A 0%, #00457C 58%, #005B96 100%);
+    box-shadow: 0 10px 30px rgba(2, 10, 20, .3);
+}
+
+.v2 .seplag-admin-header__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 24px;
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 14px clamp(16px, 3vw, 32px);
+}
+
+.v2 .seplag-admin-header__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    color: #FFFFFF;
+}
+
+.v2 .seplag-admin-header__logo {
+    flex: 0 0 auto;
+    width: auto;
+    height: 40px;
+    object-fit: contain;
+}
+
+.v2 .seplag-admin-header__brand-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.15;
+}
+
+.v2 .seplag-admin-header__brand-text strong {
+    color: #FFFFFF;
+    font-size: .96rem;
+    font-weight: 700;
+    letter-spacing: -.01em;
+}
+
+.v2 .seplag-admin-header__brand-text small {
+    margin-top: 4px;
+    color: #FDB813;
+    font-size: .6rem;
+    font-weight: 700;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+}
+
+.v2 .seplag-admin-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+}
+
+.v2 .seplag-admin-nav__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    color: #FFFFFF;
+    font-size: .88rem;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: background var(--transition), border-color var(--transition),
+        color var(--transition), box-shadow var(--transition);
+}
+
+.v2 .seplag-admin-nav__link i {
+    color: #FDB813;
+    font-size: .82rem;
+    transition: color var(--transition);
+}
+
+.v2 .seplag-admin-nav__link:hover {
+    background: rgba(255, 255, 255, .14);
+    border-color: rgba(255, 255, 255, .22);
+    color: #FFFFFF;
+}
+
+.v2 .seplag-admin-nav__link:focus-visible,
+.v2 .seplag-admin-header__brand:focus-visible,
+.v2 .seplag-admin-header__site:focus-visible,
+.v2 .seplag-admin-logout:focus-visible {
+    outline: 2px solid #FFFFFF;
+    outline-offset: 3px;
+}
+
+.v2 .seplag-admin-nav__link.is-active {
+    background: #FFFFFF;
+    border-color: #FFFFFF;
+    color: #00457C;
+    box-shadow: 0 4px 14px rgba(2, 10, 20, .24);
+}
+
+.v2 .seplag-admin-nav__link.is-active i {
+    color: #008A4B;
+}
+
+.v2 .seplag-admin-header__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+    min-width: 0;
+}
+
+.v2 .seplag-admin-header__site {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid rgba(253, 184, 19, .45);
+    border-radius: 999px;
+    background: rgba(253, 184, 19, .12);
+    color: #FDE68A;
+    font-size: .8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background var(--transition), border-color var(--transition), color var(--transition);
+}
+
+.v2 .seplag-admin-header__site:hover {
+    background: rgba(253, 184, 19, .22);
+    border-color: #FDB813;
+    color: #FFFFFF;
+}
+
+.v2 .seplag-admin-header__divider {
+    width: 1px;
+    height: 26px;
+    background: rgba(255, 255, 255, .24);
+}
+
+.v2 .seplag-admin-user {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.2;
+}
+
+.v2 .seplag-admin-user__name {
+    max-width: 190px;
+    overflow: hidden;
+    color: #FFFFFF;
+    font-size: .82rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.v2 .seplag-admin-user__role {
+    color: #C3DBEF;
+    font-size: .64rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.v2 .seplag-admin-logout {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid rgba(248, 113, 113, .42);
+    border-radius: 999px;
+    background: rgba(220, 38, 38, .16);
+    color: #FECACA;
+    font-family: inherit;
+    font-size: .8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition), border-color var(--transition), color var(--transition);
+}
+
+.v2 .seplag-admin-logout:hover {
+    background: rgba(220, 38, 38, .3);
+    border-color: #F87171;
+    color: #FFFFFF;
+}
+
+@media (max-width: 1100px) {
+    .v2 .seplag-admin-header__inner {
+        gap: 12px 16px;
+    }
+
+    .v2 .seplag-admin-header__actions {
+        order: 2;
+    }
+
+    .v2 .seplag-admin-nav {
+        order: 3;
+        flex-wrap: nowrap;
+        width: 100%;
+        padding-bottom: 2px;
+        overflow-x: auto;
+        scrollbar-width: thin;
+    }
+}
+
+@media (max-width: 640px) {
+    .v2 .seplag-admin-header__logo {
+        height: 34px;
+    }
+
+    .v2 .seplag-admin-header__divider,
+    .v2 .seplag-admin-user {
+        display: none;
+    }
+
+    .v2 .seplag-admin-header__site span,
+    .v2 .seplag-admin-logout span {
+        display: none;
+    }
+
+    .v2 .seplag-admin-header__site,
+    .v2 .seplag-admin-logout {
+        width: 38px;
+        padding: 0;
+        justify-content: center;
+    }
+}
+
 .v2 .seplag-content {
     flex: 1;
     width: 100%;

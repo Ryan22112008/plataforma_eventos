@@ -10,27 +10,7 @@
 </head>
 <body class="v2 min-h-screen flex flex-col bg-[#0B1F3A] text-slate-200">
 
-<header class="border-b-4 border-[#FDB813] bg-[#00457C] text-white shadow-lg">
-    <div class="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-        <a th:href="@{/}" class="flex items-center gap-3 rounded focus-visible:outline-white">
-            <img th:src="@{/images/logo-seplag-branco.png}" alt="Logotipo SEPLAG-MT" class="h-10 w-auto object-contain">
-            <span class="border-l border-white/25 pl-3 text-sm font-bold tracking-wide sm:text-base">Super Administração</span>
-        </a>
-        <div class="flex flex-wrap items-center justify-between gap-3 lg:justify-end">
-            <nav aria-label="Navegação do Super Admin" class="flex flex-wrap items-center gap-1 text-sm font-semibold">
-                <a th:href="@{/super-admin/usuarios}" class="rounded-lg px-3 py-2 text-white/85 transition hover:bg-white/10 hover:text-white">Usuários</a>
-                <a th:href="@{/super-admin/organizadores}" class="rounded-lg px-3 py-2 text-white/85 transition hover:bg-white/10 hover:text-white">Organizadores</a>
-                <a th:href="@{/super-admin/solicitacoes}" aria-current="page" class="rounded-lg border border-white/20 bg-white/15 px-3 py-2 text-white">Solicitações</a>
-                <a th:href="@{/}" class="rounded-lg border border-[#FDB813]/40 bg-[#FDB813]/10 px-3 py-2 text-[#FDE68A] transition hover:bg-[#FDB813]/20 hover:text-white">
-                    <i class="fa-solid fa-house mr-1.5 text-xs" aria-hidden="true"></i>Voltar ao menu principal
-                </a>
-            </nav>
-            <form th:action="@{/logout}" method="post" class="inline-flex">
-                <button type="submit" class="rounded-lg border border-white/20 px-3 py-2 text-sm font-semibold text-white/90 transition hover:bg-white/10">Sair</button>
-            </form>
-        </div>
-    </div>
-</header>
+<header th:replace="~{fragments/super-admin-header :: header('solicitacoes')}"></header>
 
 <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
     <div class="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">

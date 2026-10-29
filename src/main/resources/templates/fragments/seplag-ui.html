@@ -169,6 +169,62 @@
 </aside>
 
 <!-- ======================================================================
+     Cabeçalho do Super Admin
+     active: "usuarios" | "organizadores" | "solicitacoes"
+     ====================================================================== -->
+<header th:fragment="super-admin-header(active)" class="seplag-admin-header">
+    <div class="seplag-admin-header__inner">
+        <a th:href="@{/}" class="seplag-admin-header__brand" aria-label="SEPLAG Eventos — página inicial">
+            <img th:src="@{/images/logo-seplag-branco.png}" alt="Logotipo SEPLAG-MT" class="seplag-admin-header__logo">
+            <span class="seplag-admin-header__brand-text">
+                <strong>SEPLAG Eventos</strong>
+                <small>Super Administração</small>
+            </span>
+        </a>
+
+        <nav class="seplag-admin-nav" aria-label="Navegação do Super Admin">
+            <a th:href="@{/super-admin/usuarios}" class="seplag-admin-nav__link"
+               th:classappend="${active == 'usuarios'} ? ' is-active'"
+               th:attr="aria-current=${active == 'usuarios' ? 'page' : null}">
+                <i class="fa-solid fa-users" aria-hidden="true"></i>
+                <span>Usuários</span>
+            </a>
+            <a th:href="@{/super-admin/organizadores}" class="seplag-admin-nav__link"
+               th:classappend="${active == 'organizadores'} ? ' is-active'"
+               th:attr="aria-current=${active == 'organizadores' ? 'page' : null}">
+                <i class="fa-solid fa-user-tie" aria-hidden="true"></i>
+                <span>Organizadores</span>
+            </a>
+            <a th:href="@{/super-admin/solicitacoes}" class="seplag-admin-nav__link"
+               th:classappend="${active == 'solicitacoes'} ? ' is-active'"
+               th:attr="aria-current=${active == 'solicitacoes' ? 'page' : null}">
+                <i class="fa-solid fa-clipboard-check" aria-hidden="true"></i>
+                <span>Solicitações</span>
+            </a>
+        </nav>
+
+        <div class="seplag-admin-header__actions">
+            <a th:href="@{/}" class="seplag-admin-header__site" title="Ir para o site">
+                <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                <span>Ir para o site</span>
+            </a>
+            <span class="seplag-admin-header__divider" aria-hidden="true"></span>
+            <a th:replace="~{fragments/seplag-ui :: avatar(${fotoPerfilUrl}, ${usuarioLogado != null ? usuarioLogado.nome : null})}"></a>
+            <div class="seplag-admin-user">
+                <span class="seplag-admin-user__name" sec:authentication="name">Usuário</span>
+                <span class="seplag-admin-user__role">Super administrador</span>
+            </div>
+            <form th:action="@{/logout}" method="post" class="seplag-inline-form">
+                <button type="submit" class="seplag-admin-logout" title="Sair do sistema" aria-label="Sair do sistema">
+                    <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+                    <span>Sair</span>
+                </button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<!-- ======================================================================
      Topbar
      ====================================================================== -->
 <header th:fragment="topbar(title, eyebrow)" class="seplag-topbar">
