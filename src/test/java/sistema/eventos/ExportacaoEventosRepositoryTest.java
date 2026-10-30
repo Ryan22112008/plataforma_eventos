@@ -83,6 +83,30 @@ class ExportacaoEventosRepositoryTest {
     }
 
     @Test
+    void participadosRetornaDataInicioEDataTerminoDoEvento() {
+        List<UsuarioEventoTituloProjection> projecoes = inscricaoRepository
+                .findTitulosEventosPorParticipantes(List.of(participantePaula.getId()), StatusInscricao.UTILIZADO);
+
+        assertThat(projecoes).singleElement().satisfies(projecao -> {
+            assertThat(projecao.getTitulo()).isEqualTo("Workshop de Java");
+            assertThat(projecao.getDataInicio()).isEqualTo(java.getDataInicio());
+            assertThat(projecao.getDataTermino()).isEqualTo(java.getDataTermino());
+        });
+    }
+
+    @Test
+    void organizadosRetornaDataInicioEDataTerminoDoEvento() {
+        List<UsuarioEventoTituloProjection> projecoes = eventoRepository
+                .findTitulosEventosOrganizadosPorUsuarios(List.of(organizadorBruno.getId()));
+
+        assertThat(projecoes).singleElement().satisfies(projecao -> {
+            assertThat(projecao.getTitulo()).isEqualTo("Congresso de Tecnologia");
+            assertThat(projecao.getDataInicio()).isEqualTo(congresso.getDataInicio());
+            assertThat(projecao.getDataTermino()).isEqualTo(congresso.getDataTermino());
+        });
+    }
+
+    @Test
     void inscricaoAtivaOuCanceladaNaoApareceComoParticipacao() {
         List<String> titulos = inscricaoRepository
                 .findTitulosEventosPorParticipantes(List.of(participantePaula.getId()), StatusInscricao.UTILIZADO)

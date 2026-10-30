@@ -24,7 +24,7 @@ class SuperAdminTemplatesTest {
         assertTrue(painel.contains(">Participantes<"));
         assertTrue(painel.contains(">Organizadores<"));
         assertTrue(painel.contains(">Super Admins<"));
-        assertTrue(painel.contains("lg:grid-cols-4"), "Os cards restantes devem ficar equilibrados.");
+        assertTrue(painel.contains("seplag-stats--4"), "Os cards restantes devem ficar equilibrados.");
     }
 
     @Test
@@ -43,7 +43,7 @@ class SuperAdminTemplatesTest {
         String edicao = lerTemplate("templates/super-admin-editar-solicitacao.html");
 
         assertTrue(edicao.contains("th:href=\"@{/super-admin/solicitacoes}\""));
-        assertTrue(edicao.contains(">Voltar</a>"));
+        assertTrue(edicao.contains("</i> Voltar"));
         assertFalse(edicao.contains("Voltar à lista de solicitações"));
     }
 

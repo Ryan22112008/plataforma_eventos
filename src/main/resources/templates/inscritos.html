@@ -244,13 +244,13 @@
                                    th:href="@{/organizador/inscricoes/{inscricaoId}/certificado(inscricaoId=${i.inscricaoId})}"
                                    target="_blank"
                                    class="seplag-action seplag-action--success">
-                                    <i class="fa-solid fa-download" aria-hidden="true"></i> Baixar Oficial
+                                    <i class="fa-solid fa-download" aria-hidden="true"></i> Baixar Certificado
                                 </a>
 
                                 <span th:unless="${i.certificadoLiberado}"
                                       class="seplag-action seplag-action--disabled"
                                       title="Disponível após a validação da participação pelo organizador.">
-                                    <i class="fa-solid fa-download" aria-hidden="true"></i> Baixar Oficial
+                                    <i class="fa-solid fa-download" aria-hidden="true"></i> Baixar Certificado
                                 </span>
                             </div>
                         </td>

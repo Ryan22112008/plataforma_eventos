@@ -23,9 +23,9 @@
                 <span class="seplag-admin-user__name" sec:authentication="name">Usuário</span>
                 <span class="seplag-admin-user__role">Super Administrador</span>
             </div>
-            <a th:href="@{/}" class="seplag-admin-header__site"><i class="fa-solid fa-house" aria-hidden="true"></i><span>Menu principal</span></a>
-            <form th:action="@{/logout}" method="post" class="inline-flex">
-                <button type="submit" class="seplag-admin-logout"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i><span>Sair</span></button>
+            <a th:href="@{/}" class="seplag-admin-header__site" title="Menu principal"><i class="fa-solid fa-house" aria-hidden="true"></i><span>Menu principal</span></a>
+            <form th:action="@{/logout}" method="post" class="seplag-inline-form">
+                <button type="submit" class="seplag-admin-logout" title="Sair do sistema" aria-label="Sair do sistema"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i><span>Sair</span></button>
             </form>
         </div>
     </div>

@@ -1,87 +1,111 @@
 <!DOCTYPE html>
-<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/seplag-ui :: head('Solicitações de organizador')}">
     <title>Solicitações de organizador | SEPLAG-MT</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" th:href="@{/css/seplag-ui-v2.css}">
 </head>
-<body class="v2 min-h-screen flex flex-col bg-[#0B1F3A] text-slate-200">
+<body class="v2 seplag-admin-body">
+
+<a class="seplag-skip-link" href="#conteudo">Ir para o conteúdo</a>
+
 <header th:replace="~{fragments/super-admin-header :: header('solicitacoes')}"></header>
-<main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-    <div class="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-            <p class="text-xs font-bold uppercase tracking-[0.18em] text-[#FDB813]">Gestão de acessos</p>
-            <h1 class="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">Solicitações de organizador</h1>
-            <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-300">Revise os dados institucionais antes de decidir sobre o acesso ao painel de eventos.</p>
+
+<main class="seplag-content" id="conteudo">
+
+    <div class="seplag-page-head">
+        <div class="seplag-page-head__copy">
+            <p class="seplag-eyebrow">Gestão de acessos</p>
+            <h1>Solicitações de organizador</h1>
+            <p>Revise os dados institucionais antes de decidir sobre o acesso ao painel de eventos.</p>
         </div>
-        <span class="inline-flex w-fit items-center gap-2 rounded-full border border-amber-300/25 bg-amber-300/10 px-3 py-1.5 text-xs font-semibold text-amber-200">
-            <span class="h-1.5 w-1.5 rounded-full bg-amber-300"></span>Pendentes
-        </span>
+        <div class="seplag-page-head__actions">
+            <span class="seplag-badge seplag-badge--warning">
+                <i class="fa-solid fa-clock" aria-hidden="true"></i> Pendentes
+            </span>
+        </div>
     </div>
-    <div th:if="${sucesso}" role="status" class="mb-5 rounded-xl border border-emerald-400/25 bg-emerald-400/10 p-4 text-sm text-emerald-200"><i class="fa-solid fa-circle-check mr-2" aria-hidden="true"></i>A solicitação foi processada.</div>
-    <div th:if="${erro}" role="alert" class="mb-5 rounded-xl border border-rose-400/25 bg-rose-400/10 p-4 text-sm text-rose-200" th:text="${erro}"></div>
-    <div th:if="${solicitacoes == null or solicitacoes.isEmpty()}" class="rounded-2xl border border-[#2D4A73] bg-[#14294A] px-5 py-12 text-center shadow-lg">
-        <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-emerald-400/25 bg-emerald-400/10 text-emerald-300"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
-        <h2 class="mt-4 text-lg font-bold text-white">Tudo em dia</h2>
-        <p class="mt-1 text-sm text-slate-400">Não há solicitações pendentes no momento.</p>
+
+    <div class="seplag-flash" th:if="${sucesso}">
+        <div class="seplag-alert seplag-alert--success" role="status">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            <span>A solicitação foi processada.</span>
+        </div>
     </div>
-    <div th:if="${solicitacoes != null and !solicitacoes.isEmpty()}" class="space-y-4">
-        <article th:each="solicitacao : ${solicitacoes}" class="overflow-hidden rounded-2xl border border-[#2D4A73] bg-[#14294A] shadow-lg">
-            <div class="flex flex-col gap-4 border-b border-[#2D4A73] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                <div class="min-w-0">
-                    <h2 class="break-words text-lg font-bold text-white" th:text="${solicitacao.usuario.nome}">Nome</h2>
-                    <p class="mt-1 break-all text-sm text-slate-300" th:text="${solicitacao.usuario.email}">—</p>
+    <div class="seplag-flash" th:if="${erro}">
+        <div class="seplag-alert seplag-alert--error" role="alert">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            <span th:text="${erro}">Erro ao processar a solicitação.</span>
+        </div>
+    </div>
+
+    <div th:if="${solicitacoes == null or solicitacoes.isEmpty()}" class="seplag-card">
+        <div class="seplag-empty">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            <strong>Tudo em dia</strong>
+            <p>Não há solicitações pendentes no momento.</p>
+        </div>
+    </div>
+
+    <div th:if="${solicitacoes != null and !solicitacoes.isEmpty()}" class="seplag-stack">
+        <article th:each="solicitacao : ${solicitacoes}" class="seplag-card">
+            <div class="seplag-card__header">
+                <div class="seplag-admin-callout__body">
+                    <span class="seplag-admin-avatar seplag-admin-avatar--lg" aria-hidden="true">
+                        <i class="fa-solid fa-user-tie"></i>
+                    </span>
+                    <div>
+                        <h2 class="seplag-card__title" th:text="${solicitacao.usuario.nome}">Nome</h2>
+                        <p class="seplag-card__hint" th:text="${solicitacao.usuario.email}">—</p>
+                    </div>
                 </div>
-                <span class="inline-flex w-fit shrink-0 items-center gap-2 rounded-full border border-amber-300/25 bg-amber-300/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-amber-200">
-                    <span class="h-1.5 w-1.5 rounded-full bg-amber-300"></span>PENDENTE
-                </span>
+                <span class="seplag-badge seplag-badge--warning">PENDENTE</span>
             </div>
-            <div class="grid grid-cols-1 gap-4 px-5 py-5 sm:grid-cols-2 lg:grid-cols-4 sm:px-6">
-                <div class="rounded-xl border border-[#2D4A73] bg-[#0B1F3A]/55 p-4">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Matrícula</p>
-                    <p class="mt-1.5 break-words text-sm font-medium text-slate-100" th:text="${solicitacao.matricula}">Matrícula</p>
-                </div>
-                <div class="rounded-xl border border-[#2D4A73] bg-[#0B1F3A]/55 p-4">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">E-mail institucional</p>
-                    <p class="mt-1.5 break-all text-sm font-medium text-slate-100" th:text="${solicitacao.emailInstitucional}">E-mail institucional</p>
-                </div>
-                <div class="rounded-xl border border-[#2D4A73] bg-[#0B1F3A]/55 p-4">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Órgão</p>
-                    <p class="mt-1.5 break-words text-sm font-medium text-slate-100" th:text="${solicitacao.orgao}">Órgão</p>
-                </div>
-                <div class="rounded-xl border border-[#2D4A73] bg-[#0B1F3A]/55 p-4">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Data da solicitação</p>
-                    <p class="mt-1.5 text-sm font-medium text-slate-100" th:text="${#temporals.format(solicitacao.dataSolicitacao, 'dd/MM/yyyy HH:mm')}">Data</p>
-                </div>
-                <div class="rounded-xl border border-[#2D4A73] bg-[#0B1F3A]/55 p-4 sm:col-span-2 lg:col-span-4">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Justificativa</p>
-                    <p class="mt-1.5 break-words text-sm leading-6 text-slate-200" th:text="${solicitacao.justificativa}">Justificativa</p>
-                </div>
+
+            <div class="seplag-card__body">
+                <dl class="seplag-detail-grid">
+                    <div class="seplag-detail">
+                        <dt>Matrícula</dt>
+                        <dd th:text="${solicitacao.matricula}">Matrícula</dd>
+                    </div>
+                    <div class="seplag-detail">
+                        <dt>E-mail institucional</dt>
+                        <dd th:text="${solicitacao.emailInstitucional}">E-mail institucional</dd>
+                    </div>
+                    <div class="seplag-detail">
+                        <dt>Órgão</dt>
+                        <dd th:text="${solicitacao.orgao}">Órgão</dd>
+                    </div>
+                    <div class="seplag-detail">
+                        <dt>Data da solicitação</dt>
+                        <dd th:text="${#temporals.format(solicitacao.dataSolicitacao, 'dd/MM/yyyy HH:mm')}">Data</dd>
+                    </div>
+                    <div class="seplag-detail seplag-detail--full">
+                        <dt>Justificativa</dt>
+                        <dd th:text="${solicitacao.justificativa}">Justificativa</dd>
+                    </div>
+                </dl>
             </div>
-            <div class="flex flex-col gap-3 border-t border-[#2D4A73] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                <div th:if="${solicitacao.isDadosIncompletos()}" class="inline-flex items-start gap-2 rounded-lg border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-xs font-semibold leading-5 text-amber-200">
-                    <i class="fa-solid fa-triangle-exclamation mt-0.5" aria-hidden="true"></i>
+
+            <div class="seplag-card__footer">
+                <div th:if="${solicitacao.isDadosIncompletos()}" class="seplag-alert seplag-alert--warning" role="status">
+                    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
                     <span>Dados obrigatórios incompletos — edite antes de aprovar</span>
                 </div>
-                <div class="flex flex-col gap-2 sm:ml-auto sm:flex-row">
+                <div class="seplag-form-actions">
                     <div th:if="${solicitacao.isDadosIncompletos()}">
-                        <a th:href="@{/super-admin/solicitacoes/{id}/editar(id=${solicitacao.id})}" class="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-amber-300/30 bg-amber-300/10 px-4 py-2 text-sm font-semibold text-amber-200 transition hover:bg-amber-300/20 sm:w-auto">
-                            <i class="fa-solid fa-pen" aria-hidden="true"></i>Editar dados
+                        <a th:href="@{/super-admin/solicitacoes/{id}/editar(id=${solicitacao.id})}" class="seplag-btn seplag-btn-secondary">
+                            <i class="fa-solid fa-pen" aria-hidden="true"></i> Editar dados
                         </a>
                     </div>
                     <div th:unless="${solicitacao.isDadosIncompletos()}">
                         <form th:action="@{/super-admin/solicitacoes/{id}/aprovar(id=${solicitacao.id})}" method="post">
-                            <button type="submit" class="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600 sm:w-auto">
-                                <i class="fa-solid fa-user-check" aria-hidden="true"></i>Aprovar
+                            <button type="submit" class="seplag-btn seplag-btn-primary">
+                                <i class="fa-solid fa-user-check" aria-hidden="true"></i> Aprovar
                             </button>
                         </form>
                     </div>
                     <form th:action="@{/super-admin/solicitacoes/{id}/rejeitar(id=${solicitacao.id})}" method="post">
-                        <button type="submit" class="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-rose-300/30 bg-rose-500/10 px-4 py-2 text-sm font-semibold text-rose-200 transition hover:bg-rose-500/20 sm:w-auto">
-                            <i class="fa-solid fa-ban" aria-hidden="true"></i>Rejeitar
+                        <button type="submit" class="seplag-btn seplag-btn-danger">
+                            <i class="fa-solid fa-ban" aria-hidden="true"></i> Rejeitar
                         </button>
                     </form>
                 </div>
@@ -89,8 +113,10 @@
         </article>
     </div>
 </main>
-<footer class="mt-auto border-t border-[#2D4A73] bg-[#08182B] px-4 py-4 text-center text-xs text-slate-500">
+
+<footer class="seplag-footer">
     &copy; 2026 Secretaria de Estado de Planejamento e Gestão de Mato Grosso. Todos os direitos reservados.
 </footer>
+
 </body>
 </html>

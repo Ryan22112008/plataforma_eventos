@@ -1,74 +1,89 @@
 <!DOCTYPE html>
-<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security6">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security6">
+<head th:replace="~{fragments/seplag-ui :: head('Editar Solicitação de Organizador')}">
     <title>Editar Solicitação de Organizador | SEPLAG-MT</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" th:href="@{/css/seplag-ui-v2.css}">
 </head>
-<body class="v2 min-h-screen flex flex-col bg-[#0B1F3A] text-slate-200">
+<body class="v2 seplag-admin-body">
+
+<a class="seplag-skip-link" href="#conteudo">Ir para o conteúdo</a>
 
 <header th:replace="~{fragments/super-admin-header :: header('solicitacoes')}"></header>
 
-<main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-    <div class="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-            <p class="text-xs font-bold uppercase tracking-[0.18em] text-[#FDB813]">Super Administração</p>
-            <h1 class="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">Editar Solicitação de Organizador</h1>
-            <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-300">Preencha os dados obrigatórios antes de permitir a aprovação.</p>
+<main class="seplag-content" id="conteudo">
+
+    <div class="seplag-page-head">
+        <div class="seplag-page-head__copy">
+            <p class="seplag-eyebrow">Super Administração</p>
+            <h1>Editar Solicitação de Organizador</h1>
+            <p>Preencha os dados obrigatórios antes de permitir a aprovação.</p>
+        </div>
+        <div class="seplag-page-head__actions">
+            <a th:href="@{/super-admin/solicitacoes}" class="seplag-btn seplag-btn-secondary">
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Voltar
+            </a>
         </div>
     </div>
-    <div th:if="${erro}" role="alert" class="mb-5 rounded-xl border border-rose-400/25 bg-rose-400/10 p-4 text-sm text-rose-200" th:text="${erro}"></div>
 
-    <section class="rounded-xl border border-[#2D4A73] bg-[#0B1F3A]/55 p-5 sm:p-6 shadow-lg">
-        <form th:action="@{/super-admin/solicitacoes/{id}/editar(id=${solicitacao.id})}" th:object="${solicitacao}" method="POST" class="space-y-6">
-            <input type="hidden" th:field="*{id}"/>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label for="nomeCompleto" class="block text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1.5">Nome Completo</label>
-                    <input type="text" th:field="*{nomeCompleto}" id="nomeCompleto" class="w-full rounded-lg border border-[#2D4A73] bg-[#14294A]/40 px-3 py-2 text-sm text-slate-100 focus:border-[#00457C] focus:outline-none focus:ring-1 focus:ring-[#00457C]">
-                    <p th:if="${#fields.hasErrors('nomeCompleto')}" th:errors="*{nomeCompleto}" class="mt-1 text-xs text-rose-400"></p>
-                </div>
-                <div>
-                    <label for="matricula" class="block text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1.5">Matrícula</label>
-                    <input type="text" th:field="*{matricula}" id="matricula" class="w-full rounded-lg border border-[#2D4A73] bg-[#14294A]/40 px-3 py-2 text-sm text-slate-100 focus:border-[#00457C] focus:outline-none focus:ring-1 focus:ring-[#00457C]">
-                    <p th:if="${#fields.hasErrors('matricula')}" th:errors="*{matricula}" class="mt-1 text-xs text-rose-400"></p>
-                </div>
-                <div>
-                    <label for="emailInstitucional" class="block text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1.5">E-mail Institucional</label>
-                    <input type="email" th:field="*{emailInstitucional}" id="emailInstitucional" class="w-full rounded-lg border border-[#2D4A73] bg-[#14294A]/40 px-3 py-2 text-sm text-slate-100 focus:border-[#00457C] focus:outline-none focus:ring-1 focus:ring-[#00457C]">
-                    <p th:if="${#fields.hasErrors('emailInstitucional')}" th:errors="*{emailInstitucional}" class="mt-1 text-xs text-rose-400"></p>
-                </div>
-                <div>
-                    <label for="orgao" class="block text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1.5">Órgão</label>
-                    <input type="text" th:field="*{orgao}" id="orgao" class="w-full rounded-lg border border-[#2D4A73] bg-[#14294A]/40 px-3 py-2 text-sm text-slate-100 focus:border-[#00457C] focus:outline-none focus:ring-1 focus:ring-[#00457C]" th:value="${solicitacao.orgao}">
-                    <p th:if="${#fields.hasErrors('orgao')}" th:errors="*{orgao}" class="mt-1 text-xs text-rose-400"></p>
-                    <p class="mt-1 text-xs text-slate-400">Máximo de 100 caracteres.</p>
-                </div>
-            </div>
-            <div>
-                <label for="justificativa" class="block text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1.5">Justificativa da Solicitação</label>
-                <textarea th:field="*{justificativa}" id="justificativa" rows="4" class="w-full rounded-lg border border-[#2D4A73] bg-[#14294A]/40 px-3 py-2 text-sm text-slate-100 focus:border-[#00457C] focus:outline-none focus:ring-1 focus:ring-[#00457C]"></textarea>
-                <p th:if="${#fields.hasErrors('justificativa')}" th:errors="*{justificativa}" class="mt-1 text-xs text-rose-400"></p>
-                <p class="mt-1 text-xs text-slate-400">Máximo de 1000 caracteres.</p>
-            </div>
-            <div class="pt-4">
-                <button type="submit" class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-[#008A4B] hover:bg-[#00703c] transition-colors focus:outline-none focus:ring-2 focus-ring-offset-2 focus-ring-[#008A4B]">
-                    Salvar Dados
-                </button>
-            </div>
-        </form>
-    </section>
-
-    <div class="mt-6 border-t border-[#2D4A73] pt-6 text-center text-sm text-slate-400">
-        <a th:href="@{/super-admin/solicitacoes}" class="font-medium text-[#1476B8] hover:underline">Voltar</a>
+    <div class="seplag-flash" th:if="${erro}">
+        <div class="seplag-alert seplag-alert--error" role="alert">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            <span th:text="${erro}">Erro ao salvar os dados.</span>
+        </div>
     </div>
+
+    <section class="seplag-card" aria-labelledby="editar-titulo">
+        <div class="seplag-card__header">
+            <div>
+                <h2 class="seplag-card__title" id="editar-titulo">Dados da solicitação</h2>
+                <p class="seplag-card__hint">Os campos marcados são obrigatórios para aprovação.</p>
+            </div>
+        </div>
+        <div class="seplag-card__body">
+            <form th:action="@{/super-admin/solicitacoes/{id}/editar(id=${solicitacao.id})}" th:object="${solicitacao}" method="POST" class="seplag-form">
+                <input type="hidden" th:field="*{id}"/>
+                <div class="seplag-form-grid seplag-form-grid--2">
+                    <div class="seplag-field">
+                        <label for="nomeCompleto" class="seplag-label">Nome Completo</label>
+                        <input type="text" th:field="*{nomeCompleto}" id="nomeCompleto" class="seplag-input">
+                        <p th:if="${#fields.hasErrors('nomeCompleto')}" th:errors="*{nomeCompleto}" class="seplag-error"></p>
+                    </div>
+                    <div class="seplag-field">
+                        <label for="matricula" class="seplag-label">Matrícula</label>
+                        <input type="text" th:field="*{matricula}" id="matricula" class="seplag-input">
+                        <p th:if="${#fields.hasErrors('matricula')}" th:errors="*{matricula}" class="seplag-error"></p>
+                    </div>
+                    <div class="seplag-field">
+                        <label for="emailInstitucional" class="seplag-label">E-mail Institucional</label>
+                        <input type="email" th:field="*{emailInstitucional}" id="emailInstitucional" class="seplag-input">
+                        <p th:if="${#fields.hasErrors('emailInstitucional')}" th:errors="*{emailInstitucional}" class="seplag-error"></p>
+                    </div>
+                    <div class="seplag-field">
+                        <label for="orgao" class="seplag-label">Órgão</label>
+                        <input type="text" th:field="*{orgao}" id="orgao" class="seplag-input" th:value="${solicitacao.orgao}">
+                        <p th:if="${#fields.hasErrors('orgao')}" th:errors="*{orgao}" class="seplag-error"></p>
+                        <p class="seplag-hint">Máximo de 100 caracteres.</p>
+                    </div>
+                </div>
+                <div class="seplag-field">
+                    <label for="justificativa" class="seplag-label">Justificativa da Solicitação</label>
+                    <textarea th:field="*{justificativa}" id="justificativa" rows="4" class="seplag-input seplag-textarea"></textarea>
+                    <p th:if="${#fields.hasErrors('justificativa')}" th:errors="*{justificativa}" class="seplag-error"></p>
+                    <p class="seplag-hint">Máximo de 1000 caracteres.</p>
+                </div>
+                <div class="seplag-form-actions">
+                    <a th:href="@{/super-admin/solicitacoes}" class="seplag-btn seplag-btn-ghost">Cancelar</a>
+                    <button type="submit" class="seplag-btn seplag-btn-primary">
+                        <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Salvar Dados
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
 </main>
 
-<footer class="mt-auto border-t border-[#2D4A73] bg-[#08182B] px-4 py-4 text-center text-xs text-slate-500">
+<footer class="seplag-footer">
     &copy; 2026 Secretaria de Estado de Planejamento e Gestão de Mato Grosso. Todos os direitos reservados.
 </footer>
+
 </body>
 </html>
