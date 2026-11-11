@@ -21,7 +21,6 @@
             <a th:href="@{/presencas/{id}/frequencia(id=${evento.id})}" class="seplag-subnav__link"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i> Frequência</a>
             <a th:href="@{/organizador/eventos/{id}/sorteios(id=${evento.id})}" class="seplag-subnav__link is-active" aria-current="page"><i class="fa-solid fa-ticket" aria-hidden="true"></i> Sorteios</a>
         </nav>
-        <div th:if="${sucesso}" class="seplag-alert seplag-alert--success" role="status"><i class="fa-solid fa-circle-check" aria-hidden="true"></i><span th:text="${sucesso}">Operação concluída.</span></div>
         <div th:if="${erroNegocio}" class="seplag-alert seplag-alert--error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i><span th:text="${erroNegocio}">Não foi possível concluir o sorteio.</span></div>
         <div class="seplag-page-head sorteios-heading"><div class="seplag-page-head__copy"><p class="seplag-eyebrow">Experiência do evento</p><h1>Sorteios</h1>
             <p>Premie quem participou. Defina a frequência mínima e realize uma ou mais rodadas para <strong th:text="${evento.titulo}">seu evento</strong>.</p></div>
@@ -43,6 +42,27 @@
                 </form>
                 <p class="seplag-count-chip" style="margin-top:1rem"><i class="fa-solid fa-user-check" aria-hidden="true"></i>
                     Elegíveis agora: <strong th:text="${totalElegiveis}">0</strong></p>
+                <div class="sorteios-eligible-list" aria-labelledby="participantes-elegiveis-titulo">
+                    <div class="sorteios-eligible-list__header">
+                        <h3 id="participantes-elegiveis-titulo">Participantes elegíveis</h3>
+                        <span th:text="${totalElegiveis}">0</span>
+                    </div>
+                    <p class="sorteios-eligible-list__empty" th:if="${participantesElegiveis.isEmpty()}">
+                        Ninguém atingiu a frequência mínima ainda.
+                    </p>
+                    <ul class="sorteios-eligible-list__items" th:unless="${participantesElegiveis.isEmpty()}">
+                        <li th:each="participante : ${participantesElegiveis}">
+                            <span class="sorteios-eligible-list__person">
+                                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                                <span><strong th:text="${participante.nomeParticipante}">Nome do participante</strong>
+                                    <small th:if="${participante.emailParticipante != null}" th:text="${participante.emailParticipante}">email@exemplo.com</small>
+                                </span>
+                            </span>
+                            <span class="sorteios-eligible-list__frequency"
+                                  th:text="|${#numbers.formatDecimal(participante.percentualFrequencia, 1, 0)}%|">100%</span>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </section>
         <section class="seplag-card sorteios-draw-card" aria-labelledby="realizar-sorteio">

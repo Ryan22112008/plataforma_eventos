@@ -167,9 +167,16 @@ public class EventoController {
         int minimo = evento.getSorteioFrequenciaMinima() == null ? 75 : evento.getSorteioFrequenciaMinima();
         long elegiveis = inscritos.stream().filter(i -> !i.isInscricaoCancelada())
                 .filter(i -> i.getPercentualFrequencia() != null && i.getPercentualFrequencia() >= minimo).count();
+        List<InscritoFrequenciaDto> participantesElegiveis = inscritos.stream()
+                .filter(i -> !i.isInscricaoCancelada())
+                .filter(i -> i.getPercentualFrequencia() != null && i.getPercentualFrequencia() >= minimo)
+                .sorted(java.util.Comparator.comparing(InscritoFrequenciaDto::getNomeParticipante,
+                        String.CASE_INSENSITIVE_ORDER))
+                .toList();
         model.addAttribute("evento", evento);
         model.addAttribute("percentualMinimo", minimo);
         model.addAttribute("totalElegiveis", elegiveis);
+        model.addAttribute("participantesElegiveis", participantesElegiveis);
         model.addAttribute("resultadosSorteio", inscricaoService.listarResultadosSorteio(id));
         model.addAttribute("paginaAtiva", "sorteios");
         return "sorteios";
@@ -181,7 +188,6 @@ public class EventoController {
         exigirAcessoAoEvento(id, authentication);
         try {
             inscricaoService.configurarFrequenciaSorteio(id, percentual);
-            attributes.addFlashAttribute("sucesso", "Percentual mínimo atualizado.");
         } catch (NegocioException e) {
             attributes.addFlashAttribute("erroNegocio", e.getMessage());
         }
@@ -194,8 +200,7 @@ public class EventoController {
                                   RedirectAttributes attributes) {
         exigirAcessoAoEvento(id, authentication);
         try {
-            var vencedores = inscricaoService.realizarSorteio(id, quantidade);
-            attributes.addFlashAttribute("sucesso", "Sorteio realizado com " + vencedores.size() + " participante(s) vencedor(es).");
+            inscricaoService.realizarSorteio(id, quantidade);
         } catch (NegocioException e) {
             attributes.addFlashAttribute("erroNegocio", e.getMessage());
         } catch (Exception e) {
