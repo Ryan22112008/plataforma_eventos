@@ -4,7 +4,7 @@
 <head th:replace="~{fragments/seplag-ui :: head('Sorteios do Evento')}">
     <title>Sorteios | SEPLAG-MT</title>
 </head>
-<body class="v2 seplag-shell">
+<body class="v2 seplag-shell sorteios-page">
 <a class="seplag-skip-link" href="#conteudo">Ir para o conteúdo</a>
 <div class="seplag-drawer-backdrop" data-seplag-backdrop aria-hidden="true"></div>
 <aside th:replace="~{fragments/seplag-ui :: sidebar('')}"></aside>
@@ -23,9 +23,16 @@
         </nav>
         <div th:if="${sucesso}" class="seplag-alert seplag-alert--success" role="status"><i class="fa-solid fa-circle-check" aria-hidden="true"></i><span th:text="${sucesso}">Operação concluída.</span></div>
         <div th:if="${erroNegocio}" class="seplag-alert seplag-alert--error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i><span th:text="${erroNegocio}">Não foi possível concluir o sorteio.</span></div>
-        <div class="seplag-page-head"><div class="seplag-page-head__copy"><p class="seplag-eyebrow">Organizador</p><h1>Sorteio por frequência</h1>
-            <p th:text="${evento.titulo}">Evento</p></div></div>
-        <section class="seplag-card" aria-labelledby="configurar-sorteio">
+        <div class="seplag-page-head sorteios-heading"><div class="seplag-page-head__copy"><p class="seplag-eyebrow">Experiência do evento</p><h1>Sorteios</h1>
+            <p>Premie quem participou. Defina a frequência mínima e realize uma ou mais rodadas para <strong th:text="${evento.titulo}">seu evento</strong>.</p></div>
+            <span class="sorteios-heading__icon" aria-hidden="true"><i class="fa-solid fa-gift"></i></span></div>
+        <section class="seplag-stats sorteios-stats" aria-label="Resumo dos sorteios">
+            <article class="seplag-stat"><span class="seplag-stat__label">Participantes elegíveis</span><strong class="seplag-stat__value" th:text="${totalElegiveis}">0</strong></article>
+            <article class="seplag-stat"><span class="seplag-stat__label">Frequência mínima</span><strong class="seplag-stat__value" th:text="|${percentualMinimo}%|">75%</strong></article>
+            <article class="seplag-stat"><span class="seplag-stat__label">Rodadas realizadas</span><strong class="seplag-stat__value" th:text="${evento.sorteioNumeroRodada != null ? evento.sorteioNumeroRodada : 0}">0</strong></article>
+        </section>
+        <div class="sorteios-actions-grid">
+        <section class="seplag-card sorteios-config-card" aria-labelledby="configurar-sorteio">
             <div class="seplag-card__header"><div><h2 class="seplag-card__title" id="configurar-sorteio">Quem pode participar</h2>
                 <p class="seplag-card__hint">Defina a frequência mínima. Só entram no sorteio participantes não cancelados com presença registrada em sessões do evento.</p></div></div>
             <div class="seplag-card__body">
@@ -38,7 +45,7 @@
                     Elegíveis agora: <strong th:text="${totalElegiveis}">0</strong></p>
             </div>
         </section>
-        <section class="seplag-card" aria-labelledby="realizar-sorteio" style="margin-top:1rem">
+        <section class="seplag-card sorteios-draw-card" aria-labelledby="realizar-sorteio">
             <div class="seplag-card__header"><div><h2 class="seplag-card__title" id="realizar-sorteio">Novo sorteio</h2>
                 <p class="seplag-card__hint">Escolha quantas pessoas serão sorteadas. Cada rodada seleciona vencedores diferentes entre si; você pode realizar novas rodadas quando quiser.</p></div></div>
             <div class="seplag-card__body">
@@ -50,7 +57,8 @@
                 </form>
             </div>
         </section>
-        <section class="seplag-card" aria-labelledby="historico-sorteios" style="margin-top:1rem">
+        </div>
+        <section class="seplag-card sorteios-history-card" aria-labelledby="historico-sorteios">
             <div class="seplag-card__header"><div><h2 class="seplag-card__title" id="historico-sorteios">Histórico de sorteios</h2>
                 <p class="seplag-card__hint">Cada rodada fica registrada para consulta.</p></div></div>
             <div class="seplag-card__body">

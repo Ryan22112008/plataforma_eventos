@@ -224,10 +224,10 @@ public class InscricaoService {
             throw new NegocioException("Escolha uma quantidade entre 1 e 1000 pessoas.");
         }
         int minimo = evento.getSorteioFrequenciaMinima() == null ? 75 : evento.getSorteioFrequenciaMinima();
-        List<InscritoFrequenciaDto> elegiveis = listarInscritosComFrequencia(eventoId).stream()
+        List<InscritoFrequenciaDto> elegiveis = new ArrayList<>(listarInscritosComFrequencia(eventoId).stream()
                 .filter(i -> !i.isInscricaoCancelada())
                 .filter(i -> i.getPercentualFrequencia() != null && i.getPercentualFrequencia() >= minimo)
-                .toList();
+                .toList());
         if (elegiveis.isEmpty()) {
             throw new NegocioException("Não há participantes elegíveis. Confira o percentual mínimo e as presenças registradas.");
         }

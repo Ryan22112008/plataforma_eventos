@@ -39,6 +39,7 @@
                 <i class="fa-solid fa-clipboard-check" aria-hidden="true"></i> Frequência
             </a>
             <a th:href="@{/organizador/eventos/{id}/sorteios(id=${evento.id})}"
+               th:classappend="${paginaAtiva == 'sorteios' ? 'is-active' : ''}"
                class="seplag-subnav__link">
                 <i class="fa-solid fa-ticket" aria-hidden="true"></i> Sorteios
             </a>
