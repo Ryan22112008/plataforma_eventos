@@ -10,14 +10,16 @@
                 <img th:src="@{/images/logo-seplag-branco.png}" alt="Logotipo SEPLAG-MT" class="seplag-auth__logo">
             </div>
             <section class="seplag-card" aria-labelledby="error-title">
-                <div class="seplag-card__body" style="text-align: center;">
-                    <div class="seplag-error__icon" style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; margin: 0 auto 16px; border-radius: 50%; background: rgba(217, 164, 65, .12); border: 1px solid rgba(217, 164, 65, .34);">
-                        <i class="fa-solid fa-triangle-exclamation" style="color: #F0D6A4; font-size: 1.25rem;" aria-hidden="true"></i>
+                <div class="seplag-card__body seplag-error__body">
+                    <div class="seplag-error__icon seplag-error__icon--warning" aria-hidden="true">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
                     </div>
-                    <h1 id="error-title" style="margin: 0 0 8px 0; font-size: 1.25rem; font-weight: 700;">Erro 400 - Requisição Inválida</h1>
-                    <p style="margin: 0 0 20px 0; color: var(--muted); font-size: .9rem;">O servidor não conseguiu processar a requisição devido a parâmetros incorretos ou dados inválidos.</p>
-                    <div th:if="${mensagemErro}" class="seplag-alert seplag-alert--error" role="alert" style="margin: 0 0 24px 0; text-align: left;" th:text="${mensagemErro}">Detalhes do erro do Spring aparecerão aqui para o diagnóstico.</div>
-                    <a th:href="@{/dashboard}" class="seplag-btn seplag-btn-primary seplag-btn--block">Voltar ao Painel</a>
+                    <h1 id="error-title">Erro 400 - Requisição Inválida</h1>
+                    <p>O servidor não conseguiu processar a requisição devido a parâmetros incorretos ou dados inválidos.</p>
+                    <div th:if="${mensagemErro}" class="seplag-alert seplag-alert--error" role="alert" th:text="${mensagemErro}">Detalhes do erro do Spring aparecerão aqui para o diagnóstico.</div>
+                    <div class="seplag-error__actions">
+                        <a th:href="@{/dashboard}" class="seplag-btn seplag-btn-primary">Voltar ao Painel</a>
+                    </div>
                 </div>
             </section>
         </div>

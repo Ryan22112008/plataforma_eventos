@@ -28,11 +28,12 @@ public interface EventoRepository extends JpaRepository<Evento, Long> {
     List<Object[]> contarEventosPorOrganizadores(@Param("organizadorIds") List<Long> organizadorIds);
 
     /**
-     * Carrega em lote os títulos dos eventos organizados pelos usuários
-     * informados, usando o relacionamento real Evento.organizador.
+     * Carrega em lote os títulos e as datas dos eventos organizados pelos
+     * usuários informados, usando o relacionamento real Evento.organizador.
      * Usado pela exportação do Super Admin sem consultas por usuário.
      */
-    @Query("SELECT e.organizador.id AS usuarioId, e.titulo AS titulo " +
+    @Query("SELECT e.organizador.id AS usuarioId, e.titulo AS titulo, " +
+            "e.dataInicio AS dataInicio, e.dataTermino AS dataTermino " +
             "FROM Evento e " +
             "WHERE e.organizador.id IN :usuarioIds " +
             "ORDER BY e.organizador.id, e.titulo")

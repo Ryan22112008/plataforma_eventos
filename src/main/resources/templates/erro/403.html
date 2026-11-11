@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/seplag-ui :: head('Acesso não autorizado | SEPLAG-MT')}">
+<head th:replace="~{fragments/seplag-ui :: head('Acesso não autorizado')}">
     <title>Acesso não autorizado | SEPLAG-MT</title>
 </head>
 <body class="v2 seplag-error-page">
@@ -10,14 +10,16 @@
                 <img th:src="@{/images/logo-seplag-branco.png}" alt="Logotipo SEPLAG-MT" class="seplag-auth__logo">
             </div>
             <section class="seplag-card" aria-labelledby="error-title">
-                <div class="seplag-card__body" style="text-align: center;">
-                    <div class="seplag-error__icon" style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; margin: 0 auto 16px; border-radius: 50%; background: rgba(212, 90, 90, .12); border: 1px solid rgba(212, 90, 90, .34);">
-                        <i class="fa-solid fa-triangle-exclamation" style="color: #F6C4C4; font-size: 1.25rem;" aria-hidden="true"></i>
+                <div class="seplag-card__body seplag-error__body">
+                    <div class="seplag-error__icon seplag-error__icon--danger" aria-hidden="true">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
                     </div>
-                    <h1 id="error-title" style="margin: 0 0 8px 0; font-size: 1.25rem; font-weight: 700;">Acesso não autorizado</h1>
-                    <p class="seplag-eyebrow" style="margin: 0 0 16px 0; font-size: .7rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-400);">Erro 403</p>
-                    <p style="margin: 0 0 24px 0; color: var(--muted); font-size: .9rem;" th:text="${mensagem}">Você não tem permissão para acessar este conteúdo.</p>
-                    <a th:href="@{/}" class="seplag-btn seplag-btn-primary seplag-btn--block">Voltar à plataforma</a>
+                    <h1 id="error-title">Acesso não autorizado</h1>
+                    <p class="seplag-error__code">Erro 403</p>
+                    <p th:text="${mensagem}">Você não tem permissão para acessar este conteúdo.</p>
+                    <div class="seplag-error__actions">
+                        <a th:href="@{/}" class="seplag-btn seplag-btn-primary">Voltar à plataforma</a>
+                    </div>
                 </div>
             </section>
         </div>

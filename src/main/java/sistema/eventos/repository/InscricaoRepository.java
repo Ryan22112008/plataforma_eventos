@@ -52,13 +52,15 @@ public interface InscricaoRepository extends JpaRepository<Inscricao, Long> {
     List<Inscricao> findByParticipanteIdAndStatus(@Param("participanteId") Long participanteId, @Param("status") StatusInscricao status);
 
     /**
-     * Carrega em lote os títulos dos eventos em que os usuários informados têm
-     * inscrição com o status recebido. Usado pela exportação do Super Admin
-     * para montar a coluna "Eventos Participados" sem N+1.
+     * Carrega em lote os títulos e as datas dos eventos em que os usuários
+     * informados têm inscrição com o status recebido. Usado pela exportação do
+     * Super Admin para montar as colunas "Eventos Participados" e
+     * "Datas dos Eventos Participados" sem N+1.
      * A regra de participação continua sendo a já existente no sistema
      * (status UTILIZADO), apenas parametrizada.
      */
-    @Query("SELECT i.participante.id AS usuarioId, i.evento.titulo AS titulo " +
+    @Query("SELECT i.participante.id AS usuarioId, i.evento.titulo AS titulo, " +
+            "i.evento.dataInicio AS dataInicio, i.evento.dataTermino AS dataTermino " +
             "FROM Inscricao i " +
             "WHERE i.participante.id IN :usuarioIds AND i.status = :status " +
             "ORDER BY i.participante.id, i.evento.titulo")

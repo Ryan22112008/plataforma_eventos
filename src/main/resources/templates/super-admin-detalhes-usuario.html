@@ -1,254 +1,245 @@
 <!DOCTYPE html>
-<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security6">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security6">
+<head th:replace="~{fragments/seplag-ui :: head('Detalhes do Usuário')}">
     <title>Detalhes do Usuário | SEPLAG-MT</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Inter', sans-serif; }</style>
-    <link rel="stylesheet" th:href="@{/css/seplag-ui-v2.css}">
 </head>
-<body class="v2 bg-[#0B1F3A] min-h-screen flex flex-col text-slate-200">
+<body class="v2 seplag-admin-body">
+
+<a class="seplag-skip-link" href="#conteudo">Ir para o conteúdo</a>
 
 <header th:replace="~{fragments/super-admin-header :: header(${ehOrganizador} ? 'organizadores' : 'usuarios')}"></header>
 
-<main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+<main class="seplag-content" id="conteudo">
 
-    <div class="mb-7 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-            <p class="text-xs font-bold uppercase tracking-[0.18em] text-[#FDB813]">Super Administração · Conta</p>
-            <h1 th:if="${ehOrganizador}" class="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">Detalhes do Organizador</h1>
-            <h1 th:unless="${ehOrganizador}" class="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">Detalhes do Usuário</h1>
-            <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-300">Consulte os dados da conta, os eventos vinculados e o histórico registrado na plataforma.</p>
+    <div class="seplag-page-head">
+        <div class="seplag-page-head__copy">
+            <p class="seplag-eyebrow">Super Administração · Conta</p>
+            <h1 th:if="${ehOrganizador}">Detalhes do Organizador</h1>
+            <h1 th:unless="${ehOrganizador}">Detalhes do Usuário</h1>
+            <p>Consulte os dados da conta, os eventos vinculados e o histórico registrado na plataforma.</p>
         </div>
-        <div class="flex flex-wrap gap-2">
-        <a th:href="${ehOrganizador} ? @{/super-admin/organizadores} : @{/super-admin/usuarios}" class="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#365477] bg-[#14294A] px-3 py-2 text-sm font-semibold text-slate-200 transition hover:border-[#60A5FA] hover:text-white">
-            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Voltar
-        </a>
+        <div class="seplag-page-head__actions">
+            <a th:href="${ehOrganizador} ? @{/super-admin/organizadores} : @{/super-admin/usuarios}" class="seplag-btn seplag-btn-secondary">
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Voltar
+            </a>
         </div>
     </div>
 
     <!-- Mensagens de feedback -->
-    <div th:if="${sucesso}" role="status" class="mb-6 rounded-xl border border-emerald-400/25 border-l-4 border-l-emerald-400 bg-emerald-400/10 p-4 text-sm text-emerald-200">
-        <i class="fa-solid fa-circle-check mr-2"></i>
-        <span th:text="${sucesso}">Operação realizada com sucesso.</span>
+    <div class="seplag-flash" th:if="${sucesso}">
+        <div class="seplag-alert seplag-alert--success" role="status">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            <span th:text="${sucesso}">Operação realizada com sucesso.</span>
+        </div>
     </div>
-    <div th:if="${erro}" role="alert" class="mb-6 rounded-xl border border-rose-400/25 border-l-4 border-l-rose-400 bg-rose-400/10 p-4 text-sm text-rose-200" th:text="${erro}"></div>
+    <div class="seplag-flash" th:if="${erro}">
+        <div class="seplag-alert seplag-alert--error" role="alert">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            <span th:text="${erro}">Erro ao processar a operação.</span>
+        </div>
+    </div>
 
-    <section class="mb-6 overflow-hidden rounded-2xl border border-[#2D4A73] bg-[#14294A] shadow-xl shadow-black/10" aria-labelledby="conta-heading">
-        <div class="flex flex-col gap-4 border-b border-[#2D4A73] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <div class="flex min-w-0 items-center gap-4">
-                <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[#3B5B80] bg-[#00457C]/35 text-lg text-[#BFDBFE]" aria-hidden="true"><i class="fa-solid fa-user-tie"></i></span>
-                <div class="min-w-0">
-                    <h2 id="conta-heading" class="truncate text-xl font-bold text-white" th:text="${usuario.nome}">Nome do usuário</h2>
-                    <p class="mt-1 break-all text-sm text-slate-300" th:text="${usuario.email}">usuario@email.com</p>
+    <!-- Resumo da conta -->
+    <section class="seplag-card" aria-labelledby="conta-heading">
+        <div class="seplag-card__header">
+            <div class="seplag-admin-callout__body">
+                <span class="seplag-admin-avatar seplag-admin-avatar--lg" aria-hidden="true">
+                    <i class="fa-solid fa-user-tie"></i>
+                </span>
+                <div>
+                    <h2 class="seplag-card__title" id="conta-heading" th:text="${usuario.nome}">Nome do usuário</h2>
+                    <p class="seplag-card__hint" th:text="${usuario.email}">usuario@email.com</p>
                 </div>
             </div>
-            <div class="flex flex-wrap items-center gap-2">
-                <span th:if="${usuario.ativo}" class="inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1.5 text-xs font-semibold text-emerald-300"><span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>Ativo</span>
-                <span th:unless="${usuario.ativo}" class="inline-flex items-center gap-2 rounded-full border border-slate-400/25 bg-slate-400/10 px-3 py-1.5 text-xs font-semibold text-slate-300"><span class="h-1.5 w-1.5 rounded-full bg-slate-400"></span>Inativo</span>
-                <span th:if="${usuario.perfil.name() == 'ROLE_ORGANIZADOR'}" class="rounded-full border border-amber-300/25 bg-amber-300/10 px-3 py-1.5 text-xs font-semibold text-amber-200">ROLE_ORGANIZADOR</span>
-                <span th:if="${usuario.perfil.name() == 'ROLE_SUPER_ADMIN'}" class="rounded-full border border-blue-300/25 bg-blue-300/10 px-3 py-1.5 text-xs font-semibold text-blue-200">ROLE_SUPER_ADMIN</span>
-                <span th:if="${usuario.perfil.name() == 'ROLE_PARTICIPANTE'}" class="rounded-full border border-slate-300/20 bg-slate-300/10 px-3 py-1.5 text-xs font-semibold text-slate-200">ROLE_PARTICIPANTE</span>
-                <span th:if="${usuario.perfil.name() == 'ROLE_AVALIADOR'}" class="rounded-full border border-violet-300/25 bg-violet-300/10 px-3 py-1.5 text-xs font-semibold text-violet-200">ROLE_AVALIADOR</span>
+            <div class="seplag-page-head__actions">
+                <span th:if="${usuario.ativo}" class="seplag-badge seplag-badge--success">Ativo</span>
+                <span th:unless="${usuario.ativo}" class="seplag-badge seplag-badge--neutral">Inativo</span>
+                <span th:if="${usuario.perfil.name() == 'ROLE_ORGANIZADOR'}" class="seplag-badge seplag-badge--warning">ROLE_ORGANIZADOR</span>
+                <span th:if="${usuario.perfil.name() == 'ROLE_SUPER_ADMIN'}" class="seplag-badge seplag-badge--role">ROLE_SUPER_ADMIN</span>
+                <span th:if="${usuario.perfil.name() == 'ROLE_PARTICIPANTE'}" class="seplag-badge seplag-badge--info">ROLE_PARTICIPANTE</span>
+                <span th:if="${usuario.perfil.name() == 'ROLE_AVALIADOR'}" class="seplag-badge seplag-badge--role">ROLE_AVALIADOR</span>
             </div>
         </div>
-        <dl class="grid grid-cols-1 gap-4 px-5 py-5 sm:grid-cols-2 sm:px-6 lg:grid-cols-3">
-            <div class="rounded-xl border border-[#2D4A73] bg-[#0B1F3A]/55 p-4">
-                <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">Data de cadastro</dt>
-                <dd th:if="${usuario.dataCriacao != null}" class="mt-1.5 text-sm font-semibold text-slate-100" th:text="${#temporals.format(usuario.dataCriacao, 'dd/MM/yyyy HH:mm')}">01/01/2026</dd>
-                <dd th:unless="${usuario.dataCriacao != null}" class="mt-1.5 text-sm text-slate-400">Não informada</dd>
-            </div>
-            <div class="rounded-xl border border-[#2D4A73] bg-[#0B1F3A]/55 p-4">
-                <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">Eventos organizados</dt>
-                <dd class="mt-1.5 text-sm font-semibold text-slate-100" th:text="${totalEventosOrganizados}">0</dd>
-            </div>
-            <div th:if="${usuario.dataAtualizacao != null}" class="rounded-xl border border-[#2D4A73] bg-[#0B1F3A]/55 p-4">
-                <dt class="text-xs font-semibold uppercase tracking-wide text-slate-400">Última atualização</dt>
-                <dd class="mt-1.5 text-sm font-semibold text-slate-100" th:text="${#temporals.format(usuario.dataAtualizacao, 'dd/MM/yyyy HH:mm')}">01/01/2026</dd>
-            </div>
-        </dl>
+        <div class="seplag-card__body">
+            <dl class="seplag-detail-grid">
+                <div class="seplag-detail">
+                    <dt>Data de cadastro</dt>
+                    <dd th:if="${usuario.dataCriacao != null}" th:text="${#temporals.format(usuario.dataCriacao, 'dd/MM/yyyy HH:mm')}">01/01/2026</dd>
+                    <dd th:unless="${usuario.dataCriacao != null}" class="seplag-muted">Não informada</dd>
+                </div>
+                <div class="seplag-detail">
+                    <dt>Eventos organizados</dt>
+                    <dd th:text="${totalEventosOrganizados}">0</dd>
+                </div>
+                <div th:if="${usuario.dataAtualizacao != null}" class="seplag-detail">
+                    <dt>Última atualização</dt>
+                    <dd th:text="${#temporals.format(usuario.dataAtualizacao, 'dd/MM/yyyy HH:mm')}">01/01/2026</dd>
+                </div>
+            </dl>
+        </div>
     </section>
 
-    <section class="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Resumo da conta">
-        <article class="rounded-xl border border-[#2D4A73] bg-[#14294A] p-4">
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Eventos organizados</p>
-            <p class="mt-2 text-2xl font-bold text-white" th:text="${totalEventosOrganizados}">0</p>
-            <p class="mt-1 text-xs text-slate-400">Vinculados a esta conta</p>
-        </article>
-        <article class="rounded-xl border border-[#2D4A73] bg-[#14294A] p-4">
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Participantes inscritos</p>
-            <p class="mt-2 text-2xl font-bold text-white" th:text="${inscricoesValidasNosEventos}">0</p>
-            <p class="mt-1 text-xs text-slate-400">Inscrições válidas nos eventos</p>
-        </article>
-        <article class="rounded-xl border border-[#2D4A73] bg-[#14294A] p-4">
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Eventos ativos ou futuros</p>
-            <p class="mt-2 text-2xl font-bold text-white" th:text="${eventosAtivosOuFuturos}">0</p>
-            <p class="mt-1 text-xs text-slate-400">Publicados e ainda não encerrados</p>
-        </article>
-        <article class="rounded-xl border border-[#2D4A73] bg-[#14294A] p-4">
-            <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Histórico de participação</p>
-            <p class="mt-2 text-2xl font-bold text-white" th:text="${totalParticipacoes}">0</p>
-            <p class="mt-1 text-xs text-slate-400">Participações confirmadas</p>
-        </article>
+    <!-- Resumo numérico -->
+    <section class="seplag-stats seplag-stats--4" aria-label="Resumo da conta">
+        <div class="seplag-stat">
+            <p class="seplag-stat__label">Eventos organizados</p>
+            <p class="seplag-stat__value" th:text="${totalEventosOrganizados}">0</p>
+            <p class="seplag-hint">Vinculados a esta conta</p>
+        </div>
+        <div class="seplag-stat">
+            <p class="seplag-stat__label">Participantes inscritos</p>
+            <p class="seplag-stat__value" th:text="${inscricoesValidasNosEventos}">0</p>
+            <p class="seplag-hint">Inscrições válidas nos eventos</p>
+        </div>
+        <div class="seplag-stat">
+            <p class="seplag-stat__label">Eventos ativos ou futuros</p>
+            <p class="seplag-stat__value" th:text="${eventosAtivosOuFuturos}">0</p>
+            <p class="seplag-hint">Publicados e ainda não encerrados</p>
+        </div>
+        <div class="seplag-stat">
+            <p class="seplag-stat__label">Histórico de participação</p>
+            <p class="seplag-stat__value" th:text="${totalParticipacoes}">0</p>
+            <p class="seplag-hint">Participações confirmadas</p>
+        </div>
     </section>
 
     <!-- Seção de ações administrativas -->
-    <section class="mb-8 overflow-hidden rounded-2xl border border-[#2D4A73] bg-[#14294A]">
-        <div class="border-b border-[#2D4A73] px-5 py-4 sm:px-6">
-            <h2 class="text-lg font-bold text-white">Ações administrativas</h2>
-            <p class="mt-1 text-sm text-slate-400">Ações disponíveis para a gestão desta conta.</p>
+    <section class="seplag-card" aria-labelledby="acoes-heading">
+        <div class="seplag-card__header">
+            <div>
+                <h2 class="seplag-card__title" id="acoes-heading">Ações administrativas</h2>
+                <p class="seplag-card__hint">Ações disponíveis para a gestão desta conta.</p>
+            </div>
         </div>
-        <div class="grid grid-cols-1 gap-3 p-5 md:grid-cols-2 xl:grid-cols-3 sm:p-6">
+        <div class="seplag-card__body">
+            <div class="seplag-admin-actions">
 
-            <!-- Desativar usuário -->
-            <div th:if="${usuario.ativo and !ehPropriaConta}">
-                <form th:action="@{/super-admin/usuarios/{id}/desativar(id=${usuario.id})}" method="POST"
+                <!-- Desativar usuário -->
+                <form th:if="${usuario.ativo and !ehPropriaConta}" th:action="@{/super-admin/usuarios/{id}/desativar(id=${usuario.id})}" method="POST"
                       onsubmit="return confirm('Tem certeza que deseja desativar este usuário? O usuário não poderá acessar a plataforma enquanto estiver inativo.');"
-                      class="h-full rounded-xl border border-rose-400/25 bg-[#0B1F3A]/60 p-4">
-                    <div class="flex items-start gap-3">
-                        <i class="fa-solid fa-user-minus mt-0.5 text-rose-300"></i>
+                      class="seplag-admin-action seplag-admin-action--danger">
+                    <div class="seplag-admin-action__head">
+                        <i class="fa-solid fa-user-minus" aria-hidden="true"></i>
                         <div>
-                            <h3 class="text-sm font-bold text-white">Desativar usuário</h3>
-                            <p class="mt-1 text-xs leading-5 text-slate-400">A conta ficará sem acesso à plataforma até ser reativada.</p>
+                            <h3>Desativar usuário</h3>
+                            <p>A conta ficará sem acesso à plataforma até ser reativada.</p>
                         </div>
                     </div>
-                    <button type="submit" class="mt-4 min-h-10 w-full rounded-lg border border-rose-300/25 bg-rose-500/15 px-4 py-2 text-sm font-semibold text-rose-200 transition hover:bg-rose-500/25">
-                        Confirmar desativação
-                    </button>
+                    <button type="submit" class="seplag-btn seplag-btn-danger">Confirmar desativação</button>
                 </form>
-            </div>
-            <div th:if="${usuario.ativo and ehPropriaConta}" class="rounded-xl border border-[#365477] bg-[#0B1F3A]/60 p-4">
-                <div class="flex items-start gap-3">
-                    <i class="fa-solid fa-user-minus mt-0.5 text-slate-500"></i>
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-200">Desativar usuário</h3>
-                        <p class="mt-1 text-xs text-slate-400">Você não pode desativar a própria conta.</p>
+                <div th:if="${usuario.ativo and ehPropriaConta}" class="seplag-admin-action">
+                    <div class="seplag-admin-action__head">
+                        <i class="fa-solid fa-user-minus" aria-hidden="true"></i>
+                        <div>
+                            <h3>Desativar usuário</h3>
+                            <p>Você não pode desativar a própria conta.</p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Reativar usuário -->
-            <div th:if="${!usuario.ativo}">
-                <form th:action="@{/super-admin/usuarios/{id}/reativar(id=${usuario.id})}" method="POST"
+                <!-- Reativar usuário -->
+                <form th:if="${!usuario.ativo}" th:action="@{/super-admin/usuarios/{id}/reativar(id=${usuario.id})}" method="POST"
                       onsubmit="return confirm('Tem certeza que deseja reativar este usuário? O usuário poderá acessar a plataforma novamente.');"
-                      class="h-full rounded-xl border border-emerald-400/25 bg-[#0B1F3A]/60 p-4">
-                    <div class="flex items-start gap-3">
-                        <i class="fa-solid fa-user-plus mt-0.5 text-emerald-300"></i>
+                      class="seplag-admin-action seplag-admin-action--success">
+                    <div class="seplag-admin-action__head">
+                        <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
                         <div>
-                            <h3 class="text-sm font-bold text-white">Reativar usuário</h3>
-                            <p class="mt-1 text-xs leading-5 text-slate-400">O usuário poderá acessar a plataforma novamente.</p>
+                            <h3>Reativar usuário</h3>
+                            <p>O usuário poderá acessar a plataforma novamente.</p>
                         </div>
                     </div>
-                    <button type="submit" class="mt-4 min-h-10 w-full rounded-lg border border-emerald-300/25 bg-emerald-500/15 px-4 py-2 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/25">
-                        Confirmar reativação
-                    </button>
+                    <button type="submit" class="seplag-btn seplag-btn-primary">Confirmar reativação</button>
                 </form>
-            </div>
 
-            <!-- Remover acesso de organizador -->
-            <div th:if="${usuario.perfil.name() == 'ROLE_ORGANIZADOR' and !ehPropriaConta}">
-                <form th:action="@{/super-admin/usuarios/{id}/remover-organizador(id=${usuario.id})}" method="POST"
+                <!-- Remover acesso de organizador -->
+                <form th:if="${usuario.perfil.name() == 'ROLE_ORGANIZADOR' and !ehPropriaConta}" th:action="@{/super-admin/usuarios/{id}/remover-organizador(id=${usuario.id})}" method="POST"
                       onsubmit="return confirm('Revogar acesso de organizador? O usuário voltará para ROLE_PARTICIPANTE. Os eventos, inscrições, presenças, certificados e o histórico permanecerão.');"
-                      class="h-full rounded-xl border border-amber-300/25 bg-[#0B1F3A]/60 p-4">
-                    <div class="flex items-start gap-3">
-                        <i class="fa-solid fa-user-lock mt-0.5 text-amber-300"></i>
+                      class="seplag-admin-action seplag-admin-action--warning">
+                    <div class="seplag-admin-action__head">
+                        <i class="fa-solid fa-user-lock" aria-hidden="true"></i>
                         <div>
-                            <h3 class="text-sm font-bold text-white">Revogar acesso de organizador</h3>
-                            <p class="mt-1 text-xs leading-5 text-slate-400">O perfil voltará para participante. Eventos, inscrições, presenças, certificados e histórico serão mantidos.</p>
+                            <h3>Revogar acesso de organizador</h3>
+                            <p>O perfil voltará para participante. Eventos, inscrições, presenças, certificados e histórico serão mantidos.</p>
                         </div>
                     </div>
-                    <button type="submit" class="mt-4 min-h-10 w-full rounded-lg border border-amber-300/25 bg-amber-400/15 px-4 py-2 text-sm font-semibold text-amber-100 transition hover:bg-amber-400/25">
-                        Confirmar revogação
-                    </button>
+                    <button type="submit" class="seplag-btn seplag-btn-secondary">Confirmar revogação</button>
                 </form>
-            </div>
 
-            <!-- Promover para Super Admin -->
-            <div th:if="${usuario.perfil.name() != 'ROLE_SUPER_ADMIN' and !ehPropriaConta}">
-                <form th:action="@{/super-admin/usuarios/{id}/promover-super-admin(id=${usuario.id})}" method="POST"
+                <!-- Promover para Super Admin -->
+                <form th:if="${usuario.perfil.name() != 'ROLE_SUPER_ADMIN' and !ehPropriaConta}" th:action="@{/super-admin/usuarios/{id}/promover-super-admin(id=${usuario.id})}" method="POST"
                       onsubmit="return confirm('Promover este usuário para SUPER_ADMIN? A conta manterá o mesmo e-mail, histórico, inscrições, eventos e certificados. Esta ação concede acesso total à Super Administração.');"
-                      class="h-full rounded-xl border border-blue-300/25 bg-[#0B1F3A]/60 p-4">
-                    <div class="flex items-start gap-3">
-                        <i class="fa-solid fa-crown mt-0.5 text-blue-300"></i>
+                      class="seplag-admin-action seplag-admin-action--violet">
+                    <div class="seplag-admin-action__head">
+                        <i class="fa-solid fa-crown" aria-hidden="true"></i>
                         <div>
-                            <h3 class="text-sm font-bold text-white">Promover para Super Admin</h3>
-                            <p class="mt-1 text-xs leading-5 text-slate-400">Altera o perfil desta conta para ROLE_SUPER_ADMIN sem criar uma nova conta. E-mail, histórico, inscrições, eventos e certificados são preservados.</p>
+                            <h3>Promover para Super Admin</h3>
+                            <p>Altera o perfil desta conta para ROLE_SUPER_ADMIN sem criar uma nova conta. E-mail, histórico, inscrições, eventos e certificados são preservados.</p>
                         </div>
                     </div>
-                    <button type="submit" class="mt-4 min-h-10 w-full rounded-lg border border-blue-300/25 bg-blue-500/15 px-4 py-2 text-sm font-semibold text-blue-100 transition hover:bg-blue-500/25">
-                        Confirmar promoção
-                    </button>
+                    <button type="submit" class="seplag-btn seplag-btn-primary">Confirmar promoção</button>
                 </form>
-            </div>
 
-            <!-- Mensagem quando não há ações disponíveis -->
-            <div th:if="${!usuario.ativo and ehPropriaConta}" class="rounded-xl border border-[#365477] bg-[#0B1F3A]/60 p-4 md:col-span-2 xl:col-span-3">
-                <div class="flex items-start gap-3">
-                    <i class="fa-solid fa-info-circle mt-0.5 text-slate-500"></i>
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-200">Esta é a sua própria conta</h3>
-                        <p class="mt-1 text-xs text-slate-400">Algumas ações não estão disponíveis para a própria conta por segurança.</p>
+                <!-- Mensagem quando não há ações disponíveis -->
+                <div th:if="${!usuario.ativo and ehPropriaConta}" class="seplag-admin-action">
+                    <div class="seplag-admin-action__head">
+                        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                        <div>
+                            <h3>Esta é a sua própria conta</h3>
+                            <p>Algumas ações não estão disponíveis para a própria conta por segurança.</p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
+            </div>
         </div>
     </section>
 
     <!-- Histórico de Participação -->
-    <section class="mb-8 overflow-hidden rounded-2xl border border-[#2D4A73] bg-[#14294A]">
-        <div class="border-b border-[#2D4A73] px-5 py-4 sm:px-6">
-            <h2 class="text-lg font-bold text-white">Histórico de participação</h2>
-            <p class="mt-1 text-sm text-slate-400">Eventos e cursos nos quais o usuário efetivamente participou.</p>
-        </div>
-        <div class="p-4 sm:p-6">
-            <div th:if="${#lists.isEmpty(historico)}" class="text-center py-8">
-                <i class="fa-solid fa-calendar-times text-[#475569] text-2xl mb-3"></i>
-                <p class="text-sm text-[#94A3B8]">Este usuário ainda não possui participações registradas.</p>
+    <section class="seplag-card" aria-labelledby="historico-heading">
+        <div class="seplag-card__header">
+            <div>
+                <h2 class="seplag-card__title" id="historico-heading">Histórico de participação</h2>
+                <p class="seplag-card__hint">Eventos e cursos nos quais o usuário efetivamente participou.</p>
             </div>
-            <div th:if="${!#lists.isEmpty(historico)}" class="space-y-4">
-                <article th:each="item : ${historico}" class="rounded-xl border border-[#2D4A73] bg-[#0B1F3A]/60 p-4 transition-colors hover:border-[#52739A] sm:p-5">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div class="flex-1 min-w-0">
-                            <h3 class="text-sm font-bold text-white leading-tight" th:text="${item.tituloEvento}">Curso de Java</h3>
-                            <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
+        </div>
+        <div class="seplag-card__body">
+            <div th:if="${#lists.isEmpty(historico)}" class="seplag-empty">
+                <i class="fa-solid fa-calendar-times" aria-hidden="true"></i>
+                <strong>Nenhuma participação registrada</strong>
+                <p>Este usuário ainda não possui participações registradas.</p>
+            </div>
+            <div th:if="${!#lists.isEmpty(historico)}" class="seplag-stack">
+                <article th:each="item : ${historico}" class="seplag-item-card">
+                    <div class="seplag-item-card__head">
+                        <div>
+                            <h3 class="seplag-item-card__title" th:text="${item.tituloEvento}">Curso de Java</h3>
+                            <div class="seplag-item-card__meta">
                                 <span th:if="${item.dataInicio != null}" th:text="${#temporals.format(item.dataInicio, 'dd/MM/yyyy')}">10/10/2026</span>
                                 <span th:if="${item.dataInicio != null and item.dataTermino != null}" aria-hidden="true">a</span>
                                 <span th:if="${item.dataTermino != null}" th:text="${#temporals.format(item.dataTermino, 'dd/MM/yyyy')}">12/10/2026</span>
-                                <span th:if="${item.modalidade != null}" class="rounded-md border border-[#365477] px-2 py-1" th:text="${item.modalidade}">PRESENCIAL</span>
+                                <span th:if="${item.modalidade != null}" class="seplag-tag" th:text="${item.modalidade}">PRESENCIAL</span>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <p class="text-xs font-medium uppercase tracking-wider text-slate-500">Participação</p>
-                            <span class="mt-1 inline-flex rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1 text-xs font-semibold text-emerald-300"
-                                  th:text="${item.statusParticipacao}">Presente</span>
+                        <div>
+                            <p class="seplag-card__hint">Participação</p>
+                            <span class="seplag-badge seplag-badge--success" th:text="${item.statusParticipacao}">Presente</span>
                         </div>
                     </div>
-                    <div class="mt-4 grid grid-cols-1 gap-4 border-t border-[#2D4A73] pt-4 sm:grid-cols-2">
+                    <div class="seplag-item-card__footer">
                         <div>
-                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Frequência</p>
-                            <p th:if="${item.percentualFrequencia != null}"
-                               class="text-sm font-semibold text-white"
-                               th:text="${item.percentualFrequencia} + '%'">100%</p>
-                            <p th:unless="${item.percentualFrequencia != null}"
-                                class="text-sm font-semibold text-slate-500">—</p>
+                            <p class="seplag-card__hint">Frequência</p>
+                            <p th:if="${item.percentualFrequencia != null}" class="seplag-table__title" th:text="${item.percentualFrequencia} + '%'">100%</p>
+                            <p th:unless="${item.percentualFrequencia != null}" class="seplag-muted">—</p>
                         </div>
-                        <div class="flex flex-wrap items-center gap-2">
-                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Certificado</span>
-                            <div class="flex items-center gap-2 w-full md:w-auto">
-                                <span th:if="${item.certificadoDisponivel}"
-                                      class="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1 text-xs font-semibold text-emerald-300">Disponível</span>
-                                <span th:unless="${item.certificadoDisponivel}"
-                                      class="rounded-full border border-slate-500/25 bg-slate-500/10 px-2.5 py-1 text-xs font-semibold text-slate-400">Não disponível</span>
-                                <a th:if="${item.certificadoDisponivel}"
-                                   th:href="@{/super-admin/usuarios/{usuarioId}/inscricoes/{inscricaoId}/certificado(usuarioId=${usuario.id}, inscricaoId=${item.inscricaoId})}"
-                                   class="inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border border-[#4B7097] bg-[#00457C]/50 px-3 py-1.5 text-xs font-semibold text-blue-100 transition hover:bg-[#00457C]">
-                                    <i class="fa-solid fa-download" aria-hidden="true"></i> Baixar certificado
-                                </a>
-                            </div>
+                        <div class="seplag-row-actions">
+                            <span class="seplag-card__hint">Certificado</span>
+                            <span th:if="${item.certificadoDisponivel}" class="seplag-badge seplag-badge--success">Disponível</span>
+                            <span th:unless="${item.certificadoDisponivel}" class="seplag-badge seplag-badge--neutral">Não disponível</span>
+                            <a th:if="${item.certificadoDisponivel}"
+                               th:href="@{/super-admin/usuarios/{usuarioId}/inscricoes/{inscricaoId}/certificado(usuarioId=${usuario.id}, inscricaoId=${item.inscricaoId})}"
+                               class="seplag-btn seplag-btn-secondary seplag-btn--sm">
+                                <i class="fa-solid fa-download" aria-hidden="true"></i> Baixar certificado
+                            </a>
                         </div>
                     </div>
                 </article>
@@ -256,43 +247,49 @@
         </div>
     </section>
 
-    <section class="mb-8 overflow-hidden rounded-2xl border border-[#2D4A73] bg-[#14294A]" aria-labelledby="eventos-heading">
-        <div class="flex flex-col gap-1 border-b border-[#2D4A73] px-5 py-4 sm:flex-row sm:items-end sm:justify-between sm:px-6">
+    <!-- Eventos organizados -->
+    <section class="seplag-card" aria-labelledby="eventos-heading">
+        <div class="seplag-card__header">
             <div>
-                <h2 id="eventos-heading" class="text-lg font-bold text-white">Eventos organizados</h2>
-                <p class="mt-1 text-sm text-slate-400">Eventos vinculados a esta conta, incluindo registros históricos.</p>
+                <h2 class="seplag-card__title" id="eventos-heading">Eventos organizados</h2>
+                <p class="seplag-card__hint">Eventos vinculados a esta conta, incluindo registros históricos.</p>
             </div>
-            <span class="mt-2 w-fit rounded-full border border-[#365477] bg-[#0B1F3A] px-3 py-1 text-xs font-medium text-slate-300 sm:mt-0">
-                Total: <span th:text="${totalEventosOrganizados}">0</span>
+            <span class="seplag-count-chip">
+                <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+                Total: <strong th:text="${totalEventosOrganizados}">0</strong>
             </span>
         </div>
-        <div class="p-4 sm:p-6">
-            <div th:if="${#lists.isEmpty(eventosOrganizados)}" class="rounded-xl border border-dashed border-[#365477] px-5 py-10 text-center">
-                <i class="fa-solid fa-calendar-days text-2xl text-slate-500" aria-hidden="true"></i>
-                <p class="mt-3 text-sm text-slate-300">Esta conta ainda não possui eventos organizados.</p>
+        <div class="seplag-card__body">
+            <div th:if="${#lists.isEmpty(eventosOrganizados)}" class="seplag-empty">
+                <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+                <strong>Nenhum evento organizado</strong>
+                <p>Esta conta ainda não possui eventos organizados.</p>
             </div>
-            <div th:unless="${#lists.isEmpty(eventosOrganizados)}" class="space-y-3">
-                <article th:each="item : ${eventosOrganizados}" class="grid grid-cols-1 gap-4 rounded-xl border border-[#2D4A73] bg-[#0B1F3A]/60 p-4 transition-colors hover:border-[#52739A] sm:p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
-                    <div class="min-w-0">
-                        <h3 class="break-words text-base font-semibold text-white" th:text="${item.titulo}">Evento SEPLAG</h3>
-                        <div class="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-400">
-                            <span th:if="${item.dataInicio != null}" class="inline-flex items-center gap-1.5"><i class="fa-regular fa-calendar" aria-hidden="true"></i><span th:text="${#temporals.format(item.dataInicio, 'dd/MM/yyyy')}">10/10/2026</span></span>
-                            <span th:if="${item.dataInicio != null and item.dataTermino != null}" aria-hidden="true">–</span>
-                            <span th:if="${item.dataTermino != null}" th:text="${#temporals.format(item.dataTermino, 'dd/MM/yyyy')}">12/10/2026</span>
-                            <span th:if="${item.modalidade != null}" class="rounded-md border border-[#365477] px-2 py-1" th:text="${item.modalidade}">PRESENCIAL</span>
-                            <span th:if="${item.nicho != null}" class="rounded-md border border-[#365477] px-2 py-1" th:text="${item.nicho}">TECNOLOGIA</span>
-                            <span th:if="${item.cargaHoraria != null}" class="rounded-md border border-[#365477] px-2 py-1" th:text="|${item.cargaHoraria}h|">8h</span>
+            <div th:unless="${#lists.isEmpty(eventosOrganizados)}" class="seplag-stack">
+                <article th:each="item : ${eventosOrganizados}" class="seplag-item-card">
+                    <div class="seplag-item-card__head">
+                        <div>
+                            <h3 class="seplag-item-card__title" th:text="${item.titulo}">Evento SEPLAG</h3>
+                            <div class="seplag-item-card__meta">
+                                <span th:if="${item.dataInicio != null}"><i class="fa-regular fa-calendar" aria-hidden="true"></i> <span th:text="${#temporals.format(item.dataInicio, 'dd/MM/yyyy')}">10/10/2026</span></span>
+                                <span th:if="${item.dataInicio != null and item.dataTermino != null}" aria-hidden="true">–</span>
+                                <span th:if="${item.dataTermino != null}" th:text="${#temporals.format(item.dataTermino, 'dd/MM/yyyy')}">12/10/2026</span>
+                                <span th:if="${item.modalidade != null}" class="seplag-tag" th:text="${item.modalidade}">PRESENCIAL</span>
+                                <span th:if="${item.nicho != null}" class="seplag-tag" th:text="${item.nicho}">TECNOLOGIA</span>
+                                <span th:if="${item.cargaHoraria != null}" class="seplag-tag" th:text="|${item.cargaHoraria}h|">8h</span>
+                            </div>
+                        </div>
+                        <div class="seplag-row-actions">
+                            <span th:if="${item.status == 'PUBLICADO'}" class="seplag-badge seplag-badge--success">PUBLICADO</span>
+                            <span th:if="${item.status == 'ENCERRADO'}" class="seplag-badge seplag-badge--neutral">ENCERRADO</span>
+                            <span th:if="${item.status == 'CANCELADO'}" class="seplag-badge seplag-badge--danger">CANCELADO</span>
+                            <span th:if="${item.status == 'RASCUNHO'}" class="seplag-badge seplag-badge--warning">RASCUNHO</span>
                         </div>
                     </div>
-                    <div class="flex flex-wrap items-center gap-3 border-t border-[#2D4A73] pt-3 md:justify-end md:border-0 md:pt-0">
-                        <span th:if="${item.status == 'PUBLICADO'}" class="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1 text-xs font-semibold text-emerald-300">PUBLICADO</span>
-                        <span th:if="${item.status == 'ENCERRADO'}" class="rounded-full border border-slate-400/25 bg-slate-400/10 px-2.5 py-1 text-xs font-semibold text-slate-300">ENCERRADO</span>
-                        <span th:if="${item.status == 'CANCELADO'}" class="rounded-full border border-rose-400/25 bg-rose-400/10 px-2.5 py-1 text-xs font-semibold text-rose-300">CANCELADO</span>
-                        <span th:if="${item.status == 'RASCUNHO'}" class="rounded-full border border-blue-300/25 bg-blue-300/10 px-2.5 py-1 text-xs font-semibold text-blue-200">RASCUNHO</span>
-                        <span class="inline-flex items-center gap-2 rounded-lg border border-[#365477] bg-[#14294A] px-3 py-2 text-xs text-slate-300">
-                            <i class="fa-solid fa-users text-[#93C5FD]" aria-hidden="true"></i>
-                            <span>Inscrições válidas</span>
-                            <strong class="text-white" th:text="${item.totalInscritos}">0</strong>
+                    <div class="seplag-item-card__footer">
+                        <span class="seplag-count-chip">
+                            <i class="fa-solid fa-users" aria-hidden="true"></i>
+                            Inscrições válidas: <strong th:text="${item.totalInscritos}">0</strong>
                         </span>
                     </div>
                 </article>
@@ -302,7 +299,7 @@
 
 </main>
 
-<footer class="mt-auto border-t border-[#2D4A73] bg-[#08182B] px-4 py-4 text-center text-xs text-slate-500">
+<footer class="seplag-footer">
     &copy; 2026 Secretaria de Estado de Planejamento e Gestão de Mato Grosso. Todos os direitos reservados.
 </footer>
 

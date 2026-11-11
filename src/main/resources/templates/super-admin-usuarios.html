@@ -1,233 +1,233 @@
 <!DOCTYPE html>
-<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security6">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security6">
+<head th:replace="~{fragments/seplag-ui :: head('Gerenciamento de Usuários')}">
     <title>Gerenciamento de Usuários | SEPLAG-MT</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Inter', sans-serif; }</style>
-    <link rel="stylesheet" th:href="@{/css/seplag-ui-v2.css}">
 </head>
-<body class="v2 bg-[#0B1F3A] min-h-screen flex flex-col text-slate-200">
+<body class="v2 seplag-admin-body">
+
+<a class="seplag-skip-link" href="#conteudo">Ir para o conteúdo</a>
 
 <header th:replace="~{fragments/super-admin-header :: header('usuarios')}"></header>
 
-<main class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 lg:py-10 flex-grow">
+<main class="seplag-content" id="conteudo">
 
     <!-- Cabeçalho da página -->
-    <div class="mb-10">
-        <p class="text-xs font-semibold uppercase tracking-widest text-[#FDB813]">Super Administração</p>
-        <h1 class="mt-1 text-3xl font-bold text-white tracking-tight">Gerenciamento de Usuários</h1>
-        <p class="mt-2 text-sm text-[#94A3B8]">Consulte e filtre todos os usuários cadastrados na plataforma.</p>
+    <div class="seplag-page-head">
+        <div class="seplag-page-head__copy">
+            <p class="seplag-eyebrow">Super Administração</p>
+            <h1>Gerenciamento de Usuários</h1>
+            <p>Consulte e filtre todos os usuários cadastrados na plataforma.</p>
+        </div>
     </div>
 
-    <section aria-labelledby="solicitacoes-title" class="mb-8 flex flex-col gap-4 rounded-xl border border-[#2D4A73] bg-[#14294A] p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div class="flex items-start gap-4">
-            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-[#008A4B]/30 bg-[#008A4B]/10 text-[#86EFAC]">
-                <i class="fa-solid fa-clipboard-check" aria-hidden="true"></i>
+    <section class="seplag-admin-callout" aria-labelledby="solicitacoes-title">
+        <div class="seplag-admin-callout__body">
+            <span class="seplag-admin-callout__icon" aria-hidden="true">
+                <i class="fa-solid fa-clipboard-check"></i>
             </span>
             <div>
-                <h2 id="solicitacoes-title" class="font-semibold text-white">Solicitações de Organizador</h2>
-                <p class="mt-1 text-sm text-[#94A3B8]">Acesse a fila de solicitações aguardando aprovação da administração.</p>
+                <h2 id="solicitacoes-title">Solicitações de Organizador</h2>
+                <p>Acesse a fila de solicitações aguardando aprovação da administração.</p>
             </div>
         </div>
-        <a th:href="@{/super-admin/solicitacoes}"
-           class="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-[#008A4B]/40 bg-[#008A4B]/15 px-4 py-2 text-sm font-semibold text-[#A7F3D0] transition-colors hover:border-[#008A4B] hover:bg-[#008A4B]/25 hover:text-white">
-            Ver solicitações <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true"></i>
+        <a th:href="@{/super-admin/solicitacoes}" class="seplag-btn seplag-btn-primary">
+            Ver solicitações <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
         </a>
     </section>
 
     <!-- Mensagens de feedback -->
-    <div th:if="${sucesso}" role="status" class="mb-6 p-4 rounded-xl border border-[#008A4B]/30 bg-[#008A4B]/10 text-sm text-[#86EFAC]">
-        <i class="fa-solid fa-circle-check mr-2"></i>
-        <span th:text="${sucesso}">Operação realizada com sucesso.</span>
+    <div class="seplag-flash" th:if="${sucesso}">
+        <div class="seplag-alert seplag-alert--success" role="status">
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+            <span th:text="${sucesso}">Operação realizada com sucesso.</span>
+        </div>
     </div>
-    <div th:if="${erro}" role="alert" class="mb-6 p-4 rounded-xl border border-[#DC2626]/30 bg-[#DC2626]/10 text-sm text-[#FCA5A5]" th:text="${erro}"></div>
+    <div class="seplag-flash" th:if="${erro}">
+        <div class="seplag-alert seplag-alert--error" role="alert">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            <span th:text="${erro}">Erro ao processar a solicitação.</span>
+        </div>
+    </div>
 
     <!-- Cards de estatísticas -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
-        <div class="bg-[#14294A] rounded-xl border border-[#2D4A73] p-5 hover:border-[#008A4B]/50 transition-colors duration-200">
-            <div class="flex items-center justify-between mb-1">
-                <div>
-                    <p class="text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Total de Usuários</p>
-                    <p class="text-2xl font-bold text-white mt-0.5" th:text="${totalUsuarios}">0</p>
-                </div>
-                <div class="w-8 h-8 rounded-lg bg-[#00457C]/20 flex items-center justify-center text-[#93C5FD] text-xs">
-                    <i class="fa-solid fa-users"></i>
-                </div>
+    <section class="seplag-stats seplag-stats--4" aria-label="Resumo dos usuários">
+        <div class="seplag-stat">
+            <div class="seplag-stat__top">
+                <p class="seplag-stat__label">Total de Usuários</p>
+                <span class="seplag-stat__icon" aria-hidden="true"><i class="fa-solid fa-users"></i></span>
             </div>
+            <p class="seplag-stat__value" th:text="${totalUsuarios}">0</p>
         </div>
-        <div class="bg-[#14294A] rounded-xl border border-[#2D4A73] p-5 hover:border-[#008A4B]/50 transition-colors duration-200">
-            <div class="flex items-center justify-between mb-1">
-                <div>
-                    <p class="text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Participantes</p>
-                    <p class="text-2xl font-bold text-white mt-0.5" th:text="${totalParticipantes}">0</p>
-                </div>
-                <div class="w-8 h-8 rounded-lg bg-[#008A4B]/20 flex items-center justify-center text-[#86EFAC] text-xs">
-                    <i class="fa-solid fa-user"></i>
-                </div>
+        <div class="seplag-stat">
+            <div class="seplag-stat__top">
+                <p class="seplag-stat__label">Participantes</p>
+                <span class="seplag-stat__icon" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
             </div>
+            <p class="seplag-stat__value" th:text="${totalParticipantes}">0</p>
         </div>
-        <div class="bg-[#14294A] rounded-xl border border-[#2D4A73] p-5 hover:border-[#008A4B]/50 transition-colors duration-200">
-            <div class="flex items-center justify-between mb-1">
-                <div>
-                    <p class="text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Organizadores</p>
-                    <p class="text-2xl font-bold text-white mt-0.5" th:text="${totalOrganizadores}">0</p>
-                </div>
-                <div class="w-8 h-8 rounded-lg bg-[#00457C]/20 flex items-center justify-center text-[#93C5FD] text-xs">
-                    <i class="fa-solid fa-calendar"></i>
-                </div>
+        <div class="seplag-stat">
+            <div class="seplag-stat__top">
+                <p class="seplag-stat__label">Organizadores</p>
+                <span class="seplag-stat__icon" aria-hidden="true"><i class="fa-solid fa-calendar"></i></span>
             </div>
+            <p class="seplag-stat__value" th:text="${totalOrganizadores}">0</p>
         </div>
-        <div class="bg-[#14294A] rounded-xl border border-[#2D4A73] p-5 hover:border-[#008A4B]/50 transition-colors duration-200">
-            <div class="flex items-center justify-between mb-1">
-                <div>
-                    <p class="text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Super Admins</p>
-                    <p class="text-2xl font-bold text-white mt-0.5" th:text="${totalSuperAdmins}">0</p>
-                </div>
-                <div class="w-8 h-8 rounded-lg bg-[#082f57]/20 flex items-center justify-center text-[#67E8F9] text-xs">
-                    <i class="fa-solid fa-crown"></i>
-                </div>
+        <div class="seplag-stat">
+            <div class="seplag-stat__top">
+                <p class="seplag-stat__label">Super Admins</p>
+                <span class="seplag-stat__icon" aria-hidden="true"><i class="fa-solid fa-crown"></i></span>
             </div>
+            <p class="seplag-stat__value" th:text="${totalSuperAdmins}">0</p>
         </div>
-    </div>
+    </section>
 
     <!-- Área de filtros -->
-    <div class="bg-[#14294A] rounded-xl border border-[#2D4A73] p-4 sm:p-6 mb-8">
-        <form th:action="@{/super-admin/usuarios}" method="GET" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="lg:col-span-2">
-                <label for="nome" class="block text-xs font-medium text-[#94A3B8] uppercase tracking-wider mb-1.5">Nome ou E-mail</label>
-                <input type="text" id="nome" name="nome" th:value="${filtroNome}"
-                       placeholder="Buscar por nome ou e-mail..."
-                       class="w-full rounded-lg border border-[#2D4A73] bg-[#0B1F3A] px-3.5 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:border-[#008A4B] focus:outline-none focus:ring-1 focus:ring-[#008A4B]">
-            </div>
+    <section class="seplag-card" aria-labelledby="filtros-title">
+        <div class="seplag-card__header">
             <div>
-                <label for="perfil" class="block text-xs font-medium text-[#94A3B8] uppercase tracking-wider mb-1.5">Perfil</label>
-                <select id="perfil" name="perfil"
-                        class="w-full rounded-lg border border-[#2D4A73] bg-[#0B1F3A] px-3.5 py-2.5 text-sm text-slate-200 focus:border-[#008A4B] focus:outline-none focus:ring-1 focus:ring-[#008A4B]">
-                    <option value="">Todos</option>
-                    <option th:each="p : ${perfis}" th:value="${p}" th:selected="${filtroPerfil == p}" th:text="${p}">PARTICIPANTE</option>
-                </select>
+                <h2 class="seplag-card__title" id="filtros-title">Filtrar usuários</h2>
+                <p class="seplag-card__hint">Refine a lista por nome, e-mail, perfil ou status da conta.</p>
             </div>
-            <div>
-                <label for="ativo" class="block text-xs font-medium text-[#94A3B8] uppercase tracking-wider mb-1.5">Status</label>
-                <select id="ativo" name="ativo"
-                        class="w-full rounded-lg border border-[#2D4A73] bg-[#0B1F3A] px-3.5 py-2.5 text-sm text-slate-200 focus:border-[#008A4B] focus:outline-none focus:ring-1 focus:ring-[#008A4B]">
-                    <option value="">Todos</option>
-                    <option value="true" th:selected="${filtroAtivo == true}">Ativos</option>
-                    <option value="false" th:selected="${filtroAtivo == false}">Inativos</option>
-                </select>
-            </div>
-            <div class="lg:col-span-4 flex flex-col sm:flex-row gap-3 items-end">
-                <button type="submit" class="w-full sm:w-auto flex-1 rounded-lg bg-[#00457C] hover:bg-[#00335c] text-white px-5 py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-search"></i> Buscar
-                </button>
-                <a th:href="@{/super-admin/usuarios}" class="w-full sm:w-auto flex-1 rounded-lg border border-[#2D4A73] bg-[#0B1F3A] hover:bg-[#1E3A5F] text-slate-300 hover:text-white px-5 py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-eraser"></i> Limpar
-                </a>
-                <a th:href="@{/super-admin/usuarios/exportar(nome=${filtroNome}, email=${filtroEmail}, perfil=${filtroPerfil}, ativo=${filtroAtivo})}"
-                   class="w-full sm:w-auto flex-1 rounded-lg bg-[#008A4B] hover:bg-[#006637] text-white px-5 py-2.5 text-sm font-medium transition-colors flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-file-excel"></i> Exportar Excel
-                </a>
-            </div>
-        </form>
-    </div>
+        </div>
+        <div class="seplag-card__body">
+            <form th:action="@{/super-admin/usuarios}" method="GET" class="seplag-form">
+                <div class="seplag-form-grid seplag-form-grid--3">
+                    <div class="seplag-field">
+                        <label for="nome" class="seplag-label">Nome ou E-mail</label>
+                        <input type="text" id="nome" name="nome" th:value="${filtroNome}"
+                               placeholder="Buscar por nome ou e-mail..." class="seplag-input">
+                    </div>
+                    <div class="seplag-field">
+                        <label for="perfil" class="seplag-label">Perfil</label>
+                        <select id="perfil" name="perfil" class="seplag-select">
+                            <option value="">Todos</option>
+                            <option th:each="p : ${perfis}" th:value="${p}" th:selected="${filtroPerfil == p}" th:text="${p}">PARTICIPANTE</option>
+                        </select>
+                    </div>
+                    <div class="seplag-field">
+                        <label for="ativo" class="seplag-label">Status</label>
+                        <select id="ativo" name="ativo" class="seplag-select">
+                            <option value="">Todos</option>
+                            <option value="true" th:selected="${filtroAtivo == true}">Ativos</option>
+                            <option value="false" th:selected="${filtroAtivo == false}">Inativos</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="seplag-form-actions">
+                    <a th:href="@{/super-admin/usuarios/exportar(nome=${filtroNome}, email=${filtroEmail}, perfil=${filtroPerfil}, ativo=${filtroAtivo})}"
+                       class="seplag-btn seplag-btn-secondary">
+                        <i class="fa-solid fa-file-excel" aria-hidden="true"></i> Exportar Excel
+                    </a>
+                    <a th:href="@{/super-admin/usuarios}" class="seplag-btn seplag-btn-ghost">
+                        <i class="fa-solid fa-eraser" aria-hidden="true"></i> Limpar
+                    </a>
+                    <button type="submit" class="seplag-btn seplag-btn-primary">
+                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
 
     <!-- Tabela de usuários -->
-    <div class="bg-[#14294A] rounded-xl border border-[#2D4A73] overflow-hidden">
-        <div class="seplag-table-wrap overflow-x-auto">
-            <table class="seplag-table min-w-full divide-y divide-[#2D4A73]">
-                <thead class="bg-[#0B1F3A]">
+    <section class="seplag-card" aria-labelledby="usuarios-title">
+        <div class="seplag-card__header">
+            <div>
+                <h2 class="seplag-card__title" id="usuarios-title">Usuários cadastrados</h2>
+                <p class="seplag-card__hint">Resultados conforme os filtros aplicados.</p>
+            </div>
+            <span class="seplag-count-chip">
+                <i class="fa-solid fa-users" aria-hidden="true"></i>
+                Total: <strong th:text="${totalElements}">0</strong>
+            </span>
+        </div>
+        <div class="seplag-table-wrap">
+            <table class="seplag-table">
+                <thead>
                 <tr>
-                    <th class="px-6 py-4 text-left text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Nome</th>
-                    <th class="px-6 py-4 text-left text-xs font-medium text-[#94A3B8] uppercase tracking-wider">E-mail</th>
-                    <th class="px-6 py-4 text-left text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Perfil</th>
-                    <th class="px-6 py-4 text-left text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Status</th>
-                    <th class="px-6 py-4 text-left text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Data de Cadastro</th>
-                    <th class="px-6 py-4 text-right text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Ação</th>
+                    <th scope="col">Nome</th>
+                    <th scope="col">E-mail</th>
+                    <th scope="col">Perfil</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Data de Cadastro</th>
+                    <th scope="col">Ação</th>
                 </tr>
                 </thead>
-                <tbody class="divide-y divide-[#2D4A73] text-sm">
-                <tr th:if="${usuarios == null or usuarios.isEmpty()}" class="text-center">
-                    <td colspan="6" class="seplag-table__empty p-12">
-                        <i class="fa-solid fa-users text-3xl mb-3 block text-[#475569]"></i>
-                        <p class="text-sm text-[#94A3B8]">Nenhum usuário encontrado com os filtros informados.</p>
+                <tbody>
+                <tr th:if="${usuarios == null or usuarios.isEmpty()}">
+                    <td colspan="6" class="seplag-table__empty">
+                        <div class="seplag-empty">
+                            <i class="fa-solid fa-users" aria-hidden="true"></i>
+                            <strong>Nenhum usuário encontrado</strong>
+                            <p>Nenhum usuário corresponde aos filtros informados.</p>
+                        </div>
                     </td>
                 </tr>
-                <tr th:each="usuario : ${usuarios}" class="hover:bg-[#1E3A5F]/50 transition-colors duration-150">
-                    <td data-label="Nome" class="px-6 py-4 font-semibold text-white" th:text="${usuario.nome}">Nome</td>
-                    <td data-label="E-mail" class="px-6 py-4 text-[#CBD5E1] break-all" th:text="${usuario.email}">email@exemplo.com</td>
-                    <td data-label="Perfil" class="px-6 py-4">
+                <tr th:each="usuario : ${usuarios}">
+                    <td data-label="Nome">
+                        <span class="seplag-table__title" th:text="${usuario.nome}">Nome</span>
+                    </td>
+                    <td data-label="E-mail">
+                        <span class="seplag-cell-muted" th:text="${usuario.email}">email@exemplo.com</span>
+                    </td>
+                    <td data-label="Perfil">
                         <span th:switch="${usuario.perfil}">
-                            <span th:case="'ROLE_SUPER_ADMIN'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-[#5B21B6]/20 text-[#C4B5FD] border-[#5B21B6]/30" th:text="${usuario.perfil}">ROLE_SUPER_ADMIN</span>
-                            <span th:case="'ROLE_ADMIN'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-[#DC2626]/20 text-[#FCA5A5] border-[#DC2626]/30" th:text="${usuario.perfil}">ROLE_ADMIN</span>
-                            <span th:case="'ROLE_ORGANIZADOR'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-[#00457C]/20 text-[#93C5FD] border-[#00457C]/30" th:text="${usuario.perfil}">ROLE_ORGANIZADOR</span>
-                            <span th:case="'ROLE_PARTICIPANTE'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-[#008A4B]/20 text-[#86EFAC] border-[#008A4B]/30" th:text="${usuario.perfil}">ROLE_PARTICIPANTE</span>
-                            <span th:case="'ROLE_AVALIADOR'" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-[#7C3AED]/20 text-[#C4B5FD] border-[#7C3AED]/30" th:text="${usuario.perfil}">ROLE_AVALIADOR</span>
-                            <span th:case="*" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-[#334155] text-[#94A3B8] border-[#475569]/30" th:text="${usuario.perfil}">PARTICIPANTE</span>
+                            <span th:case="'ROLE_SUPER_ADMIN'" class="seplag-badge seplag-badge--role" th:text="${usuario.perfil}">ROLE_SUPER_ADMIN</span>
+                            <span th:case="'ROLE_ADMIN'" class="seplag-badge seplag-badge--danger" th:text="${usuario.perfil}">ROLE_ADMIN</span>
+                            <span th:case="'ROLE_ORGANIZADOR'" class="seplag-badge seplag-badge--info" th:text="${usuario.perfil}">ROLE_ORGANIZADOR</span>
+                            <span th:case="'ROLE_PARTICIPANTE'" class="seplag-badge seplag-badge--success" th:text="${usuario.perfil}">ROLE_PARTICIPANTE</span>
+                            <span th:case="'ROLE_AVALIADOR'" class="seplag-badge seplag-badge--role" th:text="${usuario.perfil}">ROLE_AVALIADOR</span>
+                            <span th:case="*" class="seplag-badge seplag-badge--neutral" th:text="${usuario.perfil}">PARTICIPANTE</span>
                         </span>
                     </td>
-                    <td data-label="Status" class="px-6 py-4">
-                        <span th:if="${usuario.ativo}" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-[#008A4B]/20 text-[#86EFAC] border-[#008A4B]/30" th:text="'Ativo'">Ativo</span>
-                        <span th:unless="${usuario.ativo}" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-[#334155] text-[#94A3B8] border-[#475569]/30" th:text="'Inativo'">Inativo</span>
+                    <td data-label="Status">
+                        <span th:if="${usuario.ativo}" class="seplag-badge seplag-badge--success" th:text="'Ativo'">Ativo</span>
+                        <span th:unless="${usuario.ativo}" class="seplag-badge seplag-badge--neutral" th:text="'Inativo'">Inativo</span>
                     </td>
-                    <td data-label="Data de Cadastro" class="px-6 py-4 text-[#94A3B8]" th:text="${#temporals.format(usuario.dataCriacao, 'dd/MM/yyyy HH:mm')}">01/01/2026</td>
-                    <td data-label="Ação" class="seplag-table__actions px-6 py-4 text-right">
-                        <a th:href="@{/super-admin/usuarios/{id}/detalhes(id=${usuario.id})}" class="inline-flex items-center gap-1.5 rounded-lg border border-[#365477] px-3 py-2 text-sm font-semibold text-[#BFDBFE] hover:bg-[#00457C]/30 hover:text-white">
-                            <i class="fa-solid fa-eye"></i> Ver Detalhes
+                    <td data-label="Data de Cadastro">
+                        <span class="seplag-cell-muted" th:text="${#temporals.format(usuario.dataCriacao, 'dd/MM/yyyy HH:mm')}">01/01/2026</span>
+                    </td>
+                    <td data-label="Ação" class="seplag-table__actions">
+                        <a th:href="@{/super-admin/usuarios/{id}/detalhes(id=${usuario.id})}" class="seplag-btn seplag-btn-secondary seplag-btn--sm">
+                            <i class="fa-solid fa-eye" aria-hidden="true"></i> Ver Detalhes
                         </a>
                     </td>
                 </tr>
                 </tbody>
             </table>
         </div>
-    </div>
+    </section>
 
     <!-- Paginação -->
-    <div th:if="${totalPages > 1}" class="mt-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <p class="text-sm text-[#94A3B8]">
-            Exibindo <strong class="text-white" th:text="${(currentPage * size) + 1}">1</strong> a
-            <strong class="text-white" th:text="${T(java.lang.Math).min((currentPage + 1) * size, totalElements)}">20</strong> de
-            <strong class="text-white" th:text="${totalElements}">0</strong> resultados
+    <div th:if="${totalPages > 1}" class="seplag-pagination-bar">
+        <p class="seplag-pagination-info">
+            Exibindo <strong th:text="${(currentPage * size) + 1}">1</strong> a
+            <strong th:text="${T(java.lang.Math).min((currentPage + 1) * size, totalElements)}">20</strong> de
+            <strong th:text="${totalElements}">0</strong> resultados
         </p>
 
-        <nav aria-label="Paginação dos usuários" class="flex flex-wrap items-center gap-1">
-            <!-- Primeira página -->
-            <a th:if="${hasPrevious}" th:href="@{/super-admin/usuarios(page=0, size=${size}, nome=${filtroNome}, email=${filtroEmail}, perfil=${filtroPerfil}, ativo=${filtroAtivo})}"
-               class="px-3 py-2 rounded-lg border border-[#2D4A73] bg-[#0B1F3A] text-sm font-medium text-slate-300 hover:bg-[#00457C] hover:text-white hover:border-[#00457C] transition-colors">
-                <i class="fa-solid fa-backward-step mr-1"></i> Primeira
+        <nav aria-label="Paginação dos usuários" class="seplag-pagination">
+            <a th:if="${hasPrevious}" th:href="@{/super-admin/usuarios(page=0, size=${size}, nome=${filtroNome}, email=${filtroEmail}, perfil=${filtroPerfil}, ativo=${filtroAtivo})}">
+                <i class="fa-solid fa-backward-step" aria-hidden="true"></i> Primeira
             </a>
-
-            <!-- Página anterior -->
-            <a th:if="${hasPrevious}" th:href="@{/super-admin/usuarios(page=${currentPage - 1}, size=${size}, nome=${filtroNome}, email=${filtroEmail}, perfil=${filtroPerfil}, ativo=${filtroAtivo})}"
-               class="px-3 py-2 rounded-lg border border-[#2D4A73] bg-[#0B1F3A] text-sm font-medium text-slate-300 hover:bg-[#00457C] hover:text-white hover:border-[#00457C] transition-colors">
-                <i class="fa-solid fa-chevron-left mr-1"></i> Anterior
+            <a th:if="${hasPrevious}" th:href="@{/super-admin/usuarios(page=${currentPage - 1}, size=${size}, nome=${filtroNome}, email=${filtroEmail}, perfil=${filtroPerfil}, ativo=${filtroAtivo})}">
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i> Anterior
             </a>
-
-            <!-- Páginas -->
             <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-               th:class="${currentPage == i} ? 'px-3 py-2 rounded-lg bg-[#00457C] text-white font-medium border border-[#00457C]' : 'px-3 py-2 rounded-lg border border-[#2D4A73] bg-[#0B1F3A] text-sm font-medium text-slate-300 hover:bg-[#1E3A5F] hover:text-white transition-colors'"
+               th:classappend="${currentPage == i} ? ' is-active'"
                th:text="${i + 1}"
                th:href="@{/super-admin/usuarios(page=${i}, size=${size}, nome=${filtroNome}, email=${filtroEmail}, perfil=${filtroPerfil}, ativo=${filtroAtivo})}">1</a>
-
-            <!-- Próxima página -->
-            <a th:if="${hasNext}" th:href="@{/super-admin/usuarios(page=${currentPage + 1}, size=${size}, nome=${filtroNome}, email=${filtroEmail}, perfil=${filtroPerfil}, ativo=${filtroAtivo})}"
-               class="px-3 py-2 rounded-lg border border-[#2D4A73] bg-[#0B1F3A] text-sm font-medium text-slate-300 hover:bg-[#00457C] hover:text-white hover:border-[#00457C] transition-colors">
-                Próximo <i class="fa-solid fa-chevron-right ml-1"></i>
+            <a th:if="${hasNext}" th:href="@{/super-admin/usuarios(page=${currentPage + 1}, size=${size}, nome=${filtroNome}, email=${filtroEmail}, perfil=${filtroPerfil}, ativo=${filtroAtivo})}">
+                Próximo <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
             </a>
-
-            <!-- Última página -->
-            <a th:if="${hasNext}" th:href="@{/super-admin/usuarios(page=${totalPages - 1}, size=${size}, nome=${filtroNome}, email=${filtroEmail}, perfil=${filtroPerfil}, ativo=${filtroAtivo})}"
-               class="px-3 py-2 rounded-lg border border-[#2D4A73] bg-[#0B1F3A] text-sm font-medium text-slate-300 hover:bg-[#00457C] hover:text-white hover:border-[#00457C] transition-colors">
-                Última <i class="fa-solid fa-forward-step ml-1"></i>
+            <a th:if="${hasNext}" th:href="@{/super-admin/usuarios(page=${totalPages - 1}, size=${size}, nome=${filtroNome}, email=${filtroEmail}, perfil=${filtroPerfil}, ativo=${filtroAtivo})}">
+                Última <i class="fa-solid fa-forward-step" aria-hidden="true"></i>
             </a>
         </nav>
     </div>
 </main>
 
-<footer class="bg-[#00457C] text-center py-4 border-t border-[#1E3A5F] text-xs text-[#94A3B8] mt-auto">
+<footer class="seplag-footer">
     &copy; 2026 Secretaria de Estado de Planejamento e Gestão de Mato Grosso. Todos os direitos reservados.
 </footer>
 

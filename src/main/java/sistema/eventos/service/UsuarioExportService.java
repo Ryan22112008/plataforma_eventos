@@ -18,7 +18,9 @@ import sistema.eventos.repository.EventoRepository;
 import sistema.eventos.repository.InscricaoRepository;
 import sistema.eventos.repository.UsuarioRepository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -33,8 +35,11 @@ public class UsuarioExportService {
     private static final String SEM_EVENTOS = "Nenhum";
     private static final String[] COLUNAS = {
             "Nome", "E-mail", "Perfil", "Status", "Data de cadastro",
-            "Eventos Participados", "Eventos Organizados"
+            "Eventos Participados", "Datas dos Eventos Participados",
+            "Eventos Organizados", "Datas dos Eventos Organizados"
     };
+
+    private static final DateTimeFormatter FORMATO_DATA_EVENTO = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     // Paleta da planilha: cabeçalho verde-claro com texto verde-escuro, corpo neutro e discreto.
     private static final byte[] COR_CABECALHO_FUNDO = {(byte) 0xE2, (byte) 0xEF, (byte) 0xDA};
@@ -48,8 +53,8 @@ public class UsuarioExportService {
     private static final float ALTURA_CABECALHO = 26f;
     private static final float ALTURA_LINHA = 20f;
     private static final int MAX_LINHAS_EVENTOS = 20;
-    private static final int[] LARGURA_MINIMA = {18, 30, 14, 12, 20, 24, 24};
-    private static final int[] LARGURA_MAXIMA = {55, 60, 22, 14, 20, 45, 45};
+    private static final int[] LARGURA_MINIMA = {18, 30, 14, 12, 20, 24, 24, 24, 24};
+    private static final int[] LARGURA_MAXIMA = {55, 60, 22, 14, 20, 45, 45, 45, 45};
 
     private final UsuarioRepository usuarioRepository;
     private final InscricaoRepository inscricaoRepository;
@@ -59,7 +64,7 @@ public class UsuarioExportService {
      * Gera um arquivo .xlsx com os usuários filtrados (sem paginação).
      *
      * Apenas dados não sensíveis são incluídos: nome, e-mail, perfil, status,
-     * data de cadastro e os títulos dos eventos participados/organizados.
+     * data de cadastro, títulos e datas dos eventos participados/organizados.
      * Senha, hash e tokens nunca são exportados.
      *
      * A participação usa a regra já existente no sistema (inscrição com status
@@ -75,8 +80,8 @@ public class UsuarioExportService {
     public byte[] exportarUsuarios(String nome, String email, Perfil perfil, Boolean ativo) {
         List<Usuario> usuarios = usuarioRepository.findFiltrosSemPaginacao(nome, email, perfil, ativo);
 
-        Map<Long, List<String>> eventosParticipados = carregarEventosParticipados(usuarios);
-        Map<Long, List<String>> eventosOrganizados = carregarEventosOrganizados(usuarios);
+        Map<Long, List<EventoExportacao>> eventosParticipados = carregarEventosParticipados(usuarios);
+        Map<Long, List<EventoExportacao>> eventosOrganizados = carregarEventosOrganizados(usuarios);
 
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet(SHEET_NAME);
@@ -121,10 +126,14 @@ public class UsuarioExportService {
                 String perfilUsuario = formatarPerfil(usuario.getPerfil());
                 String statusUsuario = usuario.isAtivo() ? "ATIVO" : "INATIVO";
                 String titulosParticipados = formatarEventos(eventosParticipados.get(usuario.getId()));
+                String datasParticipados = formatarDatasEventos(eventosParticipados.get(usuario.getId()));
                 String titulosOrganizados = formatarEventos(eventosOrganizados.get(usuario.getId()));
+                String datasOrganizados = formatarDatasEventos(eventosOrganizados.get(usuario.getId()));
 
                 row.setHeightInPoints(ALTURA_LINHA * Math.min(
-                        Math.max(contarLinhas(titulosParticipados), contarLinhas(titulosOrganizados)),
+                        Math.max(
+                                Math.max(contarLinhas(titulosParticipados), contarLinhas(datasParticipados)),
+                                Math.max(contarLinhas(titulosOrganizados), contarLinhas(datasOrganizados))),
                         MAX_LINHAS_EVENTOS));
 
                 definirTexto(row, 0, nomeUsuario, zebra ? textoEsquerdaZebra : textoEsquerda);
@@ -144,14 +153,18 @@ public class UsuarioExportService {
                 }
 
                 definirTexto(row, 5, titulosParticipados, zebra ? textoEventosZebra : textoEventos);
-                definirTexto(row, 6, titulosOrganizados, zebra ? textoEventosZebra : textoEventos);
+                definirTexto(row, 6, datasParticipados, zebra ? textoEventosZebra : textoEventos);
+                definirTexto(row, 7, titulosOrganizados, zebra ? textoEventosZebra : textoEventos);
+                definirTexto(row, 8, datasOrganizados, zebra ? textoEventosZebra : textoEventos);
 
                 maioresConteudos[0] = Math.max(maioresConteudos[0], nomeUsuario.length());
                 maioresConteudos[1] = Math.max(maioresConteudos[1], emailUsuario.length());
                 maioresConteudos[2] = Math.max(maioresConteudos[2], perfilUsuario.length());
                 maioresConteudos[3] = Math.max(maioresConteudos[3], statusUsuario.length());
                 maioresConteudos[5] = Math.max(maioresConteudos[5], maiorLinha(titulosParticipados));
-                maioresConteudos[6] = Math.max(maioresConteudos[6], maiorLinha(titulosOrganizados));
+                maioresConteudos[6] = Math.max(maioresConteudos[6], maiorLinha(datasParticipados));
+                maioresConteudos[7] = Math.max(maioresConteudos[7], maiorLinha(titulosOrganizados));
+                maioresConteudos[8] = Math.max(maioresConteudos[8], maiorLinha(datasOrganizados));
                 rowNum++;
             }
 
@@ -248,10 +261,11 @@ public class UsuarioExportService {
     }
 
     /**
-     * Carrega, em uma única consulta, os títulos dos eventos com participação
-     * validada (inscrição com status UTILIZADO) dos usuários exportados.
+     * Carrega, em uma única consulta, os títulos e as datas dos eventos com
+     * participação validada (inscrição com status UTILIZADO) dos usuários
+     * exportados.
      */
-    private Map<Long, List<String>> carregarEventosParticipados(List<Usuario> usuarios) {
+    private Map<Long, List<EventoExportacao>> carregarEventosParticipados(List<Usuario> usuarios) {
         List<Long> ids = idsDosUsuarios(usuarios);
         if (ids.isEmpty()) {
             return new LinkedHashMap<>();
@@ -261,10 +275,11 @@ public class UsuarioExportService {
     }
 
     /**
-     * Carrega, em uma única consulta, os títulos dos eventos organizados pelos
-     * usuários exportados, usando o relacionamento real Evento.organizador.
+     * Carrega, em uma única consulta, os títulos e as datas dos eventos
+     * organizados pelos usuários exportados, usando o relacionamento real
+     * Evento.organizador.
      */
-    private Map<Long, List<String>> carregarEventosOrganizados(List<Usuario> usuarios) {
+    private Map<Long, List<EventoExportacao>> carregarEventosOrganizados(List<Usuario> usuarios) {
         List<Long> ids = idsDosUsuarios(usuarios);
         if (ids.isEmpty()) {
             return new LinkedHashMap<>();
@@ -280,8 +295,8 @@ public class UsuarioExportService {
                 .toList();
     }
 
-    private Map<Long, List<String>> agruparPorUsuario(List<UsuarioEventoTituloProjection> projecoes) {
-        Map<Long, List<String>> porUsuario = new LinkedHashMap<>();
+    private Map<Long, List<EventoExportacao>> agruparPorUsuario(List<UsuarioEventoTituloProjection> projecoes) {
+        Map<Long, List<EventoExportacao>> porUsuario = new LinkedHashMap<>();
         if (projecoes == null) {
             return porUsuario;
         }
@@ -293,19 +308,48 @@ public class UsuarioExportService {
             if (titulo == null || titulo.isBlank()) {
                 continue;
             }
-            List<String> titulos = porUsuario.computeIfAbsent(projecao.getUsuarioId(), id -> new ArrayList<>());
-            if (!titulos.contains(titulo)) {
-                titulos.add(titulo);
+            List<EventoExportacao> eventos = porUsuario.computeIfAbsent(
+                    projecao.getUsuarioId(), id -> new ArrayList<>());
+            boolean jaAdicionado = eventos.stream().anyMatch(evento -> evento.titulo().equals(titulo));
+            if (!jaAdicionado) {
+                eventos.add(new EventoExportacao(titulo, projecao.getDataInicio(), projecao.getDataTermino()));
             }
         }
         return porUsuario;
     }
 
-    private String formatarEventos(List<String> titulos) {
-        if (titulos == null || titulos.isEmpty()) {
+    private String formatarEventos(List<EventoExportacao> eventos) {
+        if (eventos == null || eventos.isEmpty()) {
             return SEM_EVENTOS;
         }
-        return String.join("\n", titulos);
+        return String.join("\n", eventos.stream().map(EventoExportacao::titulo).toList());
+    }
+
+    /**
+     * Mantém a mesma ordem dos títulos e usa exatamente as datas existentes no
+     * modelo do evento, sem preencher informações ausentes.
+     */
+    private String formatarDatasEventos(List<EventoExportacao> eventos) {
+        if (eventos == null || eventos.isEmpty()) {
+            return SEM_EVENTOS;
+        }
+        return String.join("\n", eventos.stream().map(this::formatarPeriodo).toList());
+    }
+
+    private String formatarPeriodo(EventoExportacao evento) {
+        String inicio = formatarData(evento.dataInicio());
+        String termino = formatarData(evento.dataTermino());
+        if (!inicio.isEmpty() && !termino.isEmpty()) {
+            return inicio + " - " + termino;
+        }
+        if (!inicio.isEmpty()) {
+            return inicio;
+        }
+        return termino;
+    }
+
+    private String formatarData(LocalDate data) {
+        return data == null ? "" : FORMATO_DATA_EVENTO.format(data);
     }
 
     private int contarLinhas(String texto) {
@@ -350,6 +394,9 @@ public class UsuarioExportService {
             nome = nome.substring("ROLE_".length());
         }
         return nome;
+    }
+
+    private record EventoExportacao(String titulo, LocalDate dataInicio, LocalDate dataTermino) {
     }
 
     public static final class ExportacaoException extends RuntimeException {

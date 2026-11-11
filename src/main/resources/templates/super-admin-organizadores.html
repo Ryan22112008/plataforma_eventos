@@ -1,115 +1,136 @@
 <!DOCTYPE html>
-<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/seplag-ui :: head('Gerenciamento de Organizadores')}">
     <title>Gerenciamento de Organizadores | SEPLAG-MT</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" th:href="@{/css/seplag-ui-v2.css}">
 </head>
-<body class="v2 min-h-screen flex flex-col bg-[#0B1F3A] text-slate-200">
+<body class="v2 seplag-admin-body">
+
+<a class="seplag-skip-link" href="#conteudo">Ir para o conteúdo</a>
+
 <header th:replace="~{fragments/super-admin-header :: header('organizadores')}"></header>
 
-<main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-    <section class="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-            <p class="text-xs font-bold uppercase tracking-[0.18em] text-[#FDB813]">Gestão de acessos</p>
-            <h1 class="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">Organizadores</h1>
-            <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-300">Consulte os usuários com acesso de organização, acompanhe seus eventos e gerencie o perfil.</p>
+<main class="seplag-content" id="conteudo">
+
+    <div class="seplag-page-head">
+        <div class="seplag-page-head__copy">
+            <p class="seplag-eyebrow">Gestão de acessos</p>
+            <h1>Organizadores</h1>
+            <p>Consulte os usuários com acesso de organização, acompanhe seus eventos e gerencie o perfil.</p>
         </div>
-        <div class="inline-flex w-fit items-center gap-2 rounded-xl border border-[#2D4A73] bg-[#14294A] px-4 py-3">
-            <i class="fa-solid fa-user-group text-[#93C5FD]" aria-hidden="true"></i>
-            <span class="text-sm text-slate-300">Encontrados</span>
-            <strong class="text-lg font-bold text-white" th:text="${totalOrganizadores}">0</strong>
+        <div class="seplag-page-head__actions">
+            <span class="seplag-count-chip">
+                <i class="fa-solid fa-user-group" aria-hidden="true"></i>
+                Encontrados: <strong th:text="${totalOrganizadores}">0</strong>
+            </span>
+        </div>
+    </div>
+
+    <section class="seplag-card" aria-labelledby="filtros-organizadores">
+        <div class="seplag-card__header">
+            <div>
+                <h2 class="seplag-card__title" id="filtros-organizadores">Filtrar organizadores</h2>
+                <p class="seplag-card__hint">Busque por nome, e-mail ou status da conta.</p>
+            </div>
+        </div>
+        <div class="seplag-card__body">
+            <form th:action="@{/super-admin/organizadores}" method="get" class="seplag-form">
+                <div class="seplag-form-grid seplag-form-grid--3">
+                    <div class="seplag-field">
+                        <label for="nome" class="seplag-label">Nome</label>
+                        <input id="nome" name="nome" type="search" th:value="${filtroNome}" placeholder="Buscar por nome" class="seplag-input">
+                    </div>
+                    <div class="seplag-field">
+                        <label for="email" class="seplag-label">E-mail</label>
+                        <input id="email" name="email" type="search" th:value="${filtroEmail}" placeholder="Buscar por e-mail" class="seplag-input">
+                    </div>
+                    <div class="seplag-field">
+                        <label for="ativo" class="seplag-label">Status da conta</label>
+                        <select id="ativo" name="ativo" class="seplag-select">
+                            <option value="" th:selected="${filtroAtivo == null}">Todos</option>
+                            <option value="true" th:selected="${filtroAtivo == true}">Ativo</option>
+                            <option value="false" th:selected="${filtroAtivo == false}">Inativo</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="seplag-form-actions">
+                    <a th:href="@{/super-admin/organizadores}" class="seplag-btn seplag-btn-ghost">
+                        <i class="fa-solid fa-eraser" aria-hidden="true"></i> Limpar
+                    </a>
+                    <button type="submit" class="seplag-btn seplag-btn-primary">
+                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Buscar
+                    </button>
+                </div>
+            </form>
         </div>
     </section>
 
-    <form th:action="@{/super-admin/organizadores}" method="get" class="mb-6 rounded-2xl border border-[#2D4A73] bg-[#14294A] p-4 sm:p-5">
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-[1.2fr_1.2fr_0.8fr_auto] xl:items-end">
-            <div>
-                <label for="nome" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-300">Nome</label>
-                <input id="nome" name="nome" type="search" th:value="${filtroNome}" placeholder="Buscar por nome"
-                       class="h-11 w-full rounded-lg border border-[#365477] bg-[#0B1F3A] px-3 text-sm text-white placeholder:text-slate-500 focus:border-[#60A5FA] focus:outline-none focus:ring-2 focus:ring-[#60A5FA]/25">
-            </div>
-            <div>
-                <label for="email" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-300">E-mail</label>
-                <input id="email" name="email" type="search" th:value="${filtroEmail}" placeholder="Buscar por e-mail"
-                       class="h-11 w-full rounded-lg border border-[#365477] bg-[#0B1F3A] px-3 text-sm text-white placeholder:text-slate-500 focus:border-[#60A5FA] focus:outline-none focus:ring-2 focus:ring-[#60A5FA]/25">
-            </div>
-            <div>
-                <label for="ativo" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-300">Status da conta</label>
-                <select id="ativo" name="ativo" class="h-11 w-full rounded-lg border border-[#365477] bg-[#0B1F3A] px-3 text-sm text-white focus:border-[#60A5FA] focus:outline-none focus:ring-2 focus:ring-[#60A5FA]/25">
-                    <option value="" th:selected="${filtroAtivo == null}">Todos</option>
-                    <option value="true" th:selected="${filtroAtivo == true}">Ativo</option>
-                    <option value="false" th:selected="${filtroAtivo == false}">Inativo</option>
-                </select>
-            </div>
-            <div class="flex flex-col gap-2 sm:flex-row xl:justify-end">
-                <button type="submit" class="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[#07844c] px-5 text-sm font-bold text-white transition hover:bg-[#066c3e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300">
-                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Buscar
-                </button>
-                <a th:href="@{/super-admin/organizadores}" class="inline-flex h-11 items-center justify-center rounded-lg border border-[#365477] px-4 text-sm font-semibold text-slate-200 transition hover:border-slate-400 hover:bg-white/5">Limpar</a>
-            </div>
+    <div th:if="${organizadores.isEmpty()}" class="seplag-card">
+        <div class="seplag-empty">
+            <i class="fa-solid fa-user-group" aria-hidden="true"></i>
+            <strong>Nenhum organizador encontrado</strong>
+            <p>Ajuste os filtros ou limpe a pesquisa para ver os organizadores cadastrados.</p>
         </div>
-    </form>
-
-    <div th:if="${organizadores.isEmpty()}" class="rounded-2xl border border-[#2D4A73] bg-[#14294A] px-5 py-12 text-center">
-        <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#00457C]/30 text-[#93C5FD]"><i class="fa-solid fa-user-group" aria-hidden="true"></i></span>
-        <h2 class="mt-4 text-lg font-bold text-white">Nenhum organizador encontrado</h2>
-        <p class="mt-1 text-sm text-slate-400">Ajuste os filtros ou limpe a pesquisa para ver os organizadores cadastrados.</p>
     </div>
 
-    <section th:unless="${organizadores.isEmpty()}" aria-label="Lista de organizadores" class="overflow-hidden rounded-2xl border border-[#2D4A73] bg-[#14294A] shadow-xl shadow-black/10">
-        <div class="flex flex-col gap-1 border-b border-[#2D4A73] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <h2 class="font-semibold text-white">Acesso de organizador</h2>
-            <p class="text-xs text-slate-400">Perfil atual: <span class="font-semibold text-slate-300">ROLE_ORGANIZADOR</span></p>
+    <section th:unless="${organizadores.isEmpty()}" class="seplag-card" aria-label="Lista de organizadores">
+        <div class="seplag-card__header">
+            <div>
+                <h2 class="seplag-card__title">Acesso de organizador</h2>
+                <p class="seplag-card__hint">Perfil atual: ROLE_ORGANIZADOR</p>
+            </div>
         </div>
-        <div class="seplag-table-wrap overflow-x-auto">
-            <table class="seplag-table w-full text-left text-sm">
-                <thead class="bg-[#0B1F3A]/70 text-xs uppercase tracking-wide text-slate-400">
+        <div class="seplag-table-wrap">
+            <table class="seplag-table">
+                <thead>
                 <tr>
-                    <th scope="col" class="px-5 py-3.5 font-semibold">Organizador</th>
-                    <th scope="col" class="px-5 py-3.5 font-semibold">E-mail</th>
-                    <th scope="col" class="px-5 py-3.5 font-semibold">Status</th>
-                    <th scope="col" class="px-5 py-3.5 font-semibold">Eventos</th>
-                    <th scope="col" class="px-5 py-3.5 font-semibold">Cadastro</th>
-                    <th scope="col" class="px-5 py-3.5 text-right font-semibold">Ações</th>
+                    <th scope="col">Organizador</th>
+                    <th scope="col">E-mail</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Eventos</th>
+                    <th scope="col">Cadastro</th>
+                    <th scope="col">Ações</th>
                 </tr>
                 </thead>
-                <tbody class="divide-y divide-[#2D4A73]">
-                <tr th:each="organizador : ${organizadores}" class="transition-colors hover:bg-[#1A3558]">
-                    <td data-label="Organizador" class="px-5 py-4">
-                        <div class="flex items-center gap-3">
+                <tbody>
+                <tr th:each="organizador : ${organizadores}">
+                    <td data-label="Organizador">
+                        <div class="seplag-cell-user">
                             <img th:if="${fotosOrganizadores[organizador.id] != null}"
                                  th:src="${fotosOrganizadores[organizador.id]}"
                                  th:alt="${'Foto de perfil de ' + organizador.nome}"
-                                 class="h-9 w-9 shrink-0 rounded-full border border-[#3B5B80] object-cover">
-                            <span th:if="${fotosOrganizadores[organizador.id] == null}" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#3B5B80] bg-[#00457C]/30 text-xs font-bold text-[#BFDBFE]" th:text="${#strings.substring(organizador.nome, 0, 1).toUpperCase()}">O</span>
-                            <span class="font-semibold text-white" th:text="${organizador.nome}">Nome do organizador</span>
+                                 class="seplag-admin-avatar">
+                            <span th:if="${fotosOrganizadores[organizador.id] == null}"
+                                  class="seplag-admin-avatar"
+                                  aria-hidden="true"
+                                  th:text="${#strings.substring(organizador.nome, 0, 1).toUpperCase()}">O</span>
+                            <span class="seplag-table__title" th:text="${organizador.nome}">Nome do organizador</span>
                         </div>
                     </td>
-                    <td data-label="E-mail" class="break-all px-5 py-4 text-slate-300" th:text="${organizador.email}">email@seplag.mt.gov.br</td>
-                    <td data-label="Status" class="px-5 py-4">
-                        <span th:if="${organizador.ativo}" class="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1 text-xs font-semibold text-emerald-300"><span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>Ativo</span>
-                        <span th:unless="${organizador.ativo}" class="inline-flex items-center gap-1.5 rounded-full border border-slate-400/20 bg-slate-400/10 px-2.5 py-1 text-xs font-semibold text-slate-300"><span class="h-1.5 w-1.5 rounded-full bg-slate-400"></span>Inativo</span>
+                    <td data-label="E-mail">
+                        <span class="seplag-cell-muted" th:text="${organizador.email}">email@seplag.mt.gov.br</span>
                     </td>
-                    <td data-label="Eventos" class="px-5 py-4">
-                        <span class="inline-flex min-w-9 items-center justify-center rounded-md border border-[#365477] bg-[#0B1F3A] px-2 py-1 font-semibold text-slate-200" th:text="${eventosPorOrganizador[organizador.id]}">0</span>
+                    <td data-label="Status">
+                        <span th:if="${organizador.ativo}" class="seplag-badge seplag-badge--success">Ativo</span>
+                        <span th:unless="${organizador.ativo}" class="seplag-badge seplag-badge--neutral">Inativo</span>
                     </td>
-                    <td data-label="Cadastro" class="px-5 py-4 text-slate-300" th:text="${organizador.dataCriacao != null ? #temporals.format(organizador.dataCriacao, 'dd/MM/yyyy') : '—'}">01/01/2026</td>
-                    <td data-label="Ações" class="seplag-table__actions px-5 py-4">
-                        <div class="flex flex-wrap items-center justify-end gap-2">
-                            <a th:href="@{/super-admin/usuarios/{id}/detalhes(id=${organizador.id})}" class="inline-flex items-center gap-1.5 rounded-lg border border-[#365477] px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-[#60A5FA] hover:bg-[#00457C]/30 hover:text-white">
+                    <td data-label="Eventos">
+                        <span class="seplag-tag" th:text="${eventosPorOrganizador[organizador.id]}">0</span>
+                    </td>
+                    <td data-label="Cadastro">
+                        <span class="seplag-cell-muted" th:text="${organizador.dataCriacao != null ? #temporals.format(organizador.dataCriacao, 'dd/MM/yyyy') : '—'}">01/01/2026</span>
+                    </td>
+                    <td data-label="Ações" class="seplag-table__actions">
+                        <div class="seplag-row-actions">
+                            <a th:href="@{/super-admin/usuarios/{id}/detalhes(id=${organizador.id})}" class="seplag-btn seplag-btn-secondary seplag-btn--sm">
                                 <i class="fa-regular fa-eye" aria-hidden="true"></i> Detalhes
                             </a>
                             <form th:if="${idUsuarioLogado == null or organizador.id != idUsuarioLogado}" th:action="@{/super-admin/usuarios/{id}/remover-organizador(id=${organizador.id})}" method="post"
                                   onsubmit="return confirm('Revogar acesso de organizador? O usuário voltará para participante. Os eventos, inscrições, presenças e certificados não serão excluídos.');">
-                                <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg border border-amber-400/30 px-3 py-2 text-xs font-semibold text-amber-200 transition hover:border-amber-300 hover:bg-amber-400/10">
+                                <button type="submit" class="seplag-btn seplag-btn-danger seplag-btn--sm">
                                     <i class="fa-solid fa-user-shield" aria-hidden="true"></i> Revogar
                                 </button>
                             </form>
-                            <span th:if="${idUsuarioLogado != null and organizador.id == idUsuarioLogado}" class="rounded-lg border border-[#365477] px-3 py-2 text-xs text-slate-500">Conta atual</span>
+                            <span th:if="${idUsuarioLogado != null and organizador.id == idUsuarioLogado}" class="seplag-tag">Conta atual</span>
                         </div>
                     </td>
                 </tr>
@@ -118,18 +139,22 @@
         </div>
     </section>
 
-    <div th:if="${totalPages > 1}" class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p class="text-sm text-slate-400">Exibindo <strong class="text-slate-200" th:text="${(currentPage * size) + 1}">1</strong>–<strong class="text-slate-200" th:text="${T(java.lang.Math).min((currentPage + 1) * size, totalElements)}">20</strong> de <strong class="text-slate-200" th:text="${totalElements}">0</strong></p>
-        <nav aria-label="Paginação dos organizadores" class="flex flex-wrap items-center gap-2">
-            <a th:if="${hasPrevious}" th:href="@{/super-admin/organizadores(page=${currentPage - 1}, size=${size}, nome=${filtroNome}, email=${filtroEmail}, ativo=${filtroAtivo})}" class="rounded-lg border border-[#365477] px-3 py-2 text-sm text-slate-200 hover:bg-white/5">Anterior</a>
-            <span class="rounded-lg border border-[#365477] bg-[#00457C] px-3 py-2 text-sm font-semibold text-white" th:text="|${currentPage + 1} / ${totalPages}|">1 / 1</span>
-            <a th:if="${hasNext}" th:href="@{/super-admin/organizadores(page=${currentPage + 1}, size=${size}, nome=${filtroNome}, email=${filtroEmail}, ativo=${filtroAtivo})}" class="rounded-lg border border-[#365477] px-3 py-2 text-sm text-slate-200 hover:bg-white/5">Próxima</a>
+    <div th:if="${totalPages > 1}" class="seplag-pagination-bar">
+        <p class="seplag-pagination-info">
+            Exibindo <strong th:text="${(currentPage * size) + 1}">1</strong>–<strong th:text="${T(java.lang.Math).min((currentPage + 1) * size, totalElements)}">20</strong>
+            de <strong th:text="${totalElements}">0</strong>
+        </p>
+        <nav aria-label="Paginação dos organizadores" class="seplag-pagination">
+            <a th:if="${hasPrevious}" th:href="@{/super-admin/organizadores(page=${currentPage - 1}, size=${size}, nome=${filtroNome}, email=${filtroEmail}, ativo=${filtroAtivo})}">Anterior</a>
+            <span class="is-active" th:text="|${currentPage + 1} / ${totalPages}|">1 / 1</span>
+            <a th:if="${hasNext}" th:href="@{/super-admin/organizadores(page=${currentPage + 1}, size=${size}, nome=${filtroNome}, email=${filtroEmail}, ativo=${filtroAtivo})}">Próxima</a>
         </nav>
     </div>
 </main>
 
-<footer class="mt-8 border-t border-[#2D4A73] bg-[#08182B] px-4 py-4 text-center text-xs text-slate-500">
+<footer class="seplag-footer">
     &copy; 2026 Secretaria de Estado de Planejamento e Gestão de Mato Grosso. Todos os direitos reservados.
 </footer>
+
 </body>
 </html>

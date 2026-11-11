@@ -21,6 +21,7 @@ import sistema.eventos.service.UsuarioExportService;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -67,7 +68,13 @@ class UsuarioExportServiceTest {
     }
 
     private UsuarioEventoTituloProjection evento(Long usuarioId, String titulo) {
-        return new EventoTituloProjection(usuarioId, titulo);
+        return new EventoTituloProjection(usuarioId, titulo,
+                LocalDate.of(2026, 10, 10), LocalDate.of(2026, 10, 12));
+    }
+
+    private UsuarioEventoTituloProjection evento(Long usuarioId, String titulo,
+                                                 LocalDate dataInicio, LocalDate dataTermino) {
+        return new EventoTituloProjection(usuarioId, titulo, dataInicio, dataTermino);
     }
 
     private List<List<String>> linhas(byte[] xlsx) throws IOException {
@@ -230,6 +237,8 @@ class UsuarioExportServiceTest {
 
         assertEquals("Nenhum", linhas.get(1).get(5));
         assertEquals("Nenhum", linhas.get(1).get(6));
+        assertEquals("Nenhum", linhas.get(1).get(7));
+        assertEquals("Nenhum", linhas.get(1).get(8));
     }
 
     @Test
@@ -244,7 +253,9 @@ class UsuarioExportServiceTest {
         List<List<String>> linhas = linhas(usuarioExportService.exportarUsuarios(null, null, null, null));
 
         assertEquals("Workshop de Java", linhas.get(1).get(5));
-        assertEquals("Nenhum", linhas.get(1).get(6));
+        assertEquals("10/10/2026 - 12/10/2026", linhas.get(1).get(6));
+        assertEquals("Nenhum", linhas.get(1).get(7));
+        assertEquals("Nenhum", linhas.get(1).get(8));
     }
 
     @Test
@@ -253,15 +264,17 @@ class UsuarioExportServiceTest {
         when(usuarioRepository.findFiltrosSemPaginacao(null, null, null, null)).thenReturn(List.of(participante));
         when(inscricaoRepository.findTitulosEventosPorParticipantes(List.of(1L), StatusInscricao.UTILIZADO))
                 .thenReturn(List.of(
-                        evento(1L, "Workshop de Java"),
-                        evento(1L, "Congresso de Tecnologia"),
-                        evento(1L, "Curso de Spring Boot")));
+                        evento(1L, "Workshop de Java", LocalDate.of(2026, 10, 10), LocalDate.of(2026, 10, 12)),
+                        evento(1L, "Congresso de Tecnologia", LocalDate.of(2026, 10, 20), LocalDate.of(2026, 10, 21)),
+                        evento(1L, "Curso de Spring Boot", LocalDate.of(2026, 11, 5), LocalDate.of(2026, 11, 6))));
         when(eventoRepository.findTitulosEventosOrganizadosPorUsuarios(List.of(1L)))
                 .thenReturn(List.of());
 
         List<List<String>> linhas = linhas(usuarioExportService.exportarUsuarios(null, null, null, null));
 
         assertEquals("Workshop de Java\nCongresso de Tecnologia\nCurso de Spring Boot", linhas.get(1).get(5));
+        assertEquals("10/10/2026 - 12/10/2026\n20/10/2026 - 21/10/2026\n05/11/2026 - 06/11/2026",
+                linhas.get(1).get(6), "As datas devem manter a mesma ordem dos títulos");
         assertEquals(2, linhas.size(), "Usuário deve continuar em uma única linha (cabeçalho + 1)");
     }
 
@@ -294,7 +307,9 @@ class UsuarioExportServiceTest {
         List<List<String>> linhas = linhas(usuarioExportService.exportarUsuarios(null, null, null, null));
 
         assertEquals("Nenhum", linhas.get(1).get(5));
-        assertEquals("Semana de Tecnologia 2026", linhas.get(1).get(6));
+        assertEquals("Nenhum", linhas.get(1).get(6));
+        assertEquals("Semana de Tecnologia 2026", linhas.get(1).get(7));
+        assertEquals("10/10/2026 - 12/10/2026", linhas.get(1).get(8));
     }
 
     @Test
@@ -305,12 +320,16 @@ class UsuarioExportServiceTest {
                 .thenReturn(List.of());
         when(eventoRepository.findTitulosEventosOrganizadosPorUsuarios(List.of(2L)))
                 .thenReturn(List.of(
-                        evento(2L, "Semana de Tecnologia 2026"),
-                        evento(2L, "Workshop SEPLAG")));
+                        evento(2L, "Semana de Tecnologia 2026",
+                                LocalDate.of(2026, 10, 10), LocalDate.of(2026, 10, 12)),
+                        evento(2L, "Workshop SEPLAG",
+                                LocalDate.of(2026, 10, 20), LocalDate.of(2026, 10, 21))));
 
         List<List<String>> linhas = linhas(usuarioExportService.exportarUsuarios(null, null, null, null));
 
-        assertEquals("Semana de Tecnologia 2026\nWorkshop SEPLAG", linhas.get(1).get(6));
+        assertEquals("Semana de Tecnologia 2026\nWorkshop SEPLAG", linhas.get(1).get(7));
+        assertEquals("10/10/2026 - 12/10/2026\n20/10/2026 - 21/10/2026",
+                linhas.get(1).get(8), "As datas devem manter a mesma ordem dos títulos");
         assertEquals(2, linhas.size());
     }
 
@@ -326,7 +345,9 @@ class UsuarioExportServiceTest {
         List<List<String>> linhas = linhas(usuarioExportService.exportarUsuarios(null, null, null, null));
 
         assertEquals("Curso de Gestão", linhas.get(1).get(5));
-        assertEquals("Encontro de Servidores", linhas.get(1).get(6));
+        assertEquals("10/10/2026 - 12/10/2026", linhas.get(1).get(6));
+        assertEquals("Encontro de Servidores", linhas.get(1).get(7));
+        assertEquals("10/10/2026 - 12/10/2026", linhas.get(1).get(8));
     }
 
     @Test
@@ -346,9 +367,9 @@ class UsuarioExportServiceTest {
         List<List<String>> linhas = linhas(usuarioExportService.exportarUsuarios(null, null, null, null));
 
         assertEquals("Evento da Ana", linhas.get(1).get(5));
-        assertEquals("Organizado pela Ana", linhas.get(1).get(6));
+        assertEquals("Organizado pela Ana", linhas.get(1).get(7));
         assertEquals("Evento do Bruno", linhas.get(2).get(5));
-        assertEquals("Organizado pelo Bruno", linhas.get(2).get(6));
+        assertEquals("Organizado pelo Bruno", linhas.get(2).get(7));
     }
 
     @Test
@@ -407,7 +428,9 @@ class UsuarioExportServiceTest {
         assertEquals(2, linhas.size(), "Apenas o usuário filtrado deve ser exportado");
         assertEquals("João", linhas.get(1).get(0));
         assertEquals("Curso de Java", linhas.get(1).get(5));
-        assertEquals("Semana de Tecnologia", linhas.get(1).get(6));
+        assertEquals("10/10/2026 - 12/10/2026", linhas.get(1).get(6));
+        assertEquals("Semana de Tecnologia", linhas.get(1).get(7));
+        assertEquals("10/10/2026 - 12/10/2026", linhas.get(1).get(8));
         verify(usuarioRepository).findFiltrosSemPaginacao("joao", null, Perfil.ROLE_ORGANIZADOR, true);
     }
 
@@ -418,10 +441,45 @@ class UsuarioExportServiceTest {
         List<List<String>> linhas = linhas(usuarioExportService.exportarUsuarios(null, null, null, null));
 
         assertEquals(List.of("Nome", "E-mail", "Perfil", "Status", "Data de cadastro",
-                "Eventos Participados", "Eventos Organizados"), linhas.get(0));
+                "Eventos Participados", "Datas dos Eventos Participados",
+                "Eventos Organizados", "Datas dos Eventos Organizados"), linhas.get(0));
     }
 
-    private record EventoTituloProjection(Long usuarioId, String titulo) implements UsuarioEventoTituloProjection {
+    @Test
+    void datasUsamExatamenteOsCamposExistentesDoEvento() throws IOException {
+        Usuario participante = usuarioComId(1L, "Ana", "ana@seplag.mt.gov.br", Perfil.ROLE_PARTICIPANTE);
+        when(usuarioRepository.findFiltrosSemPaginacao(null, null, null, null)).thenReturn(List.of(participante));
+        when(inscricaoRepository.findTitulosEventosPorParticipantes(List.of(1L), StatusInscricao.UTILIZADO))
+                .thenReturn(List.of(evento(1L, "Evento Somente Início",
+                        LocalDate.of(2026, 10, 10), null)));
+        when(eventoRepository.findTitulosEventosOrganizadosPorUsuarios(List.of(1L))).thenReturn(List.of());
+
+        List<List<String>> linhas = linhas(usuarioExportService.exportarUsuarios(null, null, null, null));
+
+        assertEquals("10/10/2026", linhas.get(1).get(6),
+                "Data de término ausente não deve ser inventada");
+    }
+
+    @Test
+    void datasDosEventosOrganizadosMantemCorrespondenciaComOsTitulos() throws IOException {
+        Usuario organizador = usuarioComId(2L, "Bruno", "bruno@seplag.mt.gov.br", Perfil.ROLE_ORGANIZADOR);
+        when(usuarioRepository.findFiltrosSemPaginacao(null, null, null, null)).thenReturn(List.of(organizador));
+        when(inscricaoRepository.findTitulosEventosPorParticipantes(List.of(2L), StatusInscricao.UTILIZADO))
+                .thenReturn(List.of());
+        when(eventoRepository.findTitulosEventosOrganizadosPorUsuarios(List.of(2L)))
+                .thenReturn(List.of(
+                        evento(2L, "Evento Curto", LocalDate.of(2026, 1, 2), LocalDate.of(2026, 1, 3)),
+                        evento(2L, "Evento Longo", LocalDate.of(2026, 5, 10), LocalDate.of(2026, 5, 20))));
+
+        List<List<String>> linhas = linhas(usuarioExportService.exportarUsuarios(null, null, null, null));
+
+        assertEquals("Evento Curto\nEvento Longo", linhas.get(1).get(7));
+        assertEquals("02/01/2026 - 03/01/2026\n10/05/2026 - 20/05/2026", linhas.get(1).get(8));
+    }
+
+    private record EventoTituloProjection(Long usuarioId, String titulo,
+                                          LocalDate dataInicio, LocalDate dataTermino)
+            implements UsuarioEventoTituloProjection {
 
         @Override
         public Long getUsuarioId() {
@@ -431,6 +489,16 @@ class UsuarioExportServiceTest {
         @Override
         public String getTitulo() {
             return titulo;
+        }
+
+        @Override
+        public LocalDate getDataInicio() {
+            return dataInicio;
+        }
+
+        @Override
+        public LocalDate getDataTermino() {
+            return dataTermino;
         }
     }
 }
