@@ -170,7 +170,10 @@ public class EventoController {
         model.addAttribute("evento", evento);
         model.addAttribute("percentualMinimo", minimo);
         model.addAttribute("totalElegiveis", elegiveis);
-        model.addAttribute("sorteioRealizado", evento.getSorteioRealizadoEm() != null);
+        model.addAttribute("resultadosSorteio", evento.getResultadosSorteio().stream()
+                .sorted(java.util.Comparator.comparing(sistema.eventos.model.SorteioResultado::getRealizadoEm).reversed()
+                        .thenComparing(sistema.eventos.model.SorteioResultado::getId, java.util.Comparator.reverseOrder()))
+                .toList());
         model.addAttribute("paginaAtiva", "sorteios");
         return "sorteios";
     }
@@ -189,12 +192,13 @@ public class EventoController {
     }
 
     @PostMapping("/eventos/{id}/sorteios/realizar")
-    public String realizarSorteio(@PathVariable("id") Long id, Authentication authentication,
+    public String realizarSorteio(@PathVariable("id") Long id, @RequestParam("quantidade") Integer quantidade,
+                                  Authentication authentication,
                                   RedirectAttributes attributes) {
         exigirAcessoAoEvento(id, authentication);
         try {
-            InscritoFrequenciaDto vencedor = inscricaoService.realizarSorteio(id);
-            attributes.addFlashAttribute("sucesso", "Sorteio realizado! Participante vencedor: " + vencedor.getNomeParticipante() + ".");
+            var vencedores = inscricaoService.realizarSorteio(id, quantidade);
+            attributes.addFlashAttribute("sucesso", "Sorteio realizado com " + vencedores.size() + " participante(s) vencedor(es).");
         } catch (NegocioException e) {
             attributes.addFlashAttribute("erroNegocio", e.getMessage());
         }

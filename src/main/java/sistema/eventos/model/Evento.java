@@ -120,6 +120,13 @@ public class Evento extends EntidadeAuditavel {
     @Column(name = "sorteio_realizado_em")
     private java.time.LocalDateTime sorteioRealizadoEm;
 
+    @Column(name = "sorteio_numero_rodada", nullable = false)
+    private Integer sorteioNumeroRodada = 0;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "evento", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SorteioResultado> resultadosSorteio = new ArrayList<>();
+
     @Builder.Default
     @OneToMany(mappedBy = "evento", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Sessao> sessoes = new ArrayList<>();

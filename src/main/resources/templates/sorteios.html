@@ -32,25 +32,40 @@
                 <form th:action="@{/organizador/eventos/{id}/sorteios/percentual(id=${evento.id})}" method="post" class="seplag-form">
                     <div class="seplag-field"><label class="seplag-label" for="percentualMinimo">Frequência mínima (%)</label>
                         <input class="seplag-input" id="percentualMinimo" name="percentualMinimo" type="number" min="0" max="100" step="1" required th:value="${percentualMinimo}"></div>
-                    <button class="seplag-btn seplag-btn-secondary" type="submit" th:disabled="${sorteioRealizado}"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Salvar percentual</button>
+                    <button class="seplag-btn seplag-btn-secondary" type="submit"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Salvar percentual</button>
                 </form>
                 <p class="seplag-count-chip" style="margin-top:1rem"><i class="fa-solid fa-user-check" aria-hidden="true"></i>
                     Elegíveis agora: <strong th:text="${totalElegiveis}">0</strong></p>
             </div>
         </section>
         <section class="seplag-card" aria-labelledby="realizar-sorteio" style="margin-top:1rem">
-            <div class="seplag-card__header"><div><h2 class="seplag-card__title" id="realizar-sorteio">Resultado</h2>
-                <p class="seplag-card__hint">O sistema escolherá uma pessoa aleatoriamente entre os participantes elegíveis.</p></div></div>
+            <div class="seplag-card__header"><div><h2 class="seplag-card__title" id="realizar-sorteio">Novo sorteio</h2>
+                <p class="seplag-card__hint">Escolha quantas pessoas serão sorteadas. Cada rodada seleciona vencedores diferentes entre si; você pode realizar novas rodadas quando quiser.</p></div></div>
             <div class="seplag-card__body">
-                <div th:if="${sorteioRealizado}" class="seplag-alert seplag-alert--success" role="status">
-                    <i class="fa-solid fa-trophy" aria-hidden="true"></i><span>Vencedor: <strong th:text="${evento.sorteioVencedorNome}">Participante</strong>
-                    <span th:if="${evento.sorteioVencedorEmail != null}" th:text="| (${evento.sorteioVencedorEmail})|"></span>
-                    <span th:text="| — sorteio realizado em ${#temporals.format(evento.sorteioRealizadoEm, 'dd/MM/yyyy HH:mm')}|"></span></span>
-                </div>
-                <form th:unless="${sorteioRealizado}" th:action="@{/organizador/eventos/{id}/sorteios/realizar(id=${evento.id})}" method="post">
+                <form th:action="@{/organizador/eventos/{id}/sorteios/realizar(id=${evento.id})}" method="post" class="seplag-form">
+                    <div class="seplag-field"><label class="seplag-label" for="quantidade">Quantidade de pessoas</label>
+                        <input class="seplag-input" id="quantidade" name="quantidade" type="number" min="1" th:max="${totalElegiveis}" value="1" required></div>
                     <button class="seplag-btn seplag-btn-primary" type="submit" th:disabled="${totalElegiveis == 0}"><i class="fa-solid fa-dice" aria-hidden="true"></i> Realizar sorteio</button>
                     <p class="seplag-card__hint" style="margin-top:.75rem" th:if="${totalElegiveis == 0}">Ainda não há participantes elegíveis. Registre presenças e confira o percentual mínimo.</p>
                 </form>
+            </div>
+        </section>
+        <section class="seplag-card" aria-labelledby="historico-sorteios" style="margin-top:1rem">
+            <div class="seplag-card__header"><div><h2 class="seplag-card__title" id="historico-sorteios">Histórico de sorteios</h2>
+                <p class="seplag-card__hint">Cada rodada fica registrada para consulta.</p></div></div>
+            <div class="seplag-card__body">
+                <p th:if="${resultadosSorteio.isEmpty()}" class="seplag-card__hint">Nenhum sorteio realizado ainda.</p>
+                <div class="seplag-table-wrap" th:unless="${resultadosSorteio.isEmpty()}">
+                    <table class="seplag-table"><thead><tr><th>Rodada</th><th>Vencedor</th><th>Frequência</th><th>Data</th></tr></thead>
+                        <tbody><tr th:each="resultado : ${resultadosSorteio}">
+                            <td data-label="Rodada" th:text="${resultado.rodada}">1</td>
+                            <td data-label="Vencedor" class="seplag-table__title"><span th:text="${resultado.nomeVencedor}">Participante</span>
+                                <small th:if="${resultado.emailVencedor != null}" th:text="${resultado.emailVencedor}"></small></td>
+                            <td data-label="Frequência" th:text="|${#numbers.formatDecimal(resultado.percentualFrequencia, 1, 1)}%|">100%</td>
+                            <td data-label="Data" th:text="${#temporals.format(resultado.realizadoEm, 'dd/MM/yyyy HH:mm')}">11/11/2026 10:00</td>
+                        </tr></tbody>
+                    </table>
+                </div>
             </div>
         </section>
     </main>

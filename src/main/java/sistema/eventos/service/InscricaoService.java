@@ -9,6 +9,7 @@ import sistema.eventos.model.Evento;
 import sistema.eventos.model.Inscricao;
 import sistema.eventos.model.StatusInscricao;
 import sistema.eventos.model.StatusPresenca;
+import sistema.eventos.model.SorteioResultado;
 import sistema.eventos.model.Usuario;
 import sistema.eventos.repository.EventoRepository;
 import sistema.eventos.repository.InscricaoRepository;
@@ -207,11 +208,11 @@ public class InscricaoService {
     }
 
     @Transactional
-    public InscritoFrequenciaDto realizarSorteio(Long eventoId) {
+    public List<SorteioResultado> realizarSorteio(Long eventoId, Integer quantidade) {
         Evento evento = eventoRepository.findByIdForUpdate(eventoId)
                 .orElseThrow(() -> new NegocioException("Evento não encontrado."));
-        if (evento.getSorteioRealizadoEm() != null) {
-            throw new NegocioException("O sorteio deste evento já foi realizado.");
+        if (quantidade == null || quantidade < 1 || quantidade > 1000) {
+            throw new NegocioException("Escolha uma quantidade entre 1 e 1000 pessoas.");
         }
         int minimo = evento.getSorteioFrequenciaMinima() == null ? 75 : evento.getSorteioFrequenciaMinima();
         List<InscritoFrequenciaDto> elegiveis = listarInscritosComFrequencia(eventoId).stream()
@@ -221,12 +222,31 @@ public class InscricaoService {
         if (elegiveis.isEmpty()) {
             throw new NegocioException("Não há participantes elegíveis. Confira o percentual mínimo e as presenças registradas.");
         }
-        InscritoFrequenciaDto vencedor = elegiveis.get(RANDOM.nextInt(elegiveis.size()));
+        if (quantidade > elegiveis.size()) {
+            throw new NegocioException("A quantidade de pessoas sorteadas não pode superar os " + elegiveis.size() + " participantes elegíveis.");
+        }
+        java.util.Collections.shuffle(elegiveis, RANDOM);
+        int rodada = (evento.getSorteioNumeroRodada() == null ? 0 : evento.getSorteioNumeroRodada()) + 1;
+        LocalDateTime realizadoEm = LocalDateTime.now();
+        List<SorteioResultado> resultados = new ArrayList<>();
+        for (InscritoFrequenciaDto participante : elegiveis.subList(0, quantidade)) {
+            SorteioResultado resultado = new SorteioResultado();
+            resultado.setEvento(evento);
+            resultado.setRodada(rodada);
+            resultado.setNomeVencedor(participante.getNomeParticipante());
+            resultado.setEmailVencedor(participante.getEmailParticipante());
+            resultado.setPercentualFrequencia(participante.getPercentualFrequencia());
+            resultado.setRealizadoEm(realizadoEm);
+            evento.getResultadosSorteio().add(resultado);
+            resultados.add(resultado);
+        }
+        evento.setSorteioNumeroRodada(rodada);
+        InscritoFrequenciaDto vencedor = elegiveis.get(0);
         evento.setSorteioVencedorNome(vencedor.getNomeParticipante());
         evento.setSorteioVencedorEmail(vencedor.getEmailParticipante());
-        evento.setSorteioRealizadoEm(LocalDateTime.now());
+        evento.setSorteioRealizadoEm(realizadoEm);
         eventoRepository.save(evento);
-        return vencedor;
+        return resultados;
     }
 
     private InscritoFrequenciaDto montarInscritoFrequencia(Inscricao inscricao,
