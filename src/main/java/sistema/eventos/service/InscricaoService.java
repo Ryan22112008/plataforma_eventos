@@ -15,6 +15,7 @@ import sistema.eventos.repository.EventoRepository;
 import sistema.eventos.repository.InscricaoRepository;
 import sistema.eventos.repository.PresencaRepository;
 import sistema.eventos.repository.SessaoRepository;
+import sistema.eventos.repository.SorteioResultadoRepository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -37,13 +38,16 @@ public class InscricaoService {
     private final EventoRepository eventoRepository;
     private final SessaoRepository sessaoRepository;
     private final PresencaRepository presencaRepository;
+    private final SorteioResultadoRepository sorteioResultadoRepository;
 
     public InscricaoService(InscricaoRepository inscricaoRepository, EventoRepository eventoRepository,
-                            SessaoRepository sessaoRepository, PresencaRepository presencaRepository) {
+                            SessaoRepository sessaoRepository, PresencaRepository presencaRepository,
+                            SorteioResultadoRepository sorteioResultadoRepository) {
         this.inscricaoRepository = inscricaoRepository;
         this.eventoRepository = eventoRepository;
         this.sessaoRepository = sessaoRepository;
         this.presencaRepository = presencaRepository;
+        this.sorteioResultadoRepository = sorteioResultadoRepository;
     }
 
     @Transactional
@@ -207,6 +211,11 @@ public class InscricaoService {
         eventoRepository.save(evento);
     }
 
+    @Transactional(readOnly = true)
+    public List<SorteioResultado> listarResultadosSorteio(Long eventoId) {
+        return sorteioResultadoRepository.findByEventoIdOrderByRealizadoEmDescIdDesc(eventoId);
+    }
+
     @Transactional
     public List<SorteioResultado> realizarSorteio(Long eventoId, Integer quantidade) {
         Evento evento = eventoRepository.findByIdForUpdate(eventoId)
@@ -237,7 +246,6 @@ public class InscricaoService {
             resultado.setEmailVencedor(participante.getEmailParticipante());
             resultado.setPercentualFrequencia(participante.getPercentualFrequencia());
             resultado.setRealizadoEm(realizadoEm);
-            evento.getResultadosSorteio().add(resultado);
             resultados.add(resultado);
         }
         evento.setSorteioNumeroRodada(rodada);
@@ -246,7 +254,7 @@ public class InscricaoService {
         evento.setSorteioVencedorEmail(vencedor.getEmailParticipante());
         evento.setSorteioRealizadoEm(realizadoEm);
         eventoRepository.save(evento);
-        return resultados;
+        return sorteioResultadoRepository.saveAll(resultados);
     }
 
     private InscritoFrequenciaDto montarInscritoFrequencia(Inscricao inscricao,

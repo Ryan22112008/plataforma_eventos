@@ -125,10 +125,6 @@ public class Evento extends EntidadeAuditavel {
 
     @Builder.Default
     @OneToMany(mappedBy = "evento", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<SorteioResultado> resultadosSorteio = new ArrayList<>();
-
-    @Builder.Default
-    @OneToMany(mappedBy = "evento", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Sessao> sessoes = new ArrayList<>();
 
     public boolean possuiVagasDisponiveis() {
