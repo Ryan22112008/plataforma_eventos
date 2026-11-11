@@ -108,6 +108,18 @@ public class Evento extends EntidadeAuditavel {
     @Column(name = "presenca_finalizada")
     private boolean presencaFinalizada = false;
 
+    @Column(name = "sorteio_frequencia_minima")
+    private Integer sorteioFrequenciaMinima = 75;
+
+    @Column(name = "sorteio_vencedor_nome", length = 150)
+    private String sorteioVencedorNome;
+
+    @Column(name = "sorteio_vencedor_email", length = 255)
+    private String sorteioVencedorEmail;
+
+    @Column(name = "sorteio_realizado_em")
+    private java.time.LocalDateTime sorteioRealizadoEm;
+
     @Builder.Default
     @OneToMany(mappedBy = "evento", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Sessao> sessoes = new ArrayList<>();

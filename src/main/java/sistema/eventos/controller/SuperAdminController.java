@@ -23,6 +23,7 @@ import sistema.eventos.model.Inscricao;
 import sistema.eventos.model.Perfil;
 import sistema.eventos.model.Usuario;
 import sistema.eventos.service.CertificadoService;
+import sistema.eventos.service.FileStorageService;
 import sistema.eventos.service.InscricaoService;
 import sistema.eventos.service.UsuarioExportService;
 import sistema.eventos.service.UsuarioService;
@@ -30,6 +31,7 @@ import sistema.eventos.service.UsuarioService;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -49,6 +51,7 @@ public class SuperAdminController {
     private final UsuarioExportService usuarioExportService;
     private final InscricaoService inscricaoService;
     private final CertificadoService certificadoService;
+    private final FileStorageService fileStorageService;
 
     private Long idDoUsuarioLogado() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -77,7 +80,6 @@ public class SuperAdminController {
         model.addAttribute("totalUsuarios", usuariosPage.getTotalElements());
         model.addAttribute("totalParticipantes", usuarioService.contarPorPerfil(Perfil.ROLE_PARTICIPANTE));
         model.addAttribute("totalOrganizadores", usuarioService.contarPorPerfil(Perfil.ROLE_ORGANIZADOR));
-        model.addAttribute("totalAvaliadores", usuarioService.contarPorPerfil(Perfil.ROLE_AVALIADOR));
         model.addAttribute("totalSuperAdmins", usuarioService.contarPorPerfil(Perfil.ROLE_SUPER_ADMIN));
         model.addAttribute("totalAtivos", usuarioService.contarPorAtivo(true));
         model.addAttribute("totalInativos", usuarioService.contarPorAtivo(false));
@@ -119,9 +121,16 @@ public class SuperAdminController {
         Map<Long, Long> eventosPorOrganizador = usuarioService.contarEventosOrganizados(
                 organizadoresPage.getContent().stream().map(Usuario::getId).collect(Collectors.toList()));
 
+        Map<Long, String> fotosOrganizadores = new HashMap<>();
+        for (Usuario organizador : organizadoresPage.getContent()) {
+            fotosOrganizadores.put(organizador.getId(),
+                    fileStorageService.publicImageUrl(organizador.getFotoPerfil()));
+        }
+
         Long idLogado = idDoUsuarioLogado();
         model.addAttribute("organizadores", organizadoresPage.getContent());
         model.addAttribute("eventosPorOrganizador", eventosPorOrganizador);
+        model.addAttribute("fotosOrganizadores", fotosOrganizadores);
         model.addAttribute("idUsuarioLogado", idLogado);
         model.addAttribute("totalOrganizadores", organizadoresPage.getTotalElements());
         model.addAttribute("currentPage", organizadoresPage.getNumber());
@@ -250,6 +259,20 @@ public class SuperAdminController {
             Long idLogado = idDoUsuarioLogado();
             usuarioService.removerAcessoOrganizador(id, idLogado);
             redirectAttributes.addFlashAttribute("sucesso", "Acesso de organizador removido com sucesso.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erro", e.getMessage());
+        }
+        return "redirect:/super-admin/usuarios/" + id + "/detalhes";
+    }
+
+    @PostMapping("/usuarios/{id}/promover-super-admin")
+    public String promoverSuperAdmin(@PathVariable Long id,
+                                     RedirectAttributes redirectAttributes) {
+        try {
+            Long idLogado = idDoUsuarioLogado();
+            usuarioService.promoverParaSuperAdmin(id, idLogado);
+            redirectAttributes.addFlashAttribute("sucesso",
+                    "Usuário promovido para SUPER_ADMIN com sucesso. O histórico e os vínculos da conta foram preservados.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("erro", e.getMessage());
         }

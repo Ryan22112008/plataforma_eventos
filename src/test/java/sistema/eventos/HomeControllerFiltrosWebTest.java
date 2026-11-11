@@ -69,6 +69,33 @@ class HomeControllerFiltrosWebTest {
     }
 
     @Test
+    void deveRenderizarBuscaComTodosOsFiltrosDentroDoFormulario() throws Exception {
+        when(eventoRepository.buscarEventosPublicos(any(), anyBoolean(), anyString(), any(), any(),
+                any(), any(), any(), any(Pageable.class))).thenReturn(Page.empty());
+
+        String html = mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("role=\"search\"")))
+                .andExpect(content().string(containsString("aria-label=\"Filtros de busca\"")))
+                .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+
+        int inicio = html.indexOf("class=\"seplag-public-search\"");
+        int fim = html.indexOf("</form>", inicio);
+        assertThat(inicio).isGreaterThanOrEqualTo(0);
+        assertThat(fim).isGreaterThan(inicio);
+
+        String formulario = html.substring(inicio, fim);
+        assertThat(formulario).contains(
+                "name=\"busca\"", "id=\"busca\"",
+                "name=\"nicho\"", "id=\"nicho\"",
+                "name=\"modalidade\"", "id=\"modalidade\"",
+                "name=\"data\"", "id=\"data\"",
+                "name=\"vigencia\"", "id=\"vigencia\"",
+                "type=\"submit\"");
+        assertThat(formulario).doesNotContain("<form");
+    }
+
+    @Test
     void deveRenderizarOsControlesDeDataEVigencia() throws Exception {
         when(eventoRepository.buscarEventosPublicos(any(), anyBoolean(), anyString(), any(), any(),
                 any(), any(), any(), any(Pageable.class))).thenReturn(Page.empty());
@@ -163,7 +190,9 @@ class HomeControllerFiltrosWebTest {
                 .andExpect(content().string(containsString("data=2026-11-15")))
                 .andExpect(content().string(containsString("vigencia=FUTUROS")))
                 .andExpect(content().string(containsString("page=2")))
-                .andExpect(content().string(containsString("page=0")));
+                .andExpect(content().string(containsString("page=0")))
+                .andExpect(content().string(containsString("href=\"/eventos/1\"")))
+                .andExpect(content().string(not(containsString("/home/eventos/1"))));
     }
 
     private Evento eventoPublicado() {

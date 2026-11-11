@@ -142,6 +142,52 @@ class VitrineEventoControllerWebTest {
                 .andExpect(content().string(not(containsString("Enviar avaliação"))));
     }
 
+    @Test
+    void deveRenderizarBannerLocalDoEventoNoHero() throws Exception {
+        Evento evento = eventoPublicado(2L);
+        evento.setBannerUrl("banner-do-evento.jpg");
+        when(eventoService.buscarPorId(EVENTO_ID)).thenReturn(evento);
+        when(avaliacaoEventoService.obterResumo(EVENTO_ID)).thenReturn(resumoSemAvaliacoes());
+        when(avaliacaoEventoService.listarDoEvento(eq(EVENTO_ID), any(Pageable.class)))
+                .thenReturn(Page.empty());
+
+        mockMvc.perform(get("/eventos/{id}", EVENTO_ID))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Curso de Teste")))
+                .andExpect(content().string(containsString("url(&#39;/imagens-eventos/banner-do-evento.jpg&#39;)")))
+                .andExpect(content().string(containsString("Realizar Inscrição")))
+                .andExpect(content().string(containsString("Sobre o evento")))
+                .andExpect(content().string(containsString("Informações do evento")))
+                .andExpect(content().string(containsString("Local do evento")))
+                .andExpect(content().string(containsString("Avaliações")))
+                .andExpect(content().string(not(containsString("evento.bannerUrl"))));
+    }
+
+    @Test
+    void devePreservarBannerExternoDoCloudinaryNoHero() throws Exception {
+        String banner = "https://res.cloudinary.com/demo/image/upload/v1/banner.jpg";
+        Evento evento = eventoPublicado(2L);
+        evento.setBannerUrl(banner);
+        when(eventoService.buscarPorId(EVENTO_ID)).thenReturn(evento);
+        when(avaliacaoEventoService.obterResumo(EVENTO_ID)).thenReturn(resumoSemAvaliacoes());
+        when(avaliacaoEventoService.listarDoEvento(eq(EVENTO_ID), any(Pageable.class)))
+                .thenReturn(Page.empty());
+
+        mockMvc.perform(get("/eventos/{id}", EVENTO_ID))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("url(&#39;" + banner + "&#39;)")));
+    }
+
+    @Test
+    void deveManterTratamentoAtualParaEventoInexistente() throws Exception {
+        when(eventoService.buscarPorId(EVENTO_ID))
+                .thenThrow(new sistema.eventos.exception.NegocioException("Evento não encontrado"));
+
+        mockMvc.perform(get("/eventos/{id}", EVENTO_ID))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Erro 400 - Requisição Inválida")));
+    }
+
     private void autenticar(Long id, String nome) {
         Usuario usuario = new Usuario();
         usuario.setId(id);

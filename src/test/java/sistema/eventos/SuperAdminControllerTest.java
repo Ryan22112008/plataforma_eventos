@@ -1,27 +1,40 @@
 package sistema.eventos;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.ui.ExtendedModelMap;
+import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 import sistema.eventos.controller.SuperAdminController;
 import sistema.eventos.dto.HistoricoParticipacaoDto;
 import sistema.eventos.exception.NegocioException;
 import sistema.eventos.model.Evento;
 import sistema.eventos.model.Inscricao;
+import sistema.eventos.model.Perfil;
 import sistema.eventos.model.StatusEvento;
 import sistema.eventos.model.StatusInscricao;
 import sistema.eventos.model.Usuario;
 import sistema.eventos.service.CertificadoService;
+import sistema.eventos.service.FileStorageService;
 import sistema.eventos.service.InscricaoService;
 import sistema.eventos.service.UsuarioService;
 
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -39,8 +52,16 @@ class SuperAdminControllerTest {
     @Mock
     private CertificadoService certificadoService;
 
+    @Mock
+    private FileStorageService fileStorageService;
+
     @InjectMocks
     private SuperAdminController superAdminController;
+
+    @AfterEach
+    void limparContextoDeSeguranca() {
+        SecurityContextHolder.clearContext();
+    }
 
     @Test
     void superAdminDeveBaixarCertificadoValidoDeOutroUsuario() throws Exception {
@@ -211,5 +232,73 @@ class SuperAdminControllerTest {
         assertEquals(42L, dto.getInscricaoId());
         assertEquals(10L, dto.getEventoId());
         assertTrue(dto.isCertificadoDisponivel());
+    }
+
+    @Test
+    void listarOrganizadoresDeveUsarFotoPerfilQuandoExistir() {
+        Usuario organizador = new Usuario();
+        organizador.setId(5L);
+        organizador.setNome("Organizador com Foto");
+        organizador.setEmail("organizador@seplag.mt.gov.br");
+        organizador.setPerfil(Perfil.ROLE_ORGANIZADOR);
+        organizador.setFotoPerfil("foto-organizador.png");
+
+        when(usuarioService.listarUsuarios(any(), any(), eq(Perfil.ROLE_ORGANIZADOR), any(), any()))
+                .thenReturn(new PageImpl<>(List.of(organizador), PageRequest.of(0, 20), 1));
+        when(usuarioService.contarEventosOrganizados(anyList())).thenReturn(Map.of(5L, 3L));
+        when(fileStorageService.publicImageUrl("foto-organizador.png"))
+                .thenReturn("/imagens-eventos/foto-organizador.png");
+
+        ExtendedModelMap model = new ExtendedModelMap();
+        superAdminController.listarOrganizadores(model, null, null, null, 0, 20);
+
+        @SuppressWarnings("unchecked")
+        Map<Long, String> fotos = (Map<Long, String>) model.getAttribute("fotosOrganizadores");
+        assertNotNull(fotos);
+        assertEquals("/imagens-eventos/foto-organizador.png", fotos.get(5L));
+    }
+
+    @Test
+    void listarOrganizadoresDeveManterFallbackQuandoNaoHouverFoto() {
+        Usuario organizador = new Usuario();
+        organizador.setId(6L);
+        organizador.setNome("Organizador sem Foto");
+        organizador.setEmail("sem-foto@seplag.mt.gov.br");
+        organizador.setPerfil(Perfil.ROLE_ORGANIZADOR);
+        organizador.setFotoPerfil(null);
+
+        when(usuarioService.listarUsuarios(any(), any(), eq(Perfil.ROLE_ORGANIZADOR), any(), any()))
+                .thenReturn(new PageImpl<>(List.of(organizador), PageRequest.of(0, 20), 1));
+        when(usuarioService.contarEventosOrganizados(anyList())).thenReturn(new HashMap<>());
+        when(fileStorageService.publicImageUrl(null)).thenReturn(null);
+
+        ExtendedModelMap model = new ExtendedModelMap();
+        superAdminController.listarOrganizadores(model, null, null, null, 0, 20);
+
+        @SuppressWarnings("unchecked")
+        Map<Long, String> fotos = (Map<Long, String>) model.getAttribute("fotosOrganizadores");
+        assertNotNull(fotos);
+        assertNull(fotos.get(6L));
+    }
+
+    @Test
+    void promoverSuperAdminDeveDelegarParaServicoComUsuarioAutenticado() {
+        Usuario admin = new Usuario();
+        admin.setId(1L);
+        admin.setEmail("admin@seplag.mt.gov.br");
+        admin.setPerfil(Perfil.ROLE_SUPER_ADMIN);
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        "admin@seplag.mt.gov.br", "senha",
+                        AuthorityUtils.createAuthorityList("ROLE_SUPER_ADMIN")));
+        when(usuarioService.buscarPorEmail("admin@seplag.mt.gov.br")).thenReturn(admin);
+
+        RedirectAttributesModelMap attributes = new RedirectAttributesModelMap();
+        String view = superAdminController.promoverSuperAdmin(2L, attributes);
+
+        assertEquals("redirect:/super-admin/usuarios/2/detalhes", view);
+        verify(usuarioService).promoverParaSuperAdmin(2L, 1L);
+        assertNotNull(attributes.getFlashAttributes().get("sucesso"));
     }
 }

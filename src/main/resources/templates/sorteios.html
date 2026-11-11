@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+<head th:replace="~{fragments/seplag-ui :: head('Sorteios do Evento')}">
+    <title>Sorteios | SEPLAG-MT</title>
+</head>
+<body class="v2 seplag-shell">
+<a class="seplag-skip-link" href="#conteudo">Ir para o conteúdo</a>
+<div class="seplag-drawer-backdrop" data-seplag-backdrop aria-hidden="true"></div>
+<aside th:replace="~{fragments/seplag-ui :: sidebar('')}"></aside>
+<div class="seplag-main">
+    <header th:replace="~{fragments/seplag-ui :: topbar('Sorteios', 'Organizador')}"></header>
+    <main class="seplag-content" id="conteudo">
+        <nav class="seplag-breadcrumb" aria-label="Trilha de navegação">
+            <ol><li><a th:href="@{/organizador/painel}">Painel do organizador</a></li>
+                <li><span class="seplag-breadcrumb__label" th:text="${evento.titulo}">Evento</span></li>
+                <li aria-current="page">Sorteios</li></ol>
+        </nav>
+        <nav class="seplag-subnav" aria-label="Seções do evento">
+            <a th:href="@{/organizador/eventos/{id}/inscritos(id=${evento.id})}" class="seplag-subnav__link"><i class="fa-solid fa-users" aria-hidden="true"></i> Inscritos</a>
+            <a th:href="@{/presencas/{id}/frequencia(id=${evento.id})}" class="seplag-subnav__link"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i> Frequência</a>
+            <a th:href="@{/organizador/eventos/{id}/sorteios(id=${evento.id})}" class="seplag-subnav__link is-active" aria-current="page"><i class="fa-solid fa-ticket" aria-hidden="true"></i> Sorteios</a>
+        </nav>
+        <div th:if="${sucesso}" class="seplag-alert seplag-alert--success" role="status"><i class="fa-solid fa-circle-check" aria-hidden="true"></i><span th:text="${sucesso}">Operação concluída.</span></div>
+        <div th:if="${erroNegocio}" class="seplag-alert seplag-alert--error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i><span th:text="${erroNegocio}">Não foi possível concluir o sorteio.</span></div>
+        <div class="seplag-page-head"><div class="seplag-page-head__copy"><p class="seplag-eyebrow">Organizador</p><h1>Sorteio por frequência</h1>
+            <p th:text="${evento.titulo}">Evento</p></div></div>
+        <section class="seplag-card" aria-labelledby="configurar-sorteio">
+            <div class="seplag-card__header"><div><h2 class="seplag-card__title" id="configurar-sorteio">Quem pode participar</h2>
+                <p class="seplag-card__hint">Defina a frequência mínima. Só entram no sorteio participantes não cancelados com presença registrada em sessões do evento.</p></div></div>
+            <div class="seplag-card__body">
+                <form th:action="@{/organizador/eventos/{id}/sorteios/percentual(id=${evento.id})}" method="post" class="seplag-form">
+                    <div class="seplag-field"><label class="seplag-label" for="percentualMinimo">Frequência mínima (%)</label>
+                        <input class="seplag-input" id="percentualMinimo" name="percentualMinimo" type="number" min="0" max="100" step="1" required th:value="${percentualMinimo}"></div>
+                    <button class="seplag-btn seplag-btn-secondary" type="submit" th:disabled="${sorteioRealizado}"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Salvar percentual</button>
+                </form>
+                <p class="seplag-count-chip" style="margin-top:1rem"><i class="fa-solid fa-user-check" aria-hidden="true"></i>
+                    Elegíveis agora: <strong th:text="${totalElegiveis}">0</strong></p>
+            </div>
+        </section>
+        <section class="seplag-card" aria-labelledby="realizar-sorteio" style="margin-top:1rem">
+            <div class="seplag-card__header"><div><h2 class="seplag-card__title" id="realizar-sorteio">Resultado</h2>
+                <p class="seplag-card__hint">O sistema escolherá uma pessoa aleatoriamente entre os participantes elegíveis.</p></div></div>
+            <div class="seplag-card__body">
+                <div th:if="${sorteioRealizado}" class="seplag-alert seplag-alert--success" role="status">
+                    <i class="fa-solid fa-trophy" aria-hidden="true"></i><span>Vencedor: <strong th:text="${evento.sorteioVencedorNome}">Participante</strong>
+                    <span th:if="${evento.sorteioVencedorEmail != null}" th:text="| (${evento.sorteioVencedorEmail})|"></span>
+                    <span th:text="| — sorteio realizado em ${#temporals.format(evento.sorteioRealizadoEm, 'dd/MM/yyyy HH:mm')}|"></span></span>
+                </div>
+                <form th:unless="${sorteioRealizado}" th:action="@{/organizador/eventos/{id}/sorteios/realizar(id=${evento.id})}" method="post">
+                    <button class="seplag-btn seplag-btn-primary" type="submit" th:disabled="${totalElegiveis == 0}"><i class="fa-solid fa-dice" aria-hidden="true"></i> Realizar sorteio</button>
+                    <p class="seplag-card__hint" style="margin-top:.75rem" th:if="${totalElegiveis == 0}">Ainda não há participantes elegíveis. Registre presenças e confira o percentual mínimo.</p>
+                </form>
+            </div>
+        </section>
+    </main>
+</div>
+<script th:src="@{/js/seplag-shell.js}"></script>
+</body>
+</html>

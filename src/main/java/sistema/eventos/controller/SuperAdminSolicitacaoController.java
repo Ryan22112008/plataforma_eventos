@@ -78,8 +78,13 @@ public class SuperAdminSolicitacaoController {
             return "redirect:/super-admin/solicitacoes";
         }
 
-        solicitacao.setStatus(StatusSolicitacao.REJEITADO);
-        solicitacaoRepository.save(solicitacao);
+        int atualizadas = solicitacaoRepository.atualizarStatus(
+                id, StatusSolicitacao.REJEITADO, StatusSolicitacao.PENDENTE);
+
+        if (atualizadas == 0) {
+            attributes.addFlashAttribute("erro", "Esta solicitação já foi processada.");
+            return "redirect:/super-admin/solicitacoes";
+        }
 
         emailService.enviarSolicitacaoRejeitada(solicitacao.getUsuario());
 

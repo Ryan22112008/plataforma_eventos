@@ -112,6 +112,39 @@ class PresencaRepositoryFrequenciaTest {
                 .doesNotContainKey(participanteSemPresenca.getId());
     }
 
+    @Test
+    void alteracaoDeStatusRefleteNaFrequenciaSemContarJustificada() {
+        Presenca presencaSessao1 = presencaRepository
+                .findByAlunoIdAndSessaoId(participanteSemPresenca.getId(), sessao1.getId())
+                .orElseThrow();
+
+        presencaSessao1.setStatus(StatusPresenca.PRESENTE);
+        presencaRepository.saveAndFlush(presencaSessao1);
+
+        Map<Long, Long> aposPresenca = presencaRepository
+                .contarPresencasPresentesPorAluno(evento.getId(), StatusPresenca.PRESENTE)
+                .stream()
+                .collect(Collectors.toMap(
+                        PresencaPorAlunoProjection::getAlunoId,
+                        PresencaPorAlunoProjection::getTotalPresentes));
+
+        assertThat(aposPresenca)
+                .containsEntry(participanteSemPresenca.getId(), 1L)
+                .containsEntry(participanteComPresenca.getId(), 2L);
+
+        presencaSessao1.setStatus(StatusPresenca.JUSTIFICADA);
+        presencaRepository.saveAndFlush(presencaSessao1);
+
+        Map<Long, Long> aposJustificada = presencaRepository
+                .contarPresencasPresentesPorAluno(evento.getId(), StatusPresenca.PRESENTE)
+                .stream()
+                .collect(Collectors.toMap(
+                        PresencaPorAlunoProjection::getAlunoId,
+                        PresencaPorAlunoProjection::getTotalPresentes));
+
+        assertThat(aposJustificada).doesNotContainKey(participanteSemPresenca.getId());
+    }
+
     private Evento criarEvento(String titulo, Usuario organizador) {
         return Evento.builder()
                 .titulo(titulo)

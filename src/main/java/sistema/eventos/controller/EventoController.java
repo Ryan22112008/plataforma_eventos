@@ -160,6 +160,47 @@ public class EventoController {
         }
     }
 
+    @GetMapping("/eventos/{id}/sorteios")
+    public String telaSorteio(@PathVariable("id") Long id, Model model, Authentication authentication) {
+        Evento evento = exigirAcessoAoEvento(id, authentication);
+        List<InscritoFrequenciaDto> inscritos = inscricaoService.listarInscritosComFrequencia(id);
+        int minimo = evento.getSorteioFrequenciaMinima() == null ? 75 : evento.getSorteioFrequenciaMinima();
+        long elegiveis = inscritos.stream().filter(i -> !i.isInscricaoCancelada())
+                .filter(i -> i.getPercentualFrequencia() != null && i.getPercentualFrequencia() >= minimo).count();
+        model.addAttribute("evento", evento);
+        model.addAttribute("percentualMinimo", minimo);
+        model.addAttribute("totalElegiveis", elegiveis);
+        model.addAttribute("sorteioRealizado", evento.getSorteioRealizadoEm() != null);
+        model.addAttribute("paginaAtiva", "sorteios");
+        return "sorteios";
+    }
+
+    @PostMapping("/eventos/{id}/sorteios/percentual")
+    public String configurarSorteio(@PathVariable("id") Long id, @RequestParam("percentualMinimo") Integer percentual,
+                                    Authentication authentication, RedirectAttributes attributes) {
+        exigirAcessoAoEvento(id, authentication);
+        try {
+            inscricaoService.configurarFrequenciaSorteio(id, percentual);
+            attributes.addFlashAttribute("sucesso", "Percentual mínimo atualizado.");
+        } catch (NegocioException e) {
+            attributes.addFlashAttribute("erroNegocio", e.getMessage());
+        }
+        return "redirect:/organizador/eventos/" + id + "/sorteios";
+    }
+
+    @PostMapping("/eventos/{id}/sorteios/realizar")
+    public String realizarSorteio(@PathVariable("id") Long id, Authentication authentication,
+                                  RedirectAttributes attributes) {
+        exigirAcessoAoEvento(id, authentication);
+        try {
+            InscritoFrequenciaDto vencedor = inscricaoService.realizarSorteio(id);
+            attributes.addFlashAttribute("sucesso", "Sorteio realizado! Participante vencedor: " + vencedor.getNomeParticipante() + ".");
+        } catch (NegocioException e) {
+            attributes.addFlashAttribute("erroNegocio", e.getMessage());
+        }
+        return "redirect:/organizador/eventos/" + id + "/sorteios";
+    }
+
     /**
      * Valida a participação de um inscrito do evento. A autorização é feita
      * pelo organizador autenticado (ou SUPER_ADMIN) dono do evento e pelo
@@ -186,6 +227,39 @@ public class EventoController {
                     inscricaoId, eventoId, e);
             redirectAttributes.addFlashAttribute("erroNegocio",
                     "Não foi possível validar a participação neste momento.");
+        }
+        return "redirect:/organizador/eventos/" + eventoId + "/inscritos";
+    }
+
+    /**
+     * Valida em lote apenas as inscrições selecionadas na tela de inscritos.
+     * O vínculo com o evento é conferido no service para cada ID recebido.
+     */
+    @PreAuthorize("hasAnyRole('ORGANIZADOR', 'SUPER_ADMIN')")
+    @PostMapping("/eventos/{eventoId}/inscricoes/validar-participacao-lote")
+    public String validarParticipacaoEmLote(@PathVariable("eventoId") Long eventoId,
+                                            @RequestParam(value = "inscricoesSelecionadas", required = false)
+                                            List<Long> inscricoesSelecionadas,
+                                            Authentication authentication,
+                                            RedirectAttributes redirectAttributes) {
+        try {
+            exigirAcessoAoEvento(eventoId, authentication);
+            int validadas = inscricaoService.validarParticipacaoEmLote(eventoId, inscricoesSelecionadas);
+            if (validadas > 0) {
+                redirectAttributes.addFlashAttribute("sucesso",
+                        "Participação validada em lote! Os certificados dos participantes selecionados foram liberados.");
+            } else {
+                redirectAttributes.addFlashAttribute("sucesso",
+                        "As participações selecionadas já estavam validadas.");
+            }
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            throw e;
+        } catch (NegocioException e) {
+            redirectAttributes.addFlashAttribute("erroNegocio", e.getMessage());
+        } catch (Exception e) {
+            log.error("Erro ao validar em lote as inscrições do evento {}.", eventoId, e);
+            redirectAttributes.addFlashAttribute("erroNegocio",
+                    "Não foi possível validar as participações selecionadas neste momento.");
         }
         return "redirect:/organizador/eventos/" + eventoId + "/inscritos";
     }

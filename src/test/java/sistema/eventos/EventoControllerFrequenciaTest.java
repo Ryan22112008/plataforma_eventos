@@ -159,6 +159,70 @@ class EventoControllerFrequenciaTest {
         assertThat(model.getAttribute("paginaAtiva")).isEqualTo("inscritos");
     }
 
+    @Test
+    void organizadorValidaEmLoteSomenteOsIdsSelecionados() {
+        Evento evento = eventoDoOrganizador("dono@seplag.mt.gov.br");
+        List<Long> selecionados = List.of(INSCRICAO_ID, 102L);
+        when(eventoService.buscarPorId(EVENTO_ID)).thenReturn(evento);
+        when(inscricaoService.validarParticipacaoEmLote(EVENTO_ID, selecionados)).thenReturn(2);
+
+        RedirectAttributesModelMap attributes = new RedirectAttributesModelMap();
+        String view = eventoController.validarParticipacaoEmLote(
+                EVENTO_ID, selecionados,
+                autenticacao("dono@seplag.mt.gov.br", "ROLE_ORGANIZADOR"), attributes);
+
+        assertThat(view).isEqualTo("redirect:/organizador/eventos/" + EVENTO_ID + "/inscritos");
+        assertThat(attributes.getFlashAttributes()).containsKey("sucesso");
+        verify(inscricaoService).validarParticipacaoEmLote(EVENTO_ID, selecionados);
+    }
+
+    @Test
+    void loteSemSelecaoExibeMensagemDeErro() {
+        Evento evento = eventoDoOrganizador("dono@seplag.mt.gov.br");
+        when(eventoService.buscarPorId(EVENTO_ID)).thenReturn(evento);
+        when(inscricaoService.validarParticipacaoEmLote(EVENTO_ID, List.of()))
+                .thenThrow(new NegocioException("Selecione ao menos um participante para validar."));
+
+        RedirectAttributesModelMap attributes = new RedirectAttributesModelMap();
+        String view = eventoController.validarParticipacaoEmLote(
+                EVENTO_ID, List.of(),
+                autenticacao("dono@seplag.mt.gov.br", "ROLE_ORGANIZADOR"), attributes);
+
+        assertThat(view).isEqualTo("redirect:/organizador/eventos/" + EVENTO_ID + "/inscritos");
+        assertThat(attributes.getFlashAttributes()).containsKey("erroNegocio");
+    }
+
+    @Test
+    void organizadorDeOutroEventoNaoPodeValidarEmLote() {
+        Evento evento = eventoDoOrganizador("dono@seplag.mt.gov.br");
+        when(eventoService.buscarPorId(EVENTO_ID)).thenReturn(evento);
+
+        assertThatThrownBy(() -> eventoController.validarParticipacaoEmLote(
+                EVENTO_ID, List.of(INSCRICAO_ID),
+                autenticacao("outro@seplag.mt.gov.br", "ROLE_ORGANIZADOR"),
+                new RedirectAttributesModelMap()))
+                .isInstanceOf(AccessDeniedException.class);
+
+        verify(inscricaoService, never()).validarParticipacaoEmLote(
+                org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyList());
+    }
+
+    @Test
+    void superAdminPodeValidarEmLoteDeQualquerEvento() {
+        Evento evento = eventoDoOrganizador("dono@seplag.mt.gov.br");
+        List<Long> selecionados = List.of(INSCRICAO_ID);
+        when(eventoService.buscarPorId(EVENTO_ID)).thenReturn(evento);
+        when(inscricaoService.validarParticipacaoEmLote(EVENTO_ID, selecionados)).thenReturn(1);
+
+        RedirectAttributesModelMap attributes = new RedirectAttributesModelMap();
+        String view = eventoController.validarParticipacaoEmLote(
+                EVENTO_ID, selecionados,
+                autenticacao("admin@seplag.mt.gov.br", "ROLE_SUPER_ADMIN"), attributes);
+
+        assertThat(view).isEqualTo("redirect:/organizador/eventos/" + EVENTO_ID + "/inscritos");
+        assertThat(attributes.getFlashAttributes()).containsKey("sucesso");
+    }
+
     private Evento eventoDoOrganizador(String email) {
         Usuario organizador = new Usuario();
         organizador.setId(1L);
