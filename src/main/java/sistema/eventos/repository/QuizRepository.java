@@ -8,7 +8,10 @@ import java.util.Optional;
 
 public interface QuizRepository extends JpaRepository<Quiz,Long> {
     List<Quiz> findByOrganizadorIdOrderByIdDesc(Long id);
-    @EntityGraph(attributePaths={"evento","perguntas","perguntas.alternativas"}) Optional<Quiz> findWithQuestionsById(Long id);
-    @EntityGraph(attributePaths={"evento","organizador","perguntas","perguntas.alternativas"}) Optional<Quiz> findFullById(Long id);
-    @EntityGraph(attributePaths={"evento","organizador","perguntas","perguntas.alternativas"}) Optional<Quiz> findByCodigoIgnoreCase(String codigo);
+    boolean existsByCodigoIgnoreCase(String codigo);
+    // Do not fetch Quiz.perguntas and QuizPergunta.alternativas in the same
+    // EntityGraph: both are List/bag collections and Hibernate rejects that fetch.
+    @EntityGraph(attributePaths={"evento"}) Optional<Quiz> findWithQuestionsById(Long id);
+    @EntityGraph(attributePaths={"evento","organizador"}) Optional<Quiz> findFullById(Long id);
+    @EntityGraph(attributePaths={"evento","organizador"}) Optional<Quiz> findByCodigoIgnoreCase(String codigo);
 }
