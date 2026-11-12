@@ -19,6 +19,7 @@ public class Quiz {
     @Column(nullable=false) @Builder.Default private Integer pontosMedio=1000;
     @Column(nullable=false) @Builder.Default private Integer pontosDificil=1500;
     @Column(nullable=false) @Builder.Default private Integer perguntaAtual=-1;
+    @Column(name="pergunta_em_andamento_id") private Long perguntaEmAndamentoId;
     private LocalDateTime iniciadoEm;
     private LocalDateTime perguntaLiberadaEm;
     private LocalDateTime encerradoEm;

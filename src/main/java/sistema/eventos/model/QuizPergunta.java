@@ -15,5 +15,6 @@ public class QuizPergunta {
     @Column(nullable=false) @Builder.Default private Integer segundos=20;
     @Column(nullable=false) @Builder.Default private Boolean bonus=false;
     @Column(nullable=false) private Integer ordem;
+    @Column(name="ja_sorteada") @Builder.Default private Boolean jaSorteada=false;
     @OneToMany(mappedBy="pergunta",cascade=CascadeType.ALL,orphanRemoval=true) @OrderBy("ordem ASC") @Builder.Default private List<QuizAlternativa> alternativas=new ArrayList<>();
 }

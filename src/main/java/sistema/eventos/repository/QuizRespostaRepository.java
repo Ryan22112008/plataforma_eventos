@@ -4,6 +4,7 @@ import sistema.eventos.model.QuizResposta;
 import java.util.List;
 public interface QuizRespostaRepository extends JpaRepository<QuizResposta,Long> {
  boolean existsByJogadorIdAndPerguntaId(Long jogadorId,Long perguntaId);
+ java.util.Optional<sistema.eventos.model.QuizResposta> findByJogadorIdAndPerguntaId(Long jogadorId,Long perguntaId);
  List<QuizResposta> findByPerguntaId(Long perguntaId);
  List<QuizResposta> findByJogadorQuizId(Long quizId);
 }
