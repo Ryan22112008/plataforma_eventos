@@ -114,7 +114,8 @@ public class QuizController {
         QuizJogador me=jogadores.findByQuizIdAndUsuarioId(q.getId(),usuario(auth).getId()).orElseThrow();
         Map<String,Object> out=new LinkedHashMap<>();out.put("status",q.getStatus().name());out.put("titulo",q.getTitulo());out.put("pontuacao",me.getPontuacao());
         List<QuizJogador> ranking=rank(q);int posicao=posicao(ranking,me.getId());
-        out.put("rank",ranking.stream().limit(5).map(x->Map.of("nome",nomeJogador(x),"avatar",x.getAvatar(),"pontuacao",x.getPontuacao())).toList());out.put("posicao",posicao);
+        out.put("rank",ranking.stream().limit(5).map(x->Map.of("nome",nomeJogador(x),"avatar",x.getAvatar(),"pontuacao",x.getPontuacao())).toList());
+        out.put("placar",ranking.stream().map(x->Map.of("nome",nomeJogador(x),"avatar",x.getAvatar(),"pontuacao",x.getPontuacao())).toList());out.put("posicao",posicao);
         QuizPergunta p=currentQuestion(q);
         if(p==null){out.put("fase","LOBBY");out.put("pergunta",null);out.put("respondida",false);return out;}
         long sinceRelease=Duration.between(q.getPerguntaLiberadaEm(),LocalDateTime.now()).toMillis();
@@ -124,7 +125,8 @@ public class QuizController {
         String phase=sinceRelease<5000?"LEITURA":todosResponderam||remaining<=0?"RESULTADO":"RESPONDENDO";
         out.put("fase",phase);out.put("tempoRestanteMs",sinceRelease<5000?5000-sinceRelease:remaining);
         Map<String,Object> question=new LinkedHashMap<>();question.put("numero",q.getPerguntaAtual()+1);question.put("segundos",p.getSegundos());
-        question.put("alternativas",p.getAlternativas().stream().map(a->Map.of("id",a.getId(),"ordem",a.getOrdem())).toList());out.put("pergunta",question);
+        question.put("enunciado",p.getEnunciado());question.put("imagemUrl",files.publicImageUrl(p.getImagemUrl()));
+        question.put("alternativas",p.getAlternativas().stream().map(a->{Map<String,Object> option=new LinkedHashMap<>();option.put("id",a.getId());option.put("ordem",a.getOrdem());option.put("texto",a.getTexto());option.put("imagemUrl",files.publicImageUrl(a.getImagemUrl()));return option;}).toList());out.put("pergunta",question);
         QuizResposta resposta=respostas.findByJogadorIdAndPerguntaId(me.getId(),p.getId()).orElse(null);out.put("respondida",resposta!=null);
         if(phase.equals("RESULTADO"))out.put("resultado",Map.of("correta",resposta!=null&&resposta.isCorreta(),"pontos",resposta==null?0:resposta.getPontos(),"sequencia",me.getSequencia(),"posicao",posicao));
         return out;
