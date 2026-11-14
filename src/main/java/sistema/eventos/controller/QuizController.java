@@ -114,8 +114,8 @@ public class QuizController {
         QuizJogador me=jogadores.findByQuizIdAndUsuarioId(q.getId(),u.getId()).orElseThrow();
         Map<String,Object> out=new LinkedHashMap<>();out.put("status",q.getStatus().name());out.put("titulo",q.getTitulo());out.put("pontuacao",me.getPontuacao());
         List<QuizJogador> ranking=rank(q);int posicao=posicao(ranking,me.getId());
-        out.put("rank",ranking.stream().limit(5).map(x->Map.of("nome",nomeJogador(x),"avatar",x.getAvatar(),"pontuacao",x.getPontuacao())).toList());
-        out.put("placar",ranking.stream().map(x->Map.of("nome",nomeJogador(x),"avatar",x.getAvatar(),"pontuacao",x.getPontuacao())).toList());out.put("posicao",posicao);
+        out.put("rank",ranking.stream().limit(5).map(x->Map.of("id",x.getId(),"nome",nomeJogador(x),"avatar",x.getAvatar(),"pontuacao",x.getPontuacao())).toList());
+        out.put("placar",ranking.stream().map(x->Map.of("id",x.getId(),"nome",nomeJogador(x),"avatar",x.getAvatar(),"pontuacao",x.getPontuacao())).toList());out.put("posicao",posicao);out.put("jogadorId",me.getId());
         QuizPergunta p=currentQuestion(q);
         if(p==null){out.put("fase","LOBBY");out.put("pergunta",null);out.put("respondida",false);return out;}
         long sinceRelease=Duration.between(q.getPerguntaLiberadaEm(),LocalDateTime.now()).toMillis();
