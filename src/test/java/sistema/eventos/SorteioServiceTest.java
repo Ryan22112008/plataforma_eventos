@@ -94,10 +94,9 @@ class SorteioServiceTest {
                 elegivel("Bruno", "bruno@seplag.mt.gov.br", 90.0),
                 elegivel("Carla", "carla@seplag.mt.gov.br", 80.0)));
 
-        SorteioRodada rodada = sorteioService.realizarSorteio(EVENTO_ID, 2, "  Camiseta  ", AUTOR);
+        SorteioRodada rodada = sorteioService.realizarSorteio(EVENTO_ID, 2, false, AUTOR);
 
         assertThat(rodada.getNumeroRodada()).isEqualTo(1);
-        assertThat(rodada.getPremio()).isEqualTo("Camiseta");
         assertThat(rodada.getPercentualMinimo()).isEqualTo(75);
         assertThat(rodada.getTotalElegiveis()).isEqualTo(3);
         assertThat(rodada.getQuantidadeSorteada()).isEqualTo(2);
@@ -133,7 +132,7 @@ class SorteioServiceTest {
                 elegivel("Ana", "ana@seplag.mt.gov.br", 100.0),
                 elegivel("Bruno", "bruno@seplag.mt.gov.br", 90.0)));
 
-        assertThatThrownBy(() -> sorteioService.realizarSorteio(EVENTO_ID, 3, null, AUTOR))
+        assertThatThrownBy(() -> sorteioService.realizarSorteio(EVENTO_ID, 3, false, AUTOR))
                 .isInstanceOf(NegocioException.class)
                 .hasMessageContaining("Há apenas 2 participante(s) elegível(is)");
 
@@ -141,66 +140,41 @@ class SorteioServiceTest {
     }
 
     @Test
-    void listaElegiveisIgnorandoVencedoresAtivosCanceladosEBaixaFrequencia() {
+    void incluiQuemAtingeOMinimoMesmoQueJaTenhaVencido() {
         SorteioRodada ativa = rodada(1, StatusRodadaSorteio.REALIZADA, "Fone");
-        SorteioRodada cancelada = rodada(2, StatusRodadaSorteio.CANCELADA, "Livro");
-
         SorteioResultado vencedorAtivo = resultado("Ana", "ana@seplag.mt.gov.br", ativa,
                 StatusVencedorSorteio.PENDENTE);
-        SorteioResultado vencedorCancelado = resultado("Carla", "carla@seplag.mt.gov.br", cancelada,
-                StatusVencedorSorteio.PENDENTE);
         when(resultadoRepository.findByEventoIdOrderByRealizadoEmDescIdDesc(EVENTO_ID))
-                .thenReturn(List.of(vencedorAtivo, vencedorCancelado));
+                .thenReturn(List.of(vencedorAtivo));
         when(inscricaoService.listarInscritosComFrequencia(EVENTO_ID)).thenReturn(List.of(
                 elegivel("Ana", "ana@seplag.mt.gov.br", 100.0),
-                elegivel("Bruno", "bruno@seplag.mt.gov.br", 80.0),
-                elegivel("Carla", "carla@seplag.mt.gov.br", 90.0),
-                elegivel("Diego", "diego@seplag.mt.gov.br", 70.0),
-                elegivel("Elisa", "elisa@seplag.mt.gov.br", 75.0)));
+                elegivel("Bruno", "bruno@seplag.mt.gov.br", 75.0),
+                elegivel("Diego", "diego@seplag.mt.gov.br", 74.9)));
 
-        List<InscritoFrequenciaDto> elegiveis = sorteioService.listarElegiveisDisponiveis(evento);
+        List<SorteioService.ElegivelSorteio> elegiveis = sorteioService.listarElegiveis(evento);
 
-        assertThat(elegiveis).extracting(InscritoFrequenciaDto::getNomeParticipante)
-                .containsExactly("Bruno", "Carla", "Elisa");
+        assertThat(elegiveis).extracting(e -> e.participante().getNomeParticipante())
+                .containsExactly("Ana", "Bruno");
+        assertThat(elegiveis).filteredOn(SorteioService.ElegivelSorteio::vencedorAtivo)
+                .extracting(e -> e.participante().getNomeParticipante()).containsExactly("Ana");
     }
 
     @Test
-    void repoeVencedorAusenteComMesmoPremioEVinculoComRodadaOriginal() {
-        SorteioRodada original = rodada(1, StatusRodadaSorteio.REALIZADA, "Fone Bluetooth");
-        SorteioResultado ausente = resultado("Ana", "ana@seplag.mt.gov.br", original,
-                StatusVencedorSorteio.AUSENTE);
-        ausente.setId(50L);
-        when(resultadoRepository.findById(50L)).thenReturn(Optional.of(ausente));
+    void naoRepeteVencedoresQuandoOpcaoEstaAtivada() {
+        SorteioRodada ativa = rodada(1, StatusRodadaSorteio.REALIZADA, null);
+        when(resultadoRepository.findByEventoIdOrderByRealizadoEmDescIdDesc(EVENTO_ID))
+                .thenReturn(List.of(resultado("Ana", "ana@seplag.mt.gov.br", ativa,
+                        StatusVencedorSorteio.PENDENTE)));
         when(inscricaoService.listarInscritosComFrequencia(EVENTO_ID)).thenReturn(List.of(
-                elegivel("Bruno", "bruno@seplag.mt.gov.br", 100.0),
-                elegivel("Diego", "diego@seplag.mt.gov.br", 90.0)));
-        when(rodadaRepository.maiorNumeroRodada(EVENTO_ID)).thenReturn(1);
-        SorteioResultado novo = new SorteioResultado();
-        novo.setId(51L);
-        novo.setNomeVencedor("Bruno");
-        when(resultadoRepository.findByRodadaSorteioIdOrderByIdAsc(99L)).thenReturn(List.of(novo));
+                elegivel("Ana", "ana@seplag.mt.gov.br", 100.0),
+                elegivel("Bruno", "bruno@seplag.mt.gov.br", 75.0)));
 
-        SorteioRodada reposicao = sorteioService.sortearNovamente(EVENTO_ID, 50L, AUTOR);
+        SorteioRodada rodada = sorteioService.realizarSorteio(EVENTO_ID, 1, true, AUTOR);
 
-        assertThat(reposicao.getNumeroRodada()).isEqualTo(2);
-        assertThat(reposicao.getRodadaOrigem()).isSameAs(original);
-        assertThat(reposicao.getPremio()).isEqualTo("Fone Bluetooth");
-        assertThat(reposicao.getQuantidadeSorteada()).isEqualTo(1);
-        assertThat(ausente.getSubstituidoPor()).isSameAs(novo);
-        assertThat(ultimaAuditoria().getAcao()).isEqualTo(AcaoAuditoriaSorteio.SORTEIO_REPESCAGEM);
-    }
-
-    @Test
-    void reposicaoSomenteAceitaVencedorAusente() {
-        SorteioRodada original = rodada(1, StatusRodadaSorteio.REALIZADA, "Fone");
-        SorteioResultado pendente = resultado("Ana", "ana@seplag.mt.gov.br", original,
-                StatusVencedorSorteio.PENDENTE);
-        pendente.setId(50L);
-        when(resultadoRepository.findById(50L)).thenReturn(Optional.of(pendente));
-
-        assertThatThrownBy(() -> sorteioService.sortearNovamente(EVENTO_ID, 50L, AUTOR))
-                .isInstanceOf(NegocioException.class)
-                .hasMessageContaining("só é permitida para vencedores marcados como Ausente");
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<SorteioResultado>> captor = ArgumentCaptor.forClass(List.class);
+        verify(resultadoRepository).saveAll(captor.capture());
+        assertThat(captor.getValue()).extracting(SorteioResultado::getNomeVencedor).containsExactly("Bruno");
     }
 
     @Test
