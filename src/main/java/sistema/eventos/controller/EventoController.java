@@ -284,6 +284,23 @@ public class EventoController {
         return redirectSorteios(id, busca, pagina);
     }
 
+    @PostMapping("/eventos/{id}/sorteios/historico/limpar")
+    public String limparHistoricoSorteios(@PathVariable("id") Long id,
+                                          Authentication authentication,
+                                          RedirectAttributes attributes) {
+        exigirAcessoAoEvento(id, authentication);
+        try {
+            int total = sorteioService.limparHistorico(id, nomeAutor(authentication));
+            attributes.addFlashAttribute("toast", total == 0
+                    ? "O histórico de sorteios já estava vazio."
+                    : "Histórico limpo. " + total + " resultado(s) removido(s).");
+        } catch (Exception e) {
+            log.error("Falha ao limpar o histórico de sorteios do evento {}.", id, e);
+            attributes.addFlashAttribute("erroNegocio", "Não foi possível limpar o histórico agora.");
+        }
+        return "redirect:/organizador/eventos/" + id + "/sorteios";
+    }
+
     @GetMapping("/eventos/{id}/sorteios/historico.csv")
     public ResponseEntity<byte[]> exportarHistoricoCsv(@PathVariable("id") Long id,
                                                        @RequestParam(value = "q", required = false) String busca,

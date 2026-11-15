@@ -168,6 +168,13 @@
                        th:href="@{/organizador/eventos/{id}/sorteios/historico.pdf(id=${evento.id},q=${filtroBusca})}">
                         <i class="fa-solid fa-file-pdf" aria-hidden="true"></i> Exportar PDF
                     </a>
+                    <form th:action="@{/organizador/eventos/{id}/sorteios/historico/limpar(id=${evento.id})}"
+                          method="post" class="sorteios-inline-form"
+                          data-confirmar="Limpar todo o histórico deste evento? Os resultados e rodadas serão apagados permanentemente. O log de auditoria será mantido.">
+                        <button class="seplag-btn seplag-btn-danger sorteios-mini-btn" type="submit">
+                            <i class="fa-solid fa-trash-can" aria-hidden="true"></i> Limpar histórico
+                        </button>
+                    </form>
                 </div>
             </div>
             <div class="seplag-card__body">

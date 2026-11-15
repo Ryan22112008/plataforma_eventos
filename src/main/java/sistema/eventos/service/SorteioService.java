@@ -226,6 +226,29 @@ public class SorteioService {
         return rodada;
     }
 
+    @Transactional
+    public int limparHistorico(Long eventoId, String autorEmail) {
+        Evento evento = exigirEventoParaAtualizacao(eventoId);
+
+        // Remover primeiro as referências internas e resultados evita violações
+        // de chave estrangeira entre repescagens e rodadas.
+        resultadoRepository.limparVinculosDeSubstituicao(eventoId);
+        rodadaRepository.limparVinculosDeOrigem(eventoId);
+        int totalResultados = resultadoRepository.excluirPorEvento(eventoId);
+        rodadaRepository.excluirPorEvento(eventoId);
+
+        evento.setSorteioNumeroRodada(0);
+        evento.setSorteioVencedorNome(null);
+        evento.setSorteioVencedorEmail(null);
+        evento.setSorteioRealizadoEm(null);
+        eventoRepository.save(evento);
+
+        auditar(evento, AcaoAuditoriaSorteio.HISTORICO_LIMPO,
+                "Histórico de sorteios limpo. " + totalResultados + " resultado(s) removido(s).",
+                autorEmail);
+        return totalResultados;
+    }
+
     private void validarQuantidade(Integer quantidade) {
         if (quantidade == null || quantidade < 1) {
             throw new NegocioException("Informe pelo menos 1 pessoa para sortear.");

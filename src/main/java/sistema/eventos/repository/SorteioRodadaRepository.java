@@ -1,6 +1,7 @@
 package sistema.eventos.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import sistema.eventos.model.SorteioRodada;
@@ -22,4 +23,12 @@ public interface SorteioRodadaRepository extends JpaRepository<SorteioRodada, Lo
 
     @Query("SELECT COALESCE(MAX(r.numeroRodada), 0) FROM SorteioRodada r WHERE r.evento.id = :eventoId")
     Integer maiorNumeroRodada(@Param("eventoId") Long eventoId);
+
+    @Modifying
+    @Query("UPDATE SorteioRodada r SET r.rodadaOrigem = null WHERE r.evento.id = :eventoId")
+    int limparVinculosDeOrigem(@Param("eventoId") Long eventoId);
+
+    @Modifying
+    @Query("DELETE FROM SorteioRodada r WHERE r.evento.id = :eventoId")
+    int excluirPorEvento(@Param("eventoId") Long eventoId);
 }
