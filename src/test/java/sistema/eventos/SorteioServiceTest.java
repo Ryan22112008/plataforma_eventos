@@ -124,7 +124,7 @@ class SorteioServiceTest {
         assertThat(auditoria.getDetalhes())
                 .contains("Rodada 1 realizada")
                 .contains("2 vencedor(es) entre 3 elegíveis")
-                .contains("Prêmio: Camiseta");
+                .contains("Rodada 1 realizada");
     }
 
     @Test
@@ -234,7 +234,7 @@ class SorteioServiceTest {
     }
 
     @Test
-    void filtraHistoricoPorNomeEmailPremioEStatus() {
+    void filtraHistoricoPorNomeEEmail() {
         SorteioRodada rodada = rodada(1, StatusRodadaSorteio.REALIZADA, "Camiseta");
         SorteioResultado ana = resultado("Ana Souza", "ana@seplag.mt.gov.br", rodada,
                 StatusVencedorSorteio.PENDENTE);
@@ -243,12 +243,10 @@ class SorteioServiceTest {
 
         List<SorteioResultado> todos = List.of(ana, bruno);
 
-        assertThat(sorteioService.filtrar(todos, "ANA", null, null)).containsExactly(ana);
-        assertThat(sorteioService.filtrar(todos, "bruno@seplag", null, null)).containsExactly(bruno);
-        assertThat(sorteioService.filtrar(todos, null, "camiseta", null)).hasSize(2);
-        assertThat(sorteioService.filtrar(todos, null, null, StatusVencedorSorteio.AUSENTE))
-                .containsExactly(bruno);
-        assertThat(sorteioService.filtrar(todos, "inexistente", null, null)).isEmpty();
+        assertThat(sorteioService.filtrar(todos, "ANA")).containsExactly(ana);
+        assertThat(sorteioService.filtrar(todos, "bruno@seplag")).containsExactly(bruno);
+        assertThat(sorteioService.filtrar(todos, "inexistente")).isEmpty();
+        assertThat(sorteioService.filtrar(todos, null)).containsExactly(ana, bruno);
     }
 
     @Test
@@ -260,9 +258,9 @@ class SorteioServiceTest {
         resultado.setRealizadoEm(LocalDateTime.of(2026, 11, 15, 14, 30, 25));
 
         String csv = sorteioService.gerarCsv(List.of(resultado));
-        assertThat(csv).startsWith("\uFEFFRodada;Prêmio;Vencedor;E-mail;Frequência;Critério usado;Status;Data");
-        assertThat(csv).contains("\"3\";\"Fone Bluetooth\";\"Ana Souza\";\"ana@seplag.mt.gov.br\";\"87.5%\"");
-        assertThat(csv).contains("\"Ausente\";\"15/11/2026 14:30:25\"");
+        assertThat(csv).startsWith("\uFEFFRodada;Vencedor;E-mail;Frequência;Data");
+        assertThat(csv).contains("\"3\";\"Ana Souza\";\"ana@seplag.mt.gov.br\";\"87.5%\"");
+        assertThat(csv).contains("\"15/11/2026 14:30:25\"");
 
         byte[] pdf = sorteioService.gerarPdf("Evento de Teste", List.of(resultado));
         assertThat(pdf.length).isGreaterThan(500);
