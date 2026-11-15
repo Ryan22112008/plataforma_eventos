@@ -5902,3 +5902,995 @@ html.v2-root {
     .v2 .sorteios-heading__icon { display: none; }
     .v2 .sorteios-actions-grid { grid-template-columns: 1fr; }
 }
+
+/* --------------------------------------------------------------------------
+   Sorteios — melhorias de gestão, transparência e apresentação
+   -------------------------------------------------------------------------- */
+
+.v2 .sorteios-stat-link {
+    display: flex;
+    flex-direction: column;
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.v2 .sorteios-stat-link:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+}
+
+.v2 .sorteios-stat-link__hint {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: .72rem;
+    line-height: 1.4;
+}
+
+.v2 .sorteios-stat-link__hint i {
+    color: var(--vivid);
+    font-size: .72rem;
+}
+
+.v2 .sorteios-eligible-list__search {
+    position: relative;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+}
+
+.v2 .sorteios-eligible-list__search > i {
+    position: absolute;
+    top: 50%;
+    left: 28px;
+    color: var(--muted);
+    font-size: .82rem;
+    pointer-events: none;
+    transform: translateY(-50%);
+}
+
+.v2 .sorteios-eligible-list__search .seplag-input {
+    min-height: 42px;
+    padding-left: 38px;
+}
+
+.v2 .sorteios-eligible-list__email {
+    overflow: hidden;
+    color: #AFA7C2;
+    font-size: .72rem;
+    font-weight: 400;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.v2 .sorteios-eligible-list__empty {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.55;
+}
+
+.v2 .sorteios-eligible-list__empty.hidden,
+.v2 .sorteios-eligible-list__items li.hidden {
+    display: none;
+}
+
+.v2 .sorteios-empty-icon {
+    display: inline-grid;
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border: 1px solid var(--border-violet);
+    border-radius: 10px;
+    background: var(--vivid-soft);
+    color: #D8B4FE;
+}
+
+.v2 .sorteios-small-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    margin-top: 14px;
+    font-size: .76rem;
+    line-height: 1.5;
+}
+
+.v2 .sorteios-small-hint i {
+    margin-top: 3px;
+    color: var(--vivid);
+}
+
+.v2 .sorteios-form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.v2 .sorteios-form-actions .seplag-btn {
+    min-height: 46px;
+}
+
+.v2 .sorteios-optional {
+    color: var(--muted);
+    font-size: .74rem;
+    font-weight: 500;
+}
+
+.v2 .sorteios-field-feedback {
+    min-height: 1.1em;
+    margin: 0;
+    color: #FCD34D;
+    font-size: .78rem;
+    line-height: 1.45;
+}
+
+.v2 .sorteios-field-feedback:empty {
+    display: none;
+}
+
+.v2 .sorteios-input-invalido,
+.v2 .seplag-input[aria-invalid="true"] {
+    border-color: rgba(248, 113, 113, .75) !important;
+    box-shadow: 0 0 0 3px rgba(248, 113, 113, .13) !important;
+}
+
+.v2 .sorteios-resultado {
+    margin-bottom: 18px;
+    border-color: rgba(168, 85, 247, .34);
+    background:
+        radial-gradient(420px 190px at 94% 0%, rgba(168, 85, 247, .2), transparent 72%),
+        linear-gradient(180deg, rgba(124, 58, 237, .08), transparent 54%),
+        var(--surface);
+}
+
+.v2 .sorteios-resultado__vencedores {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0 0 18px;
+    padding: 0;
+    list-style: none;
+}
+
+.v2 .sorteios-resultado__vencedores li {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 15px;
+    border: 1px solid rgba(196, 181, 253, .3);
+    border-radius: 999px;
+    background: rgba(124, 58, 237, .14);
+    color: var(--text);
+    font-size: .92rem;
+    font-weight: 700;
+}
+
+.v2 .sorteios-resultado__vencedores i {
+    color: #FBBF24;
+}
+
+.v2 .sorteios-latest {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+    padding: 15px 17px;
+    border: 1px solid rgba(168, 85, 247, .24);
+    border-radius: 14px;
+    background: rgba(124, 58, 237, .08);
+}
+
+.v2 .sorteios-latest > div:first-child {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+}
+
+.v2 .sorteios-latest strong {
+    color: var(--text);
+    font-size: .92rem;
+}
+
+.v2 .sorteios-latest span {
+    color: var(--muted);
+    font-size: .78rem;
+}
+
+.v2 .sorteios-latest__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.v2 .sorteios-filter {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, .9fr) minmax(0, .9fr) auto;
+    align-items: end;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding: 15px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: rgba(7, 10, 18, .28);
+}
+
+.v2 .sorteios-filter__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px;
+}
+
+.v2 .sorteios-filter__actions .seplag-btn {
+    min-height: 46px;
+    white-space: nowrap;
+}
+
+.v2 .sorteios-export-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.v2 .sorteios-mini-btn {
+    min-height: 38px;
+    padding: 7px 12px;
+    font-size: .78rem;
+}
+
+.v2 .sorteios-inline-form {
+    display: inline-flex;
+    margin: 0;
+}
+
+.v2 .sorteios-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 0;
+    padding: 34px 20px;
+    border: 1px dashed var(--border-strong);
+    border-radius: 14px;
+    color: var(--muted);
+    font-size: .84rem;
+    line-height: 1.55;
+    text-align: center;
+}
+
+.v2 .sorteios-empty-state strong {
+    color: var(--text-secondary);
+    font-size: .94rem;
+}
+
+.v2 .sorteios-empty-state--compact {
+    padding: 24px 18px;
+}
+
+.v2 .sorteios-history-table {
+    min-width: 820px;
+}
+
+.v2 .sorteios-history-table th,
+.v2 .sorteios-history-table td {
+    padding: 11px 10px;
+}
+
+.v2 .sorteios-history-table td {
+    font-size: .8rem;
+}
+
+.v2 .sorteios-history-table th:last-child,
+.v2 .sorteios-history-table td:last-child {
+    width: 108px;
+}
+
+.v2 .sorteios-round-date {
+    display: block;
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: .7rem;
+    white-space: nowrap;
+}
+
+.v2 .sorteios-winner-name {
+    display: block;
+    color: var(--text);
+    font-weight: 600;
+}
+
+.v2 .sorteios-email {
+    display: inline-block;
+    margin-top: 3px;
+    color: #C4B5FD;
+    font-size: .78rem;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+
+.v2 .sorteios-email:hover {
+    color: #E9D5FF;
+    text-decoration: underline;
+}
+
+.v2 .sorteios-email:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+}
+
+.v2 .sorteios-round-number {
+    color: var(--text);
+    font-weight: 700;
+}
+
+.v2 .sorteios-round-badge {
+    display: block;
+    width: fit-content;
+    margin-top: 5px;
+    font-size: .62rem;
+}
+
+.v2 .sorteios-criteria-cell {
+    min-width: 178px;
+}
+
+.v2 .sorteios-criteria summary {
+    display: flex;
+    gap: 6px;
+    color: var(--text-secondary);
+    font-size: .8rem;
+    line-height: 1.45;
+    cursor: pointer;
+    list-style: none;
+}
+
+.v2 .sorteios-criteria summary::-webkit-details-marker {
+    display: none;
+}
+
+.v2 .sorteios-criteria summary::before {
+    flex: 0 0 auto;
+    color: var(--vivid);
+    content: "▸";
+    transform-origin: center;
+}
+
+.v2 .sorteios-criteria[open] summary::before {
+    content: "▾";
+}
+
+.v2 .sorteios-criteria summary:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+.v2 .sorteios-criteria__content {
+    display: grid;
+    gap: 4px;
+    margin-top: 7px;
+    padding: 9px 10px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, .025);
+    color: var(--muted);
+    font-size: .72rem;
+    line-height: 1.5;
+}
+
+.v2 .sorteios-status-form {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 176px;
+}
+
+.v2 .sorteios-status-form .seplag-select {
+    min-width: 132px;
+    min-height: 38px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    font-size: .78rem;
+}
+
+.v2 .sorteios-row-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: 4px;
+}
+
+.v2 .sorteios-icon-btn {
+    display: inline-grid;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0 7px;
+    place-items: center;
+}
+
+.v2 .sorteios-icon-btn:focus-visible,
+.v2 .sorteios-apresentacao__sair:focus-visible,
+.v2 .sorteios-dialog button:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+}
+
+.v2 .sorteios-icon-btn:disabled {
+    cursor: not-allowed;
+    opacity: .38;
+}
+
+.v2 .sorteios-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.v2 .sorteios-pagination p {
+    margin: 0;
+    color: var(--muted);
+    font-size: .79rem;
+}
+
+.v2 .sorteios-audit-scroll {
+    max-height: 360px;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.v2 .sorteios-audit-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.v2 .sorteios-audit-table td {
+    font-size: .8rem;
+    vertical-align: top;
+}
+
+.v2 .sorteios-audit-table td[data-label="Detalhes"] {
+    min-width: 280px;
+    line-height: 1.5;
+}
+
+/* Toast ------------------------------------------------------------------ */
+
+.sorteios-toast-region {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 260;
+    display: grid;
+    gap: 8px;
+    width: min(390px, calc(100vw - 32px));
+    pointer-events: none;
+}
+
+.sorteios-toast {
+    padding: 13px 16px;
+    border: 1px solid rgba(52, 211, 153, .42);
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(16, 185, 129, .16), rgba(6, 22, 17, .97));
+    box-shadow: 0 14px 34px rgba(0, 0, 0, .46), 0 0 24px rgba(16, 185, 129, .1);
+    color: #D1FAE5;
+    font-size: .84rem;
+    font-weight: 600;
+    line-height: 1.45;
+    pointer-events: auto;
+    animation: sorteios-toast-in .28s ease-out both;
+    transition: opacity .25s ease, transform .25s ease;
+}
+
+.sorteios-toast.is-hiding {
+    opacity: 0;
+    transform: translateY(8px);
+}
+
+@keyframes sorteios-toast-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Diálogos --------------------------------------------------------------- */
+
+.v2 .sorteios-dialog {
+    width: min(560px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px);
+    margin: auto;
+    padding: 0;
+    overflow: auto;
+    border: 1px solid var(--border-violet-strong);
+    border-radius: 18px;
+    background:
+        radial-gradient(380px 200px at 100% 0%, rgba(124, 58, 237, .18), transparent 72%),
+        linear-gradient(180deg, #15161D, #08090E);
+    box-shadow: 0 28px 70px rgba(0, 0, 0, .65), 0 0 44px rgba(124, 58, 237, .13);
+    color: var(--text);
+}
+
+.v2 .sorteios-dialog::backdrop {
+    background: rgba(2, 2, 4, .8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.v2 .sorteios-dialog__body {
+    display: grid;
+    justify-items: start;
+    gap: 11px;
+    padding: clamp(20px, 4vw, 28px);
+}
+
+.v2 .sorteios-dialog__icon {
+    display: inline-grid;
+    width: 46px;
+    height: 46px;
+    place-items: center;
+    border: 1px solid rgba(168, 85, 247, .28);
+    border-radius: 13px;
+    background: rgba(168, 85, 247, .14);
+    color: #E9D5FF;
+    font-size: 1.05rem;
+}
+
+.v2 .sorteios-dialog__icon--warning {
+    border-color: rgba(248, 113, 113, .3);
+    background: rgba(248, 113, 113, .12);
+    color: #FCA5A5;
+}
+
+.v2 .sorteios-dialog h2 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.v2 .sorteios-dialog__summary {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: .92rem;
+    line-height: 1.6;
+}
+
+.v2 .sorteios-dialog__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 9px;
+    width: 100%;
+    margin-top: 8px;
+}
+
+/* Revelação com suspense -------------------------------------------------- */
+
+.sorteios-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background:
+        radial-gradient(560px 340px at 50% 42%, rgba(124, 58, 237, .24), transparent 72%),
+        rgba(2, 2, 5, .95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.sorteios-overlay.hidden {
+    display: none;
+}
+
+.sorteios-suspense {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: min(900px, 100%);
+    min-height: 420px;
+    padding: clamp(24px, 5vw, 48px);
+    border: 1px solid rgba(168, 85, 247, .3);
+    border-radius: 24px;
+    background:
+        radial-gradient(440px 260px at 50% 0%, rgba(168, 85, 247, .18), transparent 72%),
+        linear-gradient(180deg, rgba(255, 255, 255, .035), transparent 46%),
+        #08090E;
+    box-shadow: 0 34px 90px rgba(0, 0, 0, .7), 0 0 60px rgba(124, 58, 237, .16);
+    text-align: center;
+}
+
+.sorteios-suspense h2 {
+    margin: 0;
+    color: var(--text);
+    font-size: clamp(1.15rem, 2.4vw, 1.55rem);
+}
+
+.sorteios-suspense__premio {
+    min-height: 1.4em;
+    margin: 0;
+    color: #D8B4FE;
+    font-size: .95rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.sorteios-suspense__stage {
+    display: grid;
+    width: 100%;
+    min-height: 210px;
+    place-items: center;
+}
+
+.sorteios-suspense__contagem {
+    color: var(--text);
+    font-size: clamp(5rem, 16vw, 10rem);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    text-shadow: 0 0 46px rgba(168, 85, 247, .55);
+    animation: sorteios-countdown .9s ease-out both;
+}
+
+.sorteios-suspense__roleta {
+    max-width: 100%;
+    color: #E9D5FF;
+    font-size: clamp(1.7rem, 6vw, 4.2rem);
+    font-weight: 800;
+    letter-spacing: -.03em;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+    opacity: .9;
+    filter: blur(.35px);
+}
+
+.sorteios-suspense__resultado {
+    display: grid;
+    gap: 10px;
+    justify-items: center;
+}
+
+.sorteios-suspense__resultado > p {
+    margin: 0;
+    color: var(--muted);
+    font-size: .82rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.sorteios-suspense__resultado ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sorteios-suspense__resultado li {
+    padding: 13px 20px;
+    border: 1px solid rgba(196, 181, 253, .38);
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(168, 85, 247, .24), rgba(124, 58, 237, .1));
+    color: #FFFFFF;
+    font-size: clamp(1.4rem, 4vw, 2.6rem);
+    font-weight: 800;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+    animation: sorteios-reveal .48s cubic-bezier(.2, .9, .25, 1.2) both;
+}
+
+.sorteios-suspense__acoes {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+@keyframes sorteios-countdown {
+    0% { opacity: 0; transform: scale(.72); }
+    28% { opacity: 1; transform: scale(1); }
+    100% { opacity: .82; transform: scale(1.04); }
+}
+
+@keyframes sorteios-reveal {
+    from { opacity: 0; transform: translateY(16px) scale(.94); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Modo apresentação ------------------------------------------------------ */
+
+.sorteios-apresentacao {
+    position: fixed;
+    inset: 0;
+    z-index: 320;
+    display: flex;
+    flex-direction: column;
+    padding: clamp(18px, 3vw, 38px);
+    overflow: hidden;
+    background:
+        radial-gradient(760px 520px at 50% 42%, rgba(124, 58, 237, .3), transparent 72%),
+        radial-gradient(520px 380px at 88% 10%, rgba(217, 70, 239, .12), transparent 70%),
+        #020204;
+    color: #FFFFFF;
+}
+
+.sorteios-apresentacao.hidden {
+    display: none;
+}
+
+.sorteios-apresentacao__confete {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.sorteios-apresentacao__topo {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.sorteios-apresentacao__topo::before {
+    content: "";
+    position: absolute;
+    inset: -28px -28px auto;
+    height: calc(100% + 56px);
+    z-index: -1;
+    background: linear-gradient(180deg, rgba(2, 2, 4, .95), rgba(2, 2, 4, 0));
+    pointer-events: none;
+}
+
+.sorteios-apresentacao__evento {
+    max-width: 70vw;
+    overflow: hidden;
+    color: rgba(255, 255, 255, .72);
+    font-size: clamp(.8rem, 1.4vw, 1rem);
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-overflow: ellipsis;
+    text-shadow: 0 2px 10px rgba(2, 2, 4, .9);
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.sorteios-apresentacao__sair {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 9px 15px;
+    border: 1px solid rgba(255, 255, 255, .24);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .06);
+    color: #FFFFFF;
+    font-family: inherit;
+    font-size: .84rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background var(--transition), border-color var(--transition);
+}
+
+.sorteios-apresentacao__sair:hover {
+    border-color: rgba(255, 255, 255, .48);
+    background: rgba(255, 255, 255, .12);
+}
+
+.sorteios-apresentacao__conteudo {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(6px, 1.2vh, 14px);
+    text-align: center;
+}
+
+.sorteios-apresentacao__premio {
+    margin: 0;
+    color: #E9D5FF;
+    font-size: clamp(1.5rem, 4.2vw, 3.7rem);
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+    text-shadow: 0 0 40px rgba(168, 85, 247, .38);
+}
+
+.sorteios-apresentacao__rodada {
+    margin: 0 0 clamp(12px, 2.4vh, 28px);
+    color: rgba(255, 255, 255, .58);
+    font-size: clamp(.8rem, 1.4vw, 1rem);
+    letter-spacing: .07em;
+    text-transform: uppercase;
+}
+
+.sorteios-apresentacao__palco {
+    display: grid;
+    width: 100%;
+    justify-items: center;
+    gap: clamp(8px, 1.4vh, 16px);
+}
+
+.sorteios-apresentacao__contador {
+    margin: 0;
+    color: rgba(255, 255, 255, .62);
+    font-size: clamp(.82rem, 1.6vw, 1.05rem);
+    font-weight: 700;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+}
+
+.sorteios-apresentacao__nome {
+    max-width: 95vw;
+    margin: 0;
+    padding: 0 .08em .08em;
+    background: linear-gradient(100deg, #FFFFFF 12%, #E9D5FF 52%, #C084FC 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: #FFFFFF;
+    font-size: clamp(2.6rem, 9vw, 8.2rem);
+    font-weight: 800;
+    letter-spacing: -.05em;
+    line-height: 1.02;
+    overflow-wrap: anywhere;
+    text-shadow: 0 18px 60px rgba(124, 58, 237, .34);
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+    .sorteios-apresentacao__nome {
+        color: transparent;
+    }
+}
+
+.sorteios-apresentacao__nome.is-revelando {
+    animation: sorteios-presentation-reveal .62s cubic-bezier(.16, .9, .24, 1.18) both;
+}
+
+.sorteios-apresentacao__criterio {
+    max-width: 70ch;
+    margin: 0;
+    color: rgba(255, 255, 255, .58);
+    font-size: clamp(.78rem, 1.35vw, .96rem);
+    line-height: 1.5;
+}
+
+.sorteios-apresentacao__controles {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: clamp(20px, 4vh, 42px);
+}
+
+.sorteios-apresentacao__controles .seplag-btn {
+    min-height: 46px;
+}
+
+@keyframes sorteios-presentation-reveal {
+    from { opacity: 0; transform: translateY(20px) scale(.96); filter: blur(4px); }
+    to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+body.sorteios-travado {
+    overflow: hidden;
+}
+
+@media (max-width: 1050px) {
+    .v2 .sorteios-filter {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .v2 .sorteios-filter__actions {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 767px) {
+    .v2 .sorteios-history-table {
+        min-width: 0;
+    }
+
+    .v2 .sorteios-history-table th:last-child,
+    .v2 .sorteios-history-table td:last-child {
+        width: 100%;
+    }
+
+    .v2 .sorteios-audit-table td[data-label="Detalhes"] {
+        min-width: 0;
+    }
+
+    .v2 .sorteios-latest {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .v2 .sorteios-latest__actions {
+        justify-content: flex-start;
+    }
+
+    .v2 .sorteios-export-actions {
+        width: 100%;
+    }
+
+    .v2 .sorteios-export-actions .seplag-btn {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .v2 .sorteios-filter {
+        grid-template-columns: 1fr;
+    }
+
+    .v2 .sorteios-form-actions .seplag-btn {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .v2 .sorteios-pagination {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .v2 .sorteios-status-form {
+        min-width: 0;
+    }
+
+    .v2 .sorteios-row-actions {
+        justify-content: flex-start;
+    }
+
+    .sorteios-toast-region {
+        right: 16px;
+        bottom: 16px;
+        left: 16px;
+        width: auto;
+    }
+
+    .sorteios-apresentacao {
+        padding: 16px;
+    }
+
+    .sorteios-apresentacao__evento {
+        max-width: 55vw;
+    }
+
+    .sorteios-apresentacao__controles {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .sorteios-apresentacao__controles .seplag-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sorteios-toast,
+    .sorteios-suspense__contagem,
+    .sorteios-suspense__resultado li,
+    .sorteios-apresentacao__nome.is-revelando {
+        animation: none !important;
+        transition: none !important;
+    }
+}

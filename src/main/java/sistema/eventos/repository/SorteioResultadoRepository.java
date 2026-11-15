@@ -6,5 +6,8 @@ import sistema.eventos.model.SorteioResultado;
 import java.util.List;
 
 public interface SorteioResultadoRepository extends JpaRepository<SorteioResultado, Long> {
+
     List<SorteioResultado> findByEventoIdOrderByRealizadoEmDescIdDesc(Long eventoId);
+
+    List<SorteioResultado> findByRodadaSorteioIdOrderByIdAsc(Long rodadaId);
 }

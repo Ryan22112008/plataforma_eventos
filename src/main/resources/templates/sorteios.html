@@ -22,23 +22,36 @@
             <a th:href="@{/organizador/eventos/{id}/sorteios(id=${evento.id})}" class="seplag-subnav__link is-active" aria-current="page"><i class="fa-solid fa-ticket" aria-hidden="true"></i> Sorteios</a>
         </nav>
         <div th:if="${erroNegocio}" class="seplag-alert seplag-alert--error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i><span th:text="${erroNegocio}">Não foi possível concluir o sorteio.</span></div>
+
+        <div id="toast-region" class="sorteios-toast-region" aria-live="polite" aria-atomic="true">
+            <div class="sorteios-toast" th:if="${toast}" th:text="${toast}">Frequência mínima salva: 75%.</div>
+        </div>
+
         <div class="seplag-page-head sorteios-heading"><div class="seplag-page-head__copy"><p class="seplag-eyebrow">Experiência do evento</p><h1>Sorteios</h1>
             <p>Premie quem participou. Defina a frequência mínima e realize uma ou mais rodadas para <strong th:text="${evento.titulo}">seu evento</strong>.</p></div>
             <span class="sorteios-heading__icon" aria-hidden="true"><i class="fa-solid fa-gift"></i></span></div>
+
         <section class="seplag-stats sorteios-stats" aria-label="Resumo dos sorteios">
             <article class="seplag-stat"><span class="seplag-stat__label">Participantes elegíveis</span><strong class="seplag-stat__value" th:text="${totalElegiveis}">0</strong></article>
             <article class="seplag-stat"><span class="seplag-stat__label">Frequência mínima</span><strong class="seplag-stat__value" th:text="|${percentualMinimo}%|">75%</strong></article>
-            <article class="seplag-stat"><span class="seplag-stat__label">Rodadas realizadas</span><strong class="seplag-stat__value" th:text="${evento.sorteioNumeroRodada != null ? evento.sorteioNumeroRodada : 0}">0</strong></article>
+            <a class="seplag-stat sorteios-stat-link" href="#historico-sorteios" data-scroll-historico aria-label="Ver histórico de sorteios">
+                <span class="seplag-stat__label">Rodadas realizadas</span>
+                <strong class="seplag-stat__value" th:text="${totalRodadas}">0</strong>
+                <span class="sorteios-stat-link__hint">Clique para ir ao histórico <i class="fa-solid fa-arrow-down" aria-hidden="true"></i></span>
+            </a>
         </section>
+
         <div class="sorteios-actions-grid">
         <section class="seplag-card sorteios-config-card" aria-labelledby="configurar-sorteio">
             <div class="seplag-card__header"><div><h2 class="seplag-card__title" id="configurar-sorteio">Quem pode participar</h2>
                 <p class="seplag-card__hint">Defina a frequência mínima. Só entram no sorteio participantes não cancelados com presença registrada em sessões do evento.</p></div></div>
             <div class="seplag-card__body">
-                <form th:action="@{/organizador/eventos/{id}/sorteios/percentual(id=${evento.id})}" method="post" class="seplag-form">
+                <form th:action="@{/organizador/eventos/{id}/sorteios/percentual(id=${evento.id})}" method="post" class="seplag-form" id="form-percentual">
                     <div class="seplag-field"><label class="seplag-label" for="percentualMinimo">Frequência mínima (%)</label>
-                        <input class="seplag-input" id="percentualMinimo" name="percentualMinimo" type="number" min="0" max="100" step="1" required th:value="${percentualMinimo}"></div>
-                    <button class="seplag-btn seplag-btn-secondary" type="submit"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Salvar percentual</button>
+                        <input class="seplag-input" id="percentualMinimo" name="percentualMinimo" type="number" min="0" max="100" step="1" required th:value="${percentualMinimo}" aria-describedby="percentual-ajuda">
+                        <span class="seplag-card__hint" id="percentual-ajuda">Use um valor entre 0 e 100. O critério fica registrado em cada rodada.</span>
+                    </div>
+                    <button class="seplag-btn seplag-btn-secondary" type="submit" id="btn-salvar-percentual"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> <span>Salvar percentual</span></button>
                 </form>
                 <p class="seplag-count-chip" style="margin-top:1rem"><i class="fa-solid fa-user-check" aria-hidden="true"></i>
                     Elegíveis agora: <strong th:text="${totalElegiveis}">0</strong></p>
@@ -47,55 +60,372 @@
                         <h3 id="participantes-elegiveis-titulo">Participantes elegíveis</h3>
                         <span th:text="${totalElegiveis}">0</span>
                     </div>
+                    <div class="sorteios-eligible-list__search" th:if="${!participantesElegiveis.isEmpty()}">
+                        <label class="seplag-sr-only" for="buscaElegiveis">Buscar participante elegível por nome ou e-mail</label>
+                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        <input class="seplag-input" id="buscaElegiveis" type="search" placeholder="Buscar por nome ou e-mail" autocomplete="off">
+                    </div>
                     <p class="sorteios-eligible-list__empty" th:if="${participantesElegiveis.isEmpty()}">
-                        Ninguém atingiu a frequência mínima ainda.
+                        <span class="sorteios-empty-icon" aria-hidden="true"><i class="fa-solid fa-user-clock"></i></span>
+                        <span>Ninguém está disponível para sorteio agora. Confira a frequência mínima, as presenças registradas e se há rodadas ativas.</span>
                     </p>
-                    <ul class="sorteios-eligible-list__items" th:unless="${participantesElegiveis.isEmpty()}">
-                        <li th:each="participante : ${participantesElegiveis}">
+                    <ul class="sorteios-eligible-list__items" th:unless="${participantesElegiveis.isEmpty()}" id="lista-elegiveis">
+                        <li th:each="participante : ${participantesElegiveis}"
+                            th:attr="data-nome=${participante.nomeParticipante},data-email=${participante.emailParticipante}">
                             <span class="sorteios-eligible-list__person">
                                 <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-                                <span><strong th:text="${participante.nomeParticipante}">Nome do participante</strong></span>
+                                <span><strong th:text="${participante.nomeParticipante}">Nome do participante</strong>
+                                    <small class="sorteios-eligible-list__email" th:text="${participante.emailParticipante}">email@exemplo.com</small></span>
                             </span>
                             <span class="sorteios-eligible-list__frequency"
                                   th:text="|${#numbers.formatDecimal(participante.percentualFrequencia, 1, 0)}%|">100%</span>
                         </li>
                     </ul>
+                    <p class="sorteios-eligible-list__empty hidden" id="busca-elegiveis-vazia">Nenhum participante encontrado para essa busca.</p>
+                </div>
+                <p class="seplag-card__hint sorteios-small-hint"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Vencedores de rodadas ativas não entram novamente. Ao desfazer uma rodada, eles voltam para esta lista.</p>
+            </div>
+        </section>
+
+        <section class="seplag-card sorteios-draw-card" aria-labelledby="realizar-sorteio">
+            <div class="seplag-card__header"><div><h2 class="seplag-card__title" id="realizar-sorteio">Novo sorteio</h2>
+                <p class="seplag-card__hint">Escolha quantas pessoas serão sorteadas. Cada rodada seleciona vencedores diferentes entre si e entre as rodadas ativas.</p></div></div>
+            <div class="seplag-card__body">
+                <form th:action="@{/organizador/eventos/{id}/sorteios/realizar(id=${evento.id})}" method="post" class="seplag-form" id="form-sorteio"
+                      th:attr="data-total-elegiveis=${totalElegiveis},data-percentual=${percentualMinimo}">
+                    <div class="seplag-field"><label class="seplag-label" for="quantidade">Quantidade de pessoas</label>
+                        <input class="seplag-input" id="quantidade" name="quantidade" type="number" min="1" step="1" th:max="${totalElegiveis}" value="1" required
+                               aria-describedby="aviso-quantidade ajuda-sorteio">
+                        <p class="sorteios-field-feedback" id="aviso-quantidade" role="status" aria-live="polite"
+                           th:text="${totalElegiveis == 0 ? 'Ainda não há participantes elegíveis. Registre presenças e confira o percentual mínimo.' : ''}"></p>
+                    </div>
+                    <div class="seplag-field"><label class="seplag-label" for="premio">Prêmio <span class="sorteios-optional">(opcional)</span></label>
+                        <input class="seplag-input" id="premio" name="premio" type="text" maxlength="120" placeholder="Ex.: Ingresso, Camiseta" autocomplete="off">
+                        <span class="seplag-card__hint" id="ajuda-sorteio">O prêmio fica registrado na rodada e pode ser exibido no modo apresentação.</span>
+                    </div>
+                    <div class="sorteios-form-actions">
+                        <button class="seplag-btn seplag-btn-primary" type="submit" id="btn-realizar-sorteio" th:disabled="${totalElegiveis == 0}"><i class="fa-solid fa-dice" aria-hidden="true"></i> Realizar sorteio</button>
+                        <button class="seplag-btn seplag-btn-secondary" type="button" id="btn-modo-apresentacao"
+                                data-modo-apresentacao th:disabled="${rodadaApresentacao == null}"
+                                th:attr="aria-label=${rodadaApresentacao == null ? 'Modo apresentação indisponível até o primeiro sorteio' : 'Abrir modo apresentação do último sorteio'}">
+                            <i class="fa-solid fa-tv" aria-hidden="true"></i> Modo apresentação
+                        </button>
+                    </div>
+                    <p class="seplag-card__hint" style="margin-top:.75rem" th:if="${totalElegiveis == 0}">Ainda não há participantes elegíveis. Registre presenças e confira o percentual mínimo.</p>
+                </form>
+
+                <div id="apresentacao-dados" class="hidden" th:if="${rodadaApresentacao != null}"
+                     th:attr="data-premio=${rodadaApresentacao.premioExibicao},data-rodada=${rodadaApresentacao.numeroRodada},data-criterio=|Sorteado entre ${rodadaApresentacao.totalElegiveis} elegíveis com frequência ≥ ${rodadaApresentacao.percentualMinimo}%|">
+                    <span th:each="vencedor : ${vencedoresApresentacao}" data-vencedor="true" th:attr="data-nome=${vencedor.nomeVencedor}"></span>
                 </div>
             </div>
         </section>
-        <section class="seplag-card sorteios-draw-card" aria-labelledby="realizar-sorteio">
-            <div class="seplag-card__header"><div><h2 class="seplag-card__title" id="realizar-sorteio">Novo sorteio</h2>
-                <p class="seplag-card__hint">Escolha quantas pessoas serão sorteadas. Cada rodada seleciona vencedores diferentes entre si; você pode realizar novas rodadas quando quiser.</p></div></div>
+        </div>
+
+        <section class="seplag-card sorteios-resultado" id="resultado-destaque" th:if="${rodadaDestaque != null}"
+                 th:attr="data-destaque=true,data-premio=${rodadaDestaque.premioExibicao},data-rodada=${rodadaDestaque.numeroRodada},data-criterio=|Sorteado entre ${rodadaDestaque.totalElegiveis} elegíveis com frequência ≥ ${rodadaDestaque.percentualMinimo}%|"
+                 aria-labelledby="resultado-destaque-titulo">
+            <div class="seplag-card__header">
+                <div><p class="seplag-eyebrow">Resultado da rodada <span th:text="${rodadaDestaque.numeroRodada}">1</span></p>
+                    <h2 class="seplag-card__title" id="resultado-destaque-titulo">Temos vencedor<span th:if="${#lists.size(vencedoresDestaque) > 1}">es</span>!</h2>
+                    <p class="seplag-card__hint" th:text="|Sorteado entre ${rodadaDestaque.totalElegiveis} elegíveis com frequência ≥ ${rodadaDestaque.percentualMinimo}%.|">Sorteado entre 12 elegíveis com frequência ≥ 75%.</p>
+                </div>
+                <span class="seplag-badge seplag-badge--success" th:if="${rodadaDestaque.premio != null}"><i class="fa-solid fa-trophy" aria-hidden="true"></i> <span th:text="${rodadaDestaque.premioExibicao}">Prêmio</span></span>
+            </div>
             <div class="seplag-card__body">
-                <form th:action="@{/organizador/eventos/{id}/sorteios/realizar(id=${evento.id})}" method="post" class="seplag-form">
-                    <div class="seplag-field"><label class="seplag-label" for="quantidade">Quantidade de pessoas</label>
-                        <input class="seplag-input" id="quantidade" name="quantidade" type="number" min="1" th:max="${totalElegiveis}" value="1" required></div>
-                    <button class="seplag-btn seplag-btn-primary" type="submit" th:disabled="${totalElegiveis == 0}"><i class="fa-solid fa-dice" aria-hidden="true"></i> Realizar sorteio</button>
-                    <p class="seplag-card__hint" style="margin-top:.75rem" th:if="${totalElegiveis == 0}">Ainda não há participantes elegíveis. Registre presenças e confira o percentual mínimo.</p>
-                </form>
+                <ul class="sorteios-resultado__vencedores">
+                    <li th:each="vencedor : ${vencedoresDestaque}" th:attr="data-nome=${vencedor.nomeVencedor}">
+                        <i class="fa-solid fa-crown" aria-hidden="true"></i>
+                        <span th:text="${vencedor.nomeVencedor}">Nome</span>
+                    </li>
+                </ul>
+                <div class="sorteios-form-actions">
+                    <button class="seplag-btn seplag-btn-primary" type="button" data-modo-apresentacao><i class="fa-solid fa-tv" aria-hidden="true"></i> Abrir modo apresentação</button>
+                    <button class="seplag-btn seplag-btn-secondary" type="button" id="reabrir-revelacao"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Rever revelação</button>
+                </div>
             </div>
         </section>
-        </div>
-        <section class="seplag-card sorteios-history-card" aria-labelledby="historico-sorteios">
-            <div class="seplag-card__header"><div><h2 class="seplag-card__title" id="historico-sorteios">Histórico de sorteios</h2>
-                <p class="seplag-card__hint">Cada rodada fica registrada para consulta.</p></div></div>
+
+        <section class="seplag-card sorteios-history-card" id="historico-sorteios" aria-labelledby="historico-sorteios-titulo">
+            <div class="seplag-card__header">
+                <div><h2 class="seplag-card__title" id="historico-sorteios-titulo" tabindex="-1">Histórico de sorteios</h2>
+                    <p class="seplag-card__hint">Cada rodada fica registrada para consulta, inclusive as canceladas.</p></div>
+                <div class="sorteios-export-actions" th:if="${!resultadosSorteio.isEmpty()}">
+                    <a class="seplag-btn seplag-btn-secondary sorteios-mini-btn"
+                       th:href="@{/organizador/eventos/{id}/sorteios/historico.csv(id=${evento.id},q=${filtroBusca},premio=${filtroPremio},status=${filtroStatus})}">
+                        <i class="fa-solid fa-file-csv" aria-hidden="true"></i> Exportar CSV
+                    </a>
+                    <a class="seplag-btn seplag-btn-secondary sorteios-mini-btn"
+                       th:href="@{/organizador/eventos/{id}/sorteios/historico.pdf(id=${evento.id},q=${filtroBusca},premio=${filtroPremio},status=${filtroStatus})}">
+                        <i class="fa-solid fa-file-pdf" aria-hidden="true"></i> Exportar PDF
+                    </a>
+                </div>
+            </div>
             <div class="seplag-card__body">
-                <p th:if="${resultadosSorteio.isEmpty()}" class="seplag-card__hint">Nenhum sorteio realizado ainda.</p>
-                <div class="seplag-table-wrap" th:unless="${resultadosSorteio.isEmpty()}">
-                    <table class="seplag-table"><thead><tr><th>Rodada</th><th>Vencedor</th><th>Frequência</th><th>Data</th></tr></thead>
-                        <tbody><tr th:each="resultado : ${resultadosSorteio}">
-                            <td data-label="Rodada" th:text="${resultado.rodada}">1</td>
-                            <td data-label="Vencedor" class="seplag-table__title"><span th:text="${resultado.nomeVencedor}">Participante</span>
-                                <small th:if="${resultado.emailVencedor != null}" th:text="${resultado.emailVencedor}"></small></td>
+                <div class="sorteios-latest" th:if="${ultimaRodadaAtiva != null}">
+                    <div>
+                        <p class="seplag-eyebrow">Rodada ativa mais recente</p>
+                        <strong>Rodada <span th:text="${ultimaRodadaAtiva.numeroRodada}">1</span><th:block th:if="${ultimaRodadaAtiva.premio != null}"> · <span th:text="${ultimaRodadaAtiva.premio}">Prêmio</span></th:block></strong>
+                        <span th:text="|${ultimaRodadaAtiva.quantidadeSorteada} vencedor(es) · ${#temporals.format(ultimaRodadaAtiva.realizadoEm, 'dd/MM/yyyy HH:mm')}|">2 vencedores</span>
+                    </div>
+                    <div class="sorteios-latest__actions">
+                        <button class="seplag-btn seplag-btn-secondary sorteios-mini-btn" type="button" data-modo-apresentacao><i class="fa-solid fa-tv" aria-hidden="true"></i> Apresentar</button>
+                        <form th:action="@{/organizador/eventos/{id}/sorteios/{rodadaId}/desfazer(id=${evento.id},rodadaId=${ultimaRodadaAtiva.id})}"
+                              method="post" class="sorteios-inline-form"
+                              th:attr="data-confirmar=|Desfazer a rodada ${ultimaRodadaAtiva.numeroRodada}? Ela ficará marcada como Cancelada e seus vencedores voltarão a ficar disponíveis. O histórico não será apagado.|">
+                            <input type="hidden" name="q" th:value="${filtroBusca}">
+                            <input type="hidden" name="premio" th:value="${filtroPremio}">
+                            <input type="hidden" name="status" th:value="${filtroStatus}">
+                            <input type="hidden" name="page" th:value="${paginaAtual}">
+                            <button class="seplag-btn seplag-btn-danger sorteios-mini-btn" type="submit"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Desfazer última rodada</button>
+                        </form>
+                    </div>
+                </div>
+
+                <form class="sorteios-filter" method="get" th:action="@{/organizador/eventos/{id}/sorteios(id=${evento.id})}" role="search" aria-label="Filtrar histórico de sorteios">
+                    <div class="seplag-field">
+                        <label class="seplag-label" for="filtro-vencedor">Vencedor ou e-mail</label>
+                        <input class="seplag-input" id="filtro-vencedor" name="q" type="search" th:value="${filtroBusca}" placeholder="Nome ou e-mail" autocomplete="off">
+                    </div>
+                    <div class="seplag-field">
+                        <label class="seplag-label" for="filtro-premio">Prêmio</label>
+                        <input class="seplag-input" id="filtro-premio" name="premio" type="search" th:value="${filtroPremio}" placeholder="Ex.: Camiseta" autocomplete="off">
+                    </div>
+                    <div class="seplag-field">
+                        <label class="seplag-label" for="filtro-status">Status</label>
+                        <select class="seplag-select" id="filtro-status" name="status">
+                            <option value="">Todos os status</option>
+                            <option th:each="opcao : ${statusSorteioOptions}" th:value="${opcao}" th:text="${opcao.descricao}"
+                                    th:selected="${filtroStatus == opcao.name()}">Pendente</option>
+                        </select>
+                    </div>
+                    <div class="sorteios-filter__actions">
+                        <button class="seplag-btn seplag-btn-secondary" type="submit"><i class="fa-solid fa-filter" aria-hidden="true"></i> Filtrar</button>
+                        <a class="seplag-btn seplag-btn-ghost" th:href="@{/organizador/eventos/{id}/sorteios(id=${evento.id})}">Limpar</a>
+                    </div>
+                </form>
+
+                <p th:if="${resultadosSorteio.isEmpty()}" class="sorteios-empty-state">
+                    <span class="sorteios-empty-icon" aria-hidden="true"><i class="fa-solid fa-dice"></i></span>
+                    <strong>Nenhum sorteio realizado ainda.</strong>
+                    <span>Defina a frequência mínima, confirme os participantes elegíveis e realize a primeira rodada.</span>
+                </p>
+
+                <p th:if="${!resultadosSorteio.isEmpty() && resultadosPagina.isEmpty()}" class="sorteios-empty-state sorteios-empty-state--compact">
+                    <span class="sorteios-empty-icon" aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></span>
+                    <strong>Nenhum resultado encontrado para os filtros.</strong>
+                    <span>Tente outro nome, prêmio ou status.</span>
+                </p>
+
+                <div class="seplag-table-wrap" th:if="${!resultadosPagina.isEmpty()}">
+                    <table class="seplag-table sorteios-history-table">
+                        <thead><tr>
+                            <th scope="col">Rodada</th>
+                            <th scope="col">Prêmio</th>
+                            <th scope="col">Vencedor</th>
+                            <th scope="col">Frequência</th>
+                            <th scope="col">Critério usado</th>
+                            <th scope="col">Status</th>
+                            <th scope="col"><span class="seplag-sr-only">Ações</span></th>
+                        </tr></thead>
+                        <tbody>
+                        <tr th:each="resultado : ${resultadosPagina}">
+                            <td data-label="Rodada / data">
+                                <span class="sorteios-round-number" th:text="${resultado.rodada}">1</span>
+                                <span class="sorteios-round-date" th:text="${#temporals.format(resultado.realizadoEm, 'dd/MM/yyyy HH:mm')}">11/11/2026 10:00</span>
+                                <span class="seplag-badge seplag-badge--danger sorteios-round-badge" th:if="${resultado.rodadaCancelada}">Cancelada</span>
+                                <span class="seplag-badge seplag-badge--info sorteios-round-badge"
+                                      th:if="${resultado.rodadaSorteio != null && resultado.rodadaSorteio.rodadaOrigem != null}"
+                                      th:text="|Reposição R${resultado.rodadaSorteio.rodadaOrigem.numeroRodada}|"
+                                      th:title="|Reposição da rodada ${resultado.rodadaSorteio.rodadaOrigem.numeroRodada}|">Reposição</span>
+                            </td>
+                            <td data-label="Prêmio" th:text="${resultado.premioRodada != null ? resultado.premioRodada : '—'}">Camiseta</td>
+                            <td data-label="Vencedor / e-mail" class="seplag-table__title">
+                                <span class="sorteios-winner-name" th:text="${resultado.nomeVencedor}">Participante</span>
+                                <a class="sorteios-email" th:if="${resultado.emailVencedor != null}" th:href="|mailto:${resultado.emailVencedor}|" th:text="${resultado.emailVencedor}">email@exemplo.com</a>
+                                <span class="sorteios-email" th:if="${resultado.emailVencedor == null}">—</span>
+                            </td>
                             <td data-label="Frequência" th:text="|${#numbers.formatDecimal(resultado.percentualFrequencia, 1, 1)}%|">100%</td>
-                            <td data-label="Data" th:text="${#temporals.format(resultado.realizadoEm, 'dd/MM/yyyy HH:mm')}">11/11/2026 10:00</td>
-                        </tr></tbody>
+                            <td data-label="Critério usado" class="sorteios-criteria-cell">
+                                <details class="sorteios-criteria">
+                                    <summary th:text="${resultado.criterioAplicado}">Sorteado entre 12 elegíveis com frequência ≥ 75%</summary>
+                                    <div th:if="${resultado.rodadaSorteio != null}" class="sorteios-criteria__content">
+                                        <span th:text="|Frequência mínima: ${resultado.rodadaSorteio.percentualMinimo}% · Total de elegíveis: ${resultado.rodadaSorteio.totalElegiveis} · Sorteados: ${resultado.rodadaSorteio.quantidadeSorteada}|"></span>
+                                        <span th:text="|Prêmio: ${resultado.rodadaSorteio.premioExibicao} · Realizado por: ${resultado.rodadaSorteio.realizadoPor != null ? resultado.rodadaSorteio.realizadoPor : '—'}|"></span>
+                                        <span th:text="|Data/hora do sorteio: ${#temporals.format(resultado.rodadaSorteio.realizadoEm, 'dd/MM/yyyy HH:mm:ss')}|"></span>
+                                    </div>
+                                    <div th:if="${resultado.rodadaSorteio == null}" class="sorteios-criteria__content">
+                                        <span>Este registro é anterior ao detalhamento por rodada. O percentual mínimo usado não foi gravado na época.</span>
+                                    </div>
+                                </details>
+                            </td>
+                            <td data-label="Status">
+                                <span class="seplag-badge seplag-badge--danger" th:if="${resultado.rodadaCancelada}">Rodada cancelada</span>
+                                <form th:unless="${resultado.rodadaCancelada}"
+                                      class="sorteios-status-form"
+                                      th:action="@{/organizador/eventos/{id}/sorteios/resultados/{resultadoId}/status(id=${evento.id},resultadoId=${resultado.id})}"
+                                      method="post">
+                                    <label class="seplag-sr-only" th:for="|status-${resultado.id}|" th:text="|Status do vencedor ${resultado.nomeVencedor}|">Status do vencedor</label>
+                                    <select class="seplag-select seplag-select--compact" th:id="|status-${resultado.id}|" name="status">
+                                        <option th:each="opcao : ${statusSorteioOptions}" th:value="${opcao}" th:text="${opcao.descricao}"
+                                                th:selected="${resultado.statusVencedorEfetivo == opcao}">Pendente</option>
+                                    </select>
+                                    <input type="hidden" name="q" th:value="${filtroBusca}">
+                                    <input type="hidden" name="premio" th:value="${filtroPremio}">
+                                    <input type="hidden" name="statusFiltro" th:value="${filtroStatus}">
+                                    <input type="hidden" name="page" th:value="${paginaAtual}">
+                                    <button class="seplag-btn seplag-btn-secondary sorteios-icon-btn" type="submit"
+                                            th:attr="aria-label=|Salvar status de ${resultado.nomeVencedor}|" title="Salvar status">
+                                        <i class="fa-solid fa-check" aria-hidden="true"></i>
+                                    </button>
+                                </form>
+                            </td>
+                            <td data-label="Ações">
+                                <div class="sorteios-row-actions">
+                                    <button class="seplag-btn seplag-btn-ghost sorteios-icon-btn" type="button"
+                                            data-copiar-email th:disabled="${resultado.emailVencedor == null}"
+                                            th:attr="data-email=${resultado.emailVencedor},aria-label=|Copiar e-mail de ${resultado.nomeVencedor}|"
+                                            title="Copiar e-mail">
+                                        <i class="fa-regular fa-copy" aria-hidden="true"></i>
+                                    </button>
+                                    <button class="seplag-btn seplag-btn-ghost sorteios-icon-btn" type="button"
+                                            data-enviar-email th:disabled="${resultado.emailVencedor == null}"
+                                            th:attr="data-email=${resultado.emailVencedor},data-nome=${resultado.nomeVencedor},data-premio=${resultado.premioRodada},data-evento=${evento.titulo},aria-label=|Enviar e-mail de parabéns para ${resultado.nomeVencedor}|"
+                                            title="Enviar e-mail">
+                                        <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+                                    </button>
+                                    <form th:if="${!resultado.rodadaCancelada && resultado.rodadaSorteio != null && resultado.statusVencedorEfetivo.name() == 'AUSENTE'}"
+                                          class="sorteios-inline-form"
+                                          th:action="@{/organizador/eventos/{id}/sorteios/resultados/{resultadoId}/repescar(id=${evento.id},resultadoId=${resultado.id})}"
+                                          method="post"
+                                          th:attr="data-confirmar=|Sortear novamente para repor ${resultado.nomeVencedor} (ausente), mantendo o prêmio ${resultado.premioRodada != null ? resultado.premioRodada : 'da rodada original'}?|">
+                                        <input type="hidden" name="q" th:value="${filtroBusca}">
+                                        <input type="hidden" name="premio" th:value="${filtroPremio}">
+                                        <input type="hidden" name="statusFiltro" th:value="${filtroStatus}">
+                                        <input type="hidden" name="page" th:value="${paginaAtual}">
+                                        <button class="seplag-btn seplag-btn-secondary sorteios-icon-btn" type="submit"
+                                                th:attr="aria-label=|Sortear novamente no lugar de ${resultado.nomeVencedor}|" title="Sortear novamente">
+                                            <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="sorteios-pagination" th:if="${!resultadosSorteio.isEmpty()}">
+                    <p th:text="|Mostrando ${registroInicial}–${registroFinal} de ${totalFiltrados} resultado(s) filtrado(s).|">Mostrando 1–10 de 20.</p>
+                    <nav class="seplag-pagination" th:if="${totalPaginas > 1}" aria-label="Paginação do histórico de sorteios">
+                        <a th:if="${paginaAtual > 1}"
+                           th:href="@{/organizador/eventos/{id}/sorteios(id=${evento.id},q=${filtroBusca},premio=${filtroPremio},status=${filtroStatus},page=${paginaAtual - 1})}">Anterior</a>
+                        <span class="is-active" aria-current="page" th:text="|${paginaAtual} / ${totalPaginas}|">1 / 1</span>
+                        <a th:if="${paginaAtual < totalPaginas}"
+                           th:href="@{/organizador/eventos/{id}/sorteios(id=${evento.id},q=${filtroBusca},premio=${filtroPremio},status=${filtroStatus},page=${paginaAtual + 1})}">Próxima</a>
+                    </nav>
+                </div>
+            </div>
+        </section>
+
+        <section class="seplag-card sorteios-audit-card" aria-labelledby="auditoria-sorteios">
+            <div class="seplag-card__header"><div><h2 class="seplag-card__title" id="auditoria-sorteios">Log de auditoria</h2>
+                <p class="seplag-card__hint">Somente leitura. Registra quem realizou cada ação e quando, para consulta do organizador.</p></div></div>
+            <div class="seplag-card__body">
+                <p th:if="${auditoria.isEmpty()}" class="seplag-card__hint">Nenhuma ação registrada ainda.</p>
+                <div class="seplag-table-wrap sorteios-audit-scroll" th:unless="${auditoria.isEmpty()}">
+                    <table class="seplag-table sorteios-audit-table">
+                        <thead><tr><th scope="col">Data/hora</th><th scope="col">Ação</th><th scope="col">Responsável</th><th scope="col">Detalhes</th></tr></thead>
+                        <tbody>
+                        <tr th:each="registro : ${auditoria}">
+                            <td data-label="Data/hora" th:text="${#temporals.format(registro.realizadoEm, 'dd/MM/yyyy HH:mm:ss')}">15/11/2026 14:00:00</td>
+                            <td data-label="Ação"><span class="seplag-badge seplag-badge--neutral" th:text="${registro.acao.descricao}">Sorteio realizado</span></td>
+                            <td data-label="Responsável" th:text="${registro.autorEmail != null ? registro.autorEmail : 'sistema'}">organizador@seplag.mt.gov.br</td>
+                            <td data-label="Detalhes" th:text="${registro.detalhes}">Detalhes</td>
+                        </tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
         </section>
     </main>
 </div>
+
+<!-- Confirmação do sorteio -->
+<dialog id="dialog-sorteio" class="sorteios-dialog" aria-labelledby="dialog-sorteio-titulo">
+    <div class="sorteios-dialog__body">
+        <span class="sorteios-dialog__icon" aria-hidden="true"><i class="fa-solid fa-dice"></i></span>
+        <p class="seplag-eyebrow">Confirme antes de sortear</p>
+        <h2 id="dialog-sorteio-titulo">Realizar sorteio?</h2>
+        <p id="dialog-sorteio-resumo" class="sorteios-dialog__summary">Sortear 1 pessoa entre 0 elegíveis (frequência ≥ 75%). Prêmio: não informado.</p>
+        <p class="seplag-card__hint">A seleção acontece no servidor com aleatoriedade criptográfica e será registrada no histórico e no log de auditoria.</p>
+        <div class="sorteios-dialog__actions">
+            <button class="seplag-btn seplag-btn-secondary" type="button" data-fechar-dialogo>Cancelar</button>
+            <button class="seplag-btn seplag-btn-primary" type="button" id="confirmar-sorteio"><i class="fa-solid fa-check" aria-hidden="true"></i> Confirmar sorteio</button>
+        </div>
+    </div>
+</dialog>
+
+<!-- Confirmação genérica: desfazer rodada / repor vencedor -->
+<dialog id="dialog-confirmacao" class="sorteios-dialog" aria-labelledby="dialog-confirmacao-titulo">
+    <div class="sorteios-dialog__body">
+        <span class="sorteios-dialog__icon sorteios-dialog__icon--warning" aria-hidden="true"><i class="fa-solid fa-triangle-exclamation"></i></span>
+        <p class="seplag-eyebrow">Confirmação</p>
+        <h2 id="dialog-confirmacao-titulo">Confirmar ação?</h2>
+        <p id="dialog-confirmacao-texto" class="sorteios-dialog__summary">Tem certeza?</p>
+        <div class="sorteios-dialog__actions">
+            <button class="seplag-btn seplag-btn-secondary" type="button" data-fechar-dialogo>Cancelar</button>
+            <button class="seplag-btn seplag-btn-danger" type="button" id="confirmar-acao"><i class="fa-solid fa-check" aria-hidden="true"></i> Confirmar</button>
+        </div>
+    </div>
+</dialog>
+
+<!-- Revelação com suspense -->
+<div id="sorteio-suspense" class="sorteios-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="suspense-titulo">
+    <div class="sorteios-suspense">
+        <p class="seplag-eyebrow">Revelação do sorteio</p>
+        <h2 id="suspense-titulo">Preparando a revelação…</h2>
+        <p id="suspense-premio" class="sorteios-suspense__premio"></p>
+        <div class="sorteios-suspense__stage">
+            <div id="suspense-contagem" class="sorteios-suspense__contagem" aria-hidden="true">3</div>
+            <div id="suspense-roleta" class="sorteios-suspense__roleta" aria-hidden="true"></div>
+            <div id="suspense-resultado" class="sorteios-suspense__resultado hidden">
+                <p>Vencedor<span th:if="${vencedoresDestaque != null && #lists.size(vencedoresDestaque) > 1}">es</span></p>
+                <ul id="suspense-vencedores"></ul>
+            </div>
+        </div>
+        <p id="suspense-status" class="seplag-sr-only" aria-live="assertive"></p>
+        <div id="suspense-acoes" class="sorteios-suspense__acoes hidden">
+            <button class="seplag-btn seplag-btn-primary" type="button" data-modo-apresentacao><i class="fa-solid fa-tv" aria-hidden="true"></i> Modo apresentação</button>
+            <button class="seplag-btn seplag-btn-secondary" type="button" id="fechar-suspense">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modo apresentação -->
+<div id="apresentacao" class="sorteios-apresentacao hidden" role="dialog" aria-modal="true" aria-labelledby="apresentacao-nome">
+    <canvas id="confete" class="sorteios-apresentacao__confete" aria-hidden="true"></canvas>
+    <header class="sorteios-apresentacao__topo">
+        <span class="sorteios-apresentacao__evento" th:text="${evento.titulo}">Evento</span>
+        <button class="sorteios-apresentacao__sair" type="button" id="fechar-apresentacao"><i class="fa-solid fa-xmark" aria-hidden="true"></i> Sair</button>
+    </header>
+    <div class="sorteios-apresentacao__conteudo">
+        <p class="seplag-eyebrow" id="apresentacao-premio-label">Prêmio</p>
+        <h2 id="apresentacao-premio" class="sorteios-apresentacao__premio">Prêmio</h2>
+        <p id="apresentacao-rodada" class="sorteios-apresentacao__rodada">Rodada 1</p>
+        <div class="sorteios-apresentacao__palco">
+            <p id="apresentacao-contador" class="sorteios-apresentacao__contador">Vencedor 1 de 1</p>
+            <h3 id="apresentacao-nome" class="sorteios-apresentacao__nome">Nome do vencedor</h3>
+            <p id="apresentacao-criterio" class="sorteios-apresentacao__criterio"></p>
+        </div>
+        <div class="sorteios-apresentacao__controles">
+            <button class="seplag-btn seplag-btn-secondary" type="button" id="apresentacao-anterior"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i> Anterior</button>
+            <button class="seplag-btn seplag-btn-primary" type="button" id="apresentacao-proximo">Próximo <i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+        </div>
+    </div>
+</div>
+
 <script th:src="@{/js/seplag-shell.js}"></script>
+<script th:src="@{/js/sorteios.js}"></script>
 </body>
 </html>

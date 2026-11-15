@@ -120,7 +120,8 @@ public class Evento extends EntidadeAuditavel {
     @Column(name = "sorteio_realizado_em")
     private java.time.LocalDateTime sorteioRealizadoEm;
 
-    @Column(name = "sorteio_numero_rodada", nullable = false)
+    @Column(name = "sorteio_numero_rodada")
+    @Builder.Default
     private Integer sorteioNumeroRodada = 0;
 
     @Builder.Default
