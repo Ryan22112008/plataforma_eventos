@@ -29,7 +29,6 @@ import sistema.eventos.model.Evento;
 import sistema.eventos.model.Inscricao;
 import sistema.eventos.model.SorteioResultado;
 import sistema.eventos.model.SorteioRodada;
-import sistema.eventos.model.StatusVencedorSorteio;
 import sistema.eventos.model.Usuario;
 import sistema.eventos.repository.SessaoRepository;
 import sistema.eventos.service.InscricaoService;
@@ -42,7 +41,6 @@ import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -175,18 +173,18 @@ public class EventoController {
     @GetMapping("/eventos/{id}/sorteios")
     public String telaSorteio(@PathVariable("id") Long id,
                               @RequestParam(value = "q", required = false) String busca,
-                              @RequestParam(value = "premio", required = false) String premio,
-                              @RequestParam(value = "status", required = false) String status,
                               @RequestParam(value = "page", required = false, defaultValue = "1") Integer pagina,
                               @RequestParam(value = "destaque", required = false) Long destaque,
                               Model model, Authentication authentication) {
         Evento evento = exigirAcessoAoEvento(id, authentication);
         int minimo = sorteioService.percentualMinimo(evento);
-        List<InscritoFrequenciaDto> participantesElegiveis = sorteioService.listarElegiveisDisponiveis(evento);
+        List<SorteioService.ElegivelSorteio> participantesElegiveis = sorteioService.listarElegiveis(evento);
+        long jaVenceram = participantesElegiveis.stream()
+                .filter(SorteioService.ElegivelSorteio::vencedorAtivo)
+                .count();
 
         List<SorteioResultado> todos = sorteioService.listarResultados(id);
-        StatusVencedorSorteio statusFiltro = parseStatusSorteio(status);
-        List<SorteioResultado> filtrados = sorteioService.filtrar(todos, busca, premio, statusFiltro);
+        List<SorteioResultado> filtrados = sorteioService.filtrar(todos, busca);
 
         int totalRegistros = filtrados.size();
         int totalPaginas = Math.max(1, (totalRegistros + SORTEIOS_POR_PAGINA - 1) / SORTEIOS_POR_PAGINA);
@@ -209,6 +207,8 @@ public class EventoController {
         model.addAttribute("evento", evento);
         model.addAttribute("percentualMinimo", minimo);
         model.addAttribute("totalElegiveis", participantesElegiveis.size());
+        model.addAttribute("totalElegiveisJaVenceram", jaVenceram);
+        model.addAttribute("totalElegiveisIneditos", participantesElegiveis.size() - jaVenceram);
         model.addAttribute("participantesElegiveis", participantesElegiveis);
         model.addAttribute("resultadosSorteio", todos);
         model.addAttribute("resultadosPagina", filtrados.subList(inicio, fim));
@@ -219,9 +219,6 @@ public class EventoController {
         model.addAttribute("registroInicial", totalRegistros == 0 ? 0 : inicio + 1);
         model.addAttribute("registroFinal", fim);
         model.addAttribute("filtroBusca", busca == null ? "" : busca.trim());
-        model.addAttribute("filtroPremio", premio == null ? "" : premio.trim());
-        model.addAttribute("filtroStatus", statusFiltro == null ? "" : statusFiltro.name());
-        model.addAttribute("statusSorteioOptions", StatusVencedorSorteio.values());
         model.addAttribute("totalRodadas", sorteioService.contarRodadasAtivas(id));
         model.addAttribute("ultimaRodadaAtiva", sorteioService.ultimaRodadaAtiva(id).orElse(null));
         model.addAttribute("rodadaDestaque", rodadaDestaque);
@@ -249,12 +246,14 @@ public class EventoController {
     @PostMapping("/eventos/{id}/sorteios/realizar")
     public String realizarSorteio(@PathVariable("id") Long id,
                                   @RequestParam("quantidade") Integer quantidade,
-                                  @RequestParam(value = "premio", required = false) String premio,
+                                  @RequestParam(value = "naoRepetirVencedores", required = false, defaultValue = "false")
+                                  boolean naoRepetirVencedores,
                                   Authentication authentication,
                                   RedirectAttributes attributes) {
         exigirAcessoAoEvento(id, authentication);
         try {
-            SorteioRodada rodada = sorteioService.realizarSorteio(id, quantidade, premio, nomeAutor(authentication));
+            SorteioRodada rodada = sorteioService.realizarSorteio(
+                    id, quantidade, naoRepetirVencedores, nomeAutor(authentication));
             return "redirect:/organizador/eventos/" + id + "/sorteios?destaque=" + rodada.getId();
         } catch (NegocioException e) {
             attributes.addFlashAttribute("erroNegocio", e.getMessage());
@@ -269,8 +268,6 @@ public class EventoController {
     public String desfazerUltimaRodada(@PathVariable("id") Long id,
                                        @PathVariable("rodadaId") Long rodadaId,
                                        @RequestParam(value = "q", required = false) String busca,
-                                       @RequestParam(value = "premio", required = false) String premio,
-                                       @RequestParam(value = "status", required = false) String status,
                                        @RequestParam(value = "page", required = false, defaultValue = "1") Integer pagina,
                                        Authentication authentication, RedirectAttributes attributes) {
         exigirAcessoAoEvento(id, authentication);
@@ -284,69 +281,16 @@ public class EventoController {
             log.error("Falha ao desfazer a rodada {} do evento {}.", rodadaId, id, e);
             attributes.addFlashAttribute("erroNegocio", "Não foi possível desfazer a rodada agora.");
         }
-        return redirectSorteios(id, busca, premio, status, pagina);
-    }
-
-    @PostMapping("/eventos/{id}/sorteios/resultados/{resultadoId}/status")
-    public String alterarStatusVencedor(@PathVariable("id") Long id,
-                                        @PathVariable("resultadoId") Long resultadoId,
-                                        @RequestParam("status") String status,
-                                        @RequestParam(value = "q", required = false) String busca,
-                                        @RequestParam(value = "premio", required = false) String premio,
-                                        @RequestParam(value = "statusFiltro", required = false) String statusFiltro,
-                                        @RequestParam(value = "page", required = false, defaultValue = "1") Integer pagina,
-                                        Authentication authentication, RedirectAttributes attributes) {
-        exigirAcessoAoEvento(id, authentication);
-        try {
-            StatusVencedorSorteio novoStatus = parseStatusSorteio(status);
-            if (novoStatus == null) {
-                throw new NegocioException("Selecione um status válido para o vencedor.");
-            }
-            SorteioResultado resultado = sorteioService.alterarStatusVencedor(
-                    id, resultadoId, novoStatus, nomeAutor(authentication));
-            attributes.addFlashAttribute("toast",
-                    "Status de " + resultado.getNomeVencedor() + " atualizado para " + novoStatus.getDescricao() + ".");
-        } catch (NegocioException e) {
-            attributes.addFlashAttribute("erroNegocio", e.getMessage());
-        } catch (Exception e) {
-            log.error("Falha ao alterar o status do resultado {} do evento {}.", resultadoId, id, e);
-            attributes.addFlashAttribute("erroNegocio", "Não foi possível atualizar o status agora.");
-        }
-        return redirectSorteios(id, busca, premio, statusFiltro, pagina);
-    }
-
-    @PostMapping("/eventos/{id}/sorteios/resultados/{resultadoId}/repescar")
-    public String sortearNovamente(@PathVariable("id") Long id,
-                                   @PathVariable("resultadoId") Long resultadoId,
-                                   @RequestParam(value = "q", required = false) String busca,
-                                   @RequestParam(value = "premio", required = false) String premio,
-                                   @RequestParam(value = "statusFiltro", required = false) String statusFiltro,
-                                   @RequestParam(value = "page", required = false, defaultValue = "1") Integer pagina,
-                                   Authentication authentication, RedirectAttributes attributes) {
-        exigirAcessoAoEvento(id, authentication);
-        try {
-            SorteioRodada reposicao = sorteioService.sortearNovamente(id, resultadoId, nomeAutor(authentication));
-            attributes.addFlashAttribute("toast",
-                    "Reposição realizada na rodada " + reposicao.getNumeroRodada() + ".");
-            return "redirect:/organizador/eventos/" + id + "/sorteios?destaque=" + reposicao.getId();
-        } catch (NegocioException e) {
-            attributes.addFlashAttribute("erroNegocio", e.getMessage());
-        } catch (Exception e) {
-            log.error("Falha ao sortear novamente o resultado {} do evento {}.", resultadoId, id, e);
-            attributes.addFlashAttribute("erroNegocio", "Não foi possível realizar a reposição agora.");
-        }
-        return redirectSorteios(id, busca, premio, statusFiltro, pagina);
+        return redirectSorteios(id, busca, pagina);
     }
 
     @GetMapping("/eventos/{id}/sorteios/historico.csv")
     public ResponseEntity<byte[]> exportarHistoricoCsv(@PathVariable("id") Long id,
                                                        @RequestParam(value = "q", required = false) String busca,
-                                                       @RequestParam(value = "premio", required = false) String premio,
-                                                       @RequestParam(value = "status", required = false) String status,
                                                        Authentication authentication) {
         exigirAcessoAoEvento(id, authentication);
         List<SorteioResultado> resultados = sorteioService.filtrar(
-                sorteioService.listarResultados(id), busca, premio, parseStatusSorteio(status));
+                sorteioService.listarResultados(id), busca);
         byte[] bytes = sorteioService.gerarCsv(resultados).getBytes(StandardCharsets.UTF_8);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -358,12 +302,10 @@ public class EventoController {
     @GetMapping("/eventos/{id}/sorteios/historico.pdf")
     public ResponseEntity<byte[]> exportarHistoricoPdf(@PathVariable("id") Long id,
                                                        @RequestParam(value = "q", required = false) String busca,
-                                                       @RequestParam(value = "premio", required = false) String premio,
-                                                       @RequestParam(value = "status", required = false) String status,
                                                        Authentication authentication) {
         Evento evento = exigirAcessoAoEvento(id, authentication);
         List<SorteioResultado> resultados = sorteioService.filtrar(
-                sorteioService.listarResultados(id), busca, premio, parseStatusSorteio(status));
+                sorteioService.listarResultados(id), busca);
         byte[] bytes = sorteioService.gerarPdf(evento.getTitulo(), resultados);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -372,28 +314,15 @@ public class EventoController {
                 .body(bytes);
     }
 
-    private StatusVencedorSorteio parseStatusSorteio(String status) {
-        if (status == null || status.isBlank()) {
-            return null;
-        }
-        try {
-            return StatusVencedorSorteio.valueOf(status.trim().toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-    }
-
     private String nomeAutor(Authentication authentication) {
         return authentication == null ? "sistema" : authentication.getName();
     }
 
-    private String redirectSorteios(Long id, String busca, String premio, String status, Integer pagina) {
+    private String redirectSorteios(Long id, String busca, Integer pagina) {
         StringBuilder url = new StringBuilder("redirect:/organizador/eventos/")
                 .append(id).append("/sorteios");
         StringBuilder query = new StringBuilder();
         adicionarParametro(query, "q", busca);
-        adicionarParametro(query, "premio", premio);
-        adicionarParametro(query, "status", status);
         if (pagina != null && pagina > 1) {
             adicionarParametro(query, "page", String.valueOf(pagina));
         }

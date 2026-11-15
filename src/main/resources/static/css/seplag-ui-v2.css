@@ -5896,6 +5896,10 @@ html.v2-root {
 .v2 .sorteios-eligible-list__person > span { display: grid; min-width: 0; gap: 3px; }
 .v2 .sorteios-eligible-list__person strong { overflow: hidden; color: var(--text); font-size: .82rem; text-overflow: ellipsis; white-space: nowrap; }
 .v2 .sorteios-eligible-list__frequency { flex: 0 0 auto; padding: 5px 9px; border: 1px solid rgba(52, 211, 153, .18); border-radius: 999px; background: rgba(16, 185, 129, .08); color: #6ee7b7; font-size: .72rem; font-weight: 700; }
+.v2 .sorteios-eligible-list__meta { display: flex; flex: 0 0 auto; align-items: center; gap: 7px; }
+.v2 .sorteios-winner-tag { gap: 4px; font-size: .62rem; white-space: nowrap; }
+.v2 .sorteios-eligible-list__items li.is-fora-da-rodada { opacity: .45; }
+.v2 .sorteios-eligible-list__items li.is-fora-da-rodada .sorteios-winner-tag { opacity: 1; }
 .v2 .sorteios-eligible-list__empty { margin: 0; padding: 16px; color: var(--muted); font-size: .82rem; }
 
 @media (max-width: 760px) {
@@ -6011,10 +6015,75 @@ html.v2-root {
     min-height: 46px;
 }
 
-.v2 .sorteios-optional {
-    color: var(--muted);
-    font-size: .74rem;
-    font-weight: 500;
+.v2 .sorteios-switch-field {
+    display: grid;
+    gap: 7px;
+    padding: 13px 15px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .02);
+}
+
+.v2 .sorteios-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    width: fit-content;
+    cursor: pointer;
+}
+
+.v2 .sorteios-switch input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+.v2 .sorteios-switch__track {
+    position: relative;
+    flex: 0 0 auto;
+    width: 42px;
+    height: 24px;
+    border: 1px solid rgba(255, 255, 255, .2);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .09);
+    transition: background var(--transition), border-color var(--transition);
+}
+
+.v2 .sorteios-switch__track::after {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #E5E7EB;
+    content: "";
+    transition: transform var(--transition), background var(--transition);
+}
+
+.v2 .sorteios-switch input:checked + .sorteios-switch__track {
+    border-color: rgba(168, 85, 247, .6);
+    background: rgba(124, 58, 237, .55);
+}
+
+.v2 .sorteios-switch input:checked + .sorteios-switch__track::after {
+    background: #FFFFFF;
+    transform: translateX(18px);
+}
+
+.v2 .sorteios-switch input:focus-visible + .sorteios-switch__track {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+}
+
+.v2 .sorteios-switch__label {
+    color: var(--text);
+    font-size: .84rem;
+    font-weight: 600;
 }
 
 .v2 .sorteios-field-feedback {
@@ -6117,6 +6186,10 @@ html.v2-root {
     background: rgba(7, 10, 18, .28);
 }
 
+.v2 .sorteios-filter--simple {
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
 .v2 .sorteios-filter__actions {
     display: flex;
     flex-wrap: wrap;
@@ -6172,7 +6245,7 @@ html.v2-root {
 }
 
 .v2 .sorteios-history-table {
-    min-width: 820px;
+    min-width: 640px;
 }
 
 .v2 .sorteios-history-table th,
@@ -6232,69 +6305,6 @@ html.v2-root {
     width: fit-content;
     margin-top: 5px;
     font-size: .62rem;
-}
-
-.v2 .sorteios-criteria-cell {
-    min-width: 178px;
-}
-
-.v2 .sorteios-criteria summary {
-    display: flex;
-    gap: 6px;
-    color: var(--text-secondary);
-    font-size: .8rem;
-    line-height: 1.45;
-    cursor: pointer;
-    list-style: none;
-}
-
-.v2 .sorteios-criteria summary::-webkit-details-marker {
-    display: none;
-}
-
-.v2 .sorteios-criteria summary::before {
-    flex: 0 0 auto;
-    color: var(--vivid);
-    content: "▸";
-    transform-origin: center;
-}
-
-.v2 .sorteios-criteria[open] summary::before {
-    content: "▾";
-}
-
-.v2 .sorteios-criteria summary:focus-visible {
-    outline: 2px solid var(--focus);
-    outline-offset: 3px;
-    border-radius: 4px;
-}
-
-.v2 .sorteios-criteria__content {
-    display: grid;
-    gap: 4px;
-    margin-top: 7px;
-    padding: 9px 10px;
-    border: 1px solid var(--border);
-    border-radius: 9px;
-    background: rgba(255, 255, 255, .025);
-    color: var(--muted);
-    font-size: .72rem;
-    line-height: 1.5;
-}
-
-.v2 .sorteios-status-form {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    min-width: 176px;
-}
-
-.v2 .sorteios-status-form .seplag-select {
-    min-width: 132px;
-    min-height: 38px;
-    padding-top: 7px;
-    padding-bottom: 7px;
-    font-size: .78rem;
 }
 
 .v2 .sorteios-row-actions {
@@ -6512,16 +6522,6 @@ html.v2-root {
     margin: 0;
     color: var(--text);
     font-size: clamp(1.15rem, 2.4vw, 1.55rem);
-}
-
-.sorteios-suspense__premio {
-    min-height: 1.4em;
-    margin: 0;
-    color: #D8B4FE;
-    font-size: .95rem;
-    font-weight: 700;
-    letter-spacing: .04em;
-    text-transform: uppercase;
 }
 
 .sorteios-suspense__stage {

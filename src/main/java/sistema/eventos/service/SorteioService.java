@@ -46,10 +46,17 @@ import java.util.stream.Collectors;
 public class SorteioService {
 
     private static final int LIMITE_QUANTIDADE = 1000;
-    private static final int LIMITE_PREMIOS = 120;
     private static final int LIMITE_AUTOR = 150;
     private static final DateTimeFormatter DATA_HORA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final DateTimeFormatter DATA_HORA_EXPORTACAO = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+
+    /**
+     * Participante elegível e a informação de já ter vencido alguma rodada
+     * ativa. A repetição é permitida por padrão; a interface usa esta marca
+     * apenas quando o organizador ativa a opção de não repetir vencedores.
+     */
+    public record ElegivelSorteio(InscritoFrequenciaDto participante, boolean vencedorAtivo) {
+    }
 
     /**
      * SecureRandom.nextInt(bound) é o equivalente criptográfico de
@@ -80,12 +87,13 @@ public class SorteioService {
     }
 
     /**
-     * Participantes que atendem à frequência mínima e ainda não venceram em
-     * uma rodada ativa. Quando uma rodada é desfeita, seus vencedores voltam
-     * automaticamente para esta lista.
+     * Todos os participantes que atendem à frequência mínima. A repetição é
+     * permitida por padrão: quem já venceu aparece na lista marcado como
+     * vencedor ativo e só é excluído quando o organizador ativa a opção de
+     * não repetir vencedores.
      */
     @Transactional(readOnly = true)
-    public List<InscritoFrequenciaDto> listarElegiveisDisponiveis(Evento evento) {
+    public List<ElegivelSorteio> listarElegiveis(Evento evento) {
         int minimo = percentualMinimo(evento);
         Set<String> vencedoresAtivos = resultadosAtivos(evento.getId()).stream()
                 .map(this::chaveVencedor)
@@ -94,8 +102,8 @@ public class SorteioService {
         return inscricaoService.listarInscritosComFrequencia(evento.getId()).stream()
                 .filter(i -> !i.isInscricaoCancelada())
                 .filter(i -> i.getPercentualFrequencia() != null && i.getPercentualFrequencia() >= minimo)
-                .filter(i -> !vencedoresAtivos.contains(chaveParticipante(i)))
-                .sorted(Comparator.comparing(InscritoFrequenciaDto::getNomeParticipante,
+                .map(i -> new ElegivelSorteio(i, vencedoresAtivos.contains(chaveParticipante(i))))
+                .sorted(Comparator.comparing(e -> e.participante().getNomeParticipante(),
                         String.CASE_INSENSITIVE_ORDER))
                 .toList();
     }
@@ -139,18 +147,14 @@ public class SorteioService {
     }
 
     /**
-     * Filtro do histórico. Busca por nome/e-mail, prêmio e status individual.
+     * Filtro do histórico. Busca apenas por nome ou e-mail do vencedor.
      */
-    public List<SorteioResultado> filtrar(List<SorteioResultado> resultados, String busca,
-                                          String premio, StatusVencedorSorteio status) {
+    public List<SorteioResultado> filtrar(List<SorteioResultado> resultados, String busca) {
         String termo = normalizar(busca);
-        String termoPremio = normalizar(premio);
         return resultados.stream()
                 .filter(r -> termo == null
                         || contem(r.getNomeVencedor(), termo)
                         || contem(r.getEmailVencedor(), termo))
-                .filter(r -> termoPremio == null || contem(r.getPremioRodada(), termoPremio))
-                .filter(r -> status == null || r.getStatusVencedorEfetivo() == status)
                 .toList();
     }
 
@@ -173,63 +177,30 @@ public class SorteioService {
     }
 
     @Transactional
-    public SorteioRodada realizarSorteio(Long eventoId, Integer quantidade, String premio, String autorEmail) {
+    public SorteioRodada realizarSorteio(Long eventoId, Integer quantidade,
+                                         boolean naoRepetirVencedores, String autorEmail) {
         Evento evento = exigirEventoParaAtualizacao(eventoId);
         validarQuantidade(quantidade);
         int minimo = percentualMinimo(evento);
-        List<InscritoFrequenciaDto> elegiveis = new ArrayList<>(listarElegiveisDisponiveis(evento));
-        if (elegiveis.isEmpty()) {
-            throw new NegocioException("Não há participantes elegíveis. Confira o percentual mínimo e as presenças registradas.");
+        List<ElegivelSorteio> elegiveis = listarElegiveis(evento);
+        List<InscritoFrequenciaDto> disponiveis = elegiveis.stream()
+                .filter(e -> !naoRepetirVencedores || !e.vencedorAtivo())
+                .map(ElegivelSorteio::participante)
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        if (disponiveis.isEmpty()) {
+            if (elegiveis.isEmpty()) {
+                throw new NegocioException("Não há participantes elegíveis. Confira o percentual mínimo e as presenças registradas.");
+            }
+            throw new NegocioException("Todos os participantes elegíveis já venceram. Desative a opção de não repetir vencedores para sortear novamente.");
         }
-        if (quantidade > elegiveis.size()) {
-            throw new NegocioException("Há apenas " + elegiveis.size()
+        if (quantidade > disponiveis.size()) {
+            throw new NegocioException("Há apenas " + disponiveis.size()
                     + " participante(s) elegível(is) para este sorteio.");
         }
-        fisherYates(elegiveis);
-        return criarRodada(evento, elegiveis, quantidade, premio, minimo, null, autorEmail,
-                AcaoAuditoriaSorteio.SORTEIO_REALIZADO, null);
-    }
-
-    /**
-     * Repõe um vencedor ausente com uma nova rodada de uma pessoa. A nova
-     * rodada herda o prêmio e fica vinculada à rodada original.
-     */
-    @Transactional
-    public SorteioRodada sortearNovamente(Long eventoId, Long resultadoId, String autorEmail) {
-        Evento evento = exigirEventoParaAtualizacao(eventoId);
-        SorteioResultado original = resultadoRepository.findById(resultadoId)
-                .orElseThrow(() -> new NegocioException("Vencedor não encontrado."));
-        if (original.getEvento() == null || !eventoId.equals(original.getEvento().getId())) {
-            throw new NegocioException("Este vencedor não pertence ao evento informado.");
-        }
-        if (original.getStatusVencedorEfetivo() != StatusVencedorSorteio.AUSENTE) {
-            throw new NegocioException("A reposição só é permitida para vencedores marcados como Ausente.");
-        }
-        SorteioRodada rodadaOriginal = original.getRodadaSorteio();
-        if (rodadaOriginal == null) {
-            throw new NegocioException("A rodada original não possui metadados suficientes para a reposição.");
-        }
-        if (rodadaOriginal.isCancelada()) {
-            throw new NegocioException("Não é possível repor um vencedor de uma rodada cancelada.");
-        }
-
-        int minimo = percentualMinimo(evento);
-        List<InscritoFrequenciaDto> elegiveis = new ArrayList<>(listarElegiveisDisponiveis(evento));
-        if (elegiveis.isEmpty()) {
-            throw new NegocioException("Não há participantes elegíveis para a reposição.");
-        }
-        fisherYates(elegiveis);
-
-        SorteioRodada reposicao = criarRodada(evento, elegiveis, 1, rodadaOriginal.getPremio(),
-                minimo, rodadaOriginal, autorEmail, AcaoAuditoriaSorteio.SORTEIO_REPESCAGEM,
-                "Reposição do vencedor ausente da rodada " + rodadaOriginal.getNumeroRodada() + ".");
-
-        List<SorteioResultado> novos = resultadoRepository.findByRodadaSorteioIdOrderByIdAsc(reposicao.getId());
-        if (!novos.isEmpty()) {
-            original.setSubstituidoPor(novos.get(0));
-            resultadoRepository.save(original);
-        }
-        return reposicao;
+        fisherYates(disponiveis);
+        return criarRodada(evento, disponiveis, quantidade, minimo, naoRepetirVencedores,
+                autorEmail, AcaoAuditoriaSorteio.SORTEIO_REALIZADO);
     }
 
     @Transactional
@@ -255,32 +226,6 @@ public class SorteioService {
         return rodada;
     }
 
-    @Transactional
-    public SorteioResultado alterarStatusVencedor(Long eventoId, Long resultadoId,
-                                                  StatusVencedorSorteio novoStatus, String autorEmail) {
-        if (novoStatus == null) {
-            throw new NegocioException("Selecione um status válido.");
-        }
-        Evento evento = exigirEventoParaAtualizacao(eventoId);
-        SorteioResultado resultado = resultadoRepository.findById(resultadoId)
-                .orElseThrow(() -> new NegocioException("Vencedor não encontrado."));
-        if (resultado.getEvento() == null || !eventoId.equals(resultado.getEvento().getId())) {
-            throw new NegocioException("Este vencedor não pertence ao evento informado.");
-        }
-        if (resultado.isRodadaCancelada()) {
-            throw new NegocioException("Não é possível alterar o status de uma rodada cancelada.");
-        }
-        StatusVencedorSorteio anterior = resultado.getStatusVencedorEfetivo();
-        resultado.setStatusVencedor(novoStatus);
-        resultadoRepository.save(resultado);
-
-        auditar(evento, AcaoAuditoriaSorteio.STATUS_VENCEDOR_ALTERADO,
-                "Status de " + resultado.getNomeVencedor() + " na rodada " + resultado.getRodada()
-                        + " alterado de " + anterior.getDescricao() + " para " + novoStatus.getDescricao() + ".",
-                autorEmail);
-        return resultado;
-    }
-
     private void validarQuantidade(Integer quantidade) {
         if (quantidade == null || quantidade < 1) {
             throw new NegocioException("Informe pelo menos 1 pessoa para sortear.");
@@ -291,26 +236,22 @@ public class SorteioService {
     }
 
     private SorteioRodada criarRodada(Evento evento, List<InscritoFrequenciaDto> elegiveis,
-                                      int quantidade, String premio, int minimo,
-                                      SorteioRodada rodadaOrigem, String autorEmail,
-                                      AcaoAuditoriaSorteio acao, String contextoExtra) {
+                                      int quantidade, int minimo, boolean naoRepetirVencedores,
+                                      String autorEmail, AcaoAuditoriaSorteio acao) {
         int numero = Math.max(
                 evento.getSorteioNumeroRodada() == null ? 0 : evento.getSorteioNumeroRodada(),
                 Optional.ofNullable(rodadaRepository.maiorNumeroRodada(evento.getId())).orElse(0)) + 1;
         LocalDateTime realizadoEm = LocalDateTime.now();
-        String premioLimpo = limparPremio(premio);
 
         SorteioRodada rodada = new SorteioRodada();
         rodada.setEvento(evento);
         rodada.setNumeroRodada(numero);
-        rodada.setPremio(premioLimpo);
         rodada.setPercentualMinimo(minimo);
         rodada.setTotalElegiveis(elegiveis.size());
         rodada.setQuantidadeSorteada(quantidade);
         rodada.setRealizadoEm(realizadoEm);
         rodada.setRealizadoPor(limitar(autorEmail, LIMITE_AUTOR));
         rodada.setStatus(StatusRodadaSorteio.REALIZADA);
-        rodada.setRodadaOrigem(rodadaOrigem);
         rodadaRepository.save(rodada);
 
         List<SorteioResultado> resultados = new ArrayList<>();
@@ -339,13 +280,10 @@ public class SorteioService {
         detalhe.append("Rodada ").append(numero).append(" realizada: ")
                 .append(quantidade).append(" vencedor(es) entre ")
                 .append(elegiveis.size()).append(" elegíveis (frequência ≥ ")
-                .append(minimo).append("%).");
-        if (premioLimpo != null) {
-            detalhe.append(" Prêmio: ").append(premioLimpo).append(".");
-        }
-        if (contextoExtra != null && !contextoExtra.isBlank()) {
-            detalhe.append(" ").append(contextoExtra);
-        }
+                .append(minimo).append("%). ")
+                .append(naoRepetirVencedores
+                        ? "Não repetir vencedores ativado."
+                        : "Repetição de vencedores permitida.");
         auditar(evento, acao, detalhe.toString(), autorEmail);
         return rodada;
     }
@@ -434,13 +372,6 @@ public class SorteioService {
         return valor.trim().toLowerCase(Locale.ROOT);
     }
 
-    private String limparPremio(String premio) {
-        if (premio == null || premio.isBlank()) {
-            return null;
-        }
-        return limitar(premio.trim(), LIMITE_PREMIOS);
-    }
-
     private String limitar(String valor, int limite) {
         if (valor == null) {
             return null;
@@ -456,15 +387,12 @@ public class SorteioService {
     public String gerarCsv(List<SorteioResultado> resultados) {
         StringBuilder csv = new StringBuilder();
         csv.append('\uFEFF');
-        csv.append("Rodada;Prêmio;Vencedor;E-mail;Frequência;Critério usado;Status;Data\n");
+        csv.append("Rodada;Vencedor;E-mail;Frequência;Data\n");
         for (SorteioResultado resultado : resultados) {
             csv.append(csvEscape(numeroRodada(resultado))).append(';')
-                    .append(csvEscape(valorOuVazio(resultado.getPremioRodada()))).append(';')
                     .append(csvEscape(valorOuVazio(resultado.getNomeVencedor()))).append(';')
                     .append(csvEscape(valorOuVazio(resultado.getEmailVencedor()))).append(';')
                     .append(csvEscape(formatarPercentual(resultado.getPercentualFrequencia()))).append(';')
-                    .append(csvEscape(resultado.getCriterioAplicado())).append(';')
-                    .append(csvEscape(resultado.getStatusExibicao())).append(';')
                     .append(csvEscape(formatarDataExportacao(resultado.getRealizadoEm())))
                     .append('\n');
         }
@@ -494,10 +422,10 @@ public class SorteioService {
             if (resultados.isEmpty()) {
                 document.add(new Paragraph("Nenhum sorteio registrado para este evento.", corpo));
             } else {
-                PdfPTable tabela = new PdfPTable(new float[]{0.55f, 1.15f, 1.4f, 1.75f, 0.65f, 2.1f, 1.0f, 1.15f});
+                PdfPTable tabela = new PdfPTable(new float[]{0.6f, 2.0f, 2.4f, 0.9f, 1.3f});
                 tabela.setWidthPercentage(100);
                 tabela.setHeaderRows(1);
-                String[] colunas = {"Rodada", "Prêmio", "Vencedor", "E-mail", "Freq.", "Critério", "Status", "Data"};
+                String[] colunas = {"Rodada", "Vencedor", "E-mail", "Freq.", "Data"};
                 for (String coluna : colunas) {
                     PdfPCell celula = new PdfPCell(new Phrase(coluna, cabecalho));
                     celula.setBackgroundColor(new Color(237, 231, 248));
@@ -507,12 +435,9 @@ public class SorteioService {
                 }
                 for (SorteioResultado resultado : resultados) {
                     adicionarCelulaPdf(tabela, numeroRodada(resultado), corpo);
-                    adicionarCelulaPdf(tabela, valorOuVazio(resultado.getPremioRodada()), corpo);
                     adicionarCelulaPdf(tabela, valorOuVazio(resultado.getNomeVencedor()), corpo);
                     adicionarCelulaPdf(tabela, valorOuVazio(resultado.getEmailVencedor()), corpo);
                     adicionarCelulaPdf(tabela, formatarPercentual(resultado.getPercentualFrequencia()), corpo);
-                    adicionarCelulaPdf(tabela, resultado.getCriterioAplicado(), corpo);
-                    adicionarCelulaPdf(tabela, resultado.getStatusExibicao(), corpo);
                     adicionarCelulaPdf(tabela, formatarDataHora(resultado.getRealizadoEm()), corpo);
                 }
                 document.add(tabela);

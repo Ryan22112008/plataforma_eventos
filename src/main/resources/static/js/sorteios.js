@@ -146,16 +146,17 @@
     })();
 
     // ---------------------------------------------------------------------
-    // Quantidade, prêmio e confirmação do sorteio
+    // Quantidade, opção de não repetir e confirmação do sorteio
     // ---------------------------------------------------------------------
     var contextoFormularioSorteio = null;
 
     (function configurarFormularioSorteio() {
         var formulario = porId('form-sorteio');
         var campo = porId('quantidade');
-        var campoPremio = porId('premio');
+        var alternarNaoRepetir = porId('naoRepetirVencedores');
         var botao = porId('btn-realizar-sorteio');
         var feedback = porId('aviso-quantidade');
+        var feedbackNaoRepetir = porId('aviso-nao-repetir');
         if (!formulario || !campo || !botao || !feedback) {
             return;
         }
@@ -164,9 +165,25 @@
         if (!Number.isFinite(totalElegiveis)) {
             totalElegiveis = 0;
         }
+        var totalIneditos = parseInt(formulario.getAttribute('data-total-ineditos') || '0', 10);
+        if (!Number.isFinite(totalIneditos)) {
+            totalIneditos = totalElegiveis;
+        }
         var percentual = parseInt(formulario.getAttribute('data-percentual') || '75', 10);
         if (!Number.isFinite(percentual)) {
             percentual = 75;
+        }
+
+        var linhasElegiveis = todos('#lista-elegiveis li');
+        var contadorLista = porId('elegiveis-contador-lista');
+        var contadorChip = porId('elegiveis-contador-chip');
+
+        function naoRepetir() {
+            return !!(alternarNaoRepetir && alternarNaoRepetir.checked);
+        }
+
+        function disponiveis() {
+            return naoRepetir() ? totalIneditos : totalElegiveis;
         }
 
         function quantidadeAtual() {
@@ -177,13 +194,32 @@
             return Number.isFinite(numero) ? numero : null;
         }
 
+        function atualizarListaElegiveis() {
+            var total = disponiveis();
+            if (contadorLista) {
+                contadorLista.textContent = String(total);
+            }
+            if (contadorChip) {
+                contadorChip.textContent = String(total);
+            }
+            linhasElegiveis.forEach(function (linha) {
+                var jaVenceu = linha.getAttribute('data-vencedor') === 'true';
+                linha.classList.toggle('is-fora-da-rodada', naoRepetir() && jaVenceu);
+            });
+            campo.setAttribute('max', String(Math.max(1, total)));
+        }
+
         function validar() {
             var quantidade = quantidadeAtual();
+            var total = disponiveis();
             var mensagem = '';
             var valido = true;
 
             if (totalElegiveis === 0) {
                 mensagem = 'Ainda não há participantes elegíveis. Registre presenças e confira o percentual mínimo.';
+                valido = false;
+            } else if (total === 0) {
+                mensagem = 'Todos os elegíveis já venceram. Desative a opção de não repetir vencedores para sortear novamente.';
                 valido = false;
             } else if (quantidade === null) {
                 mensagem = 'Campo obrigatório: informe quantas pessoas serão sorteadas.';
@@ -191,8 +227,8 @@
             } else if (quantidade < 1 || Math.floor(quantidade) !== quantidade) {
                 mensagem = 'Informe pelo menos 1 pessoa (número inteiro).';
                 valido = false;
-            } else if (quantidade > totalElegiveis) {
-                mensagem = 'Há apenas ' + rotuloElegiveis(totalElegiveis) + '.';
+            } else if (quantidade > total) {
+                mensagem = 'Há apenas ' + rotuloElegiveis(total) + ' disponível(is) nesta configuração.';
                 valido = false;
             }
 
@@ -201,18 +237,34 @@
             feedback.textContent = mensagem;
             botao.disabled = !valido;
             botao.setAttribute('aria-disabled', botao.disabled ? 'true' : 'false');
-            return { valido: valido, quantidade: quantidade, mensagem: mensagem };
+
+            if (feedbackNaoRepetir) {
+                if (naoRepetir()) {
+                    feedbackNaoRepetir.textContent = total + ' de ' + totalElegiveis
+                        + ' elegíveis disponíveis nesta rodada (vencedores excluídos).';
+                } else {
+                    feedbackNaoRepetir.textContent = '';
+                }
+            }
+
+            return { valido: valido, quantidade: quantidade, mensagem: mensagem, total: total };
         }
 
         campo.addEventListener('input', validar);
         campo.addEventListener('change', validar);
+        if (alternarNaoRepetir) {
+            alternarNaoRepetir.addEventListener('change', function () {
+                atualizarListaElegiveis();
+                validar();
+            });
+        }
+        atualizarListaElegiveis();
         validar();
 
         contextoFormularioSorteio = {
             totalElegiveis: totalElegiveis,
             percentual: percentual,
             campoQuantidade: campo,
-            campoPremio: campoPremio,
             validar: validar
         };
 
@@ -234,10 +286,9 @@
             evento.preventDefault();
 
             var quantidade = resultado.quantidade;
-            var premio = campoPremio ? campoPremio.value.trim() : '';
             var texto = 'Sortear ' + quantidade + (quantidade === 1 ? ' pessoa' : ' pessoas')
-                + ' entre ' + totalElegiveis + ' elegíveis (frequência ≥ ' + percentual + '%). '
-                + 'Prêmio: ' + (premio || 'não informado') + '.';
+                + ' entre ' + resultado.total + ' disponíveis (frequência ≥ ' + percentual + '%). '
+                + (naoRepetir() ? 'Sem repetir vencedores.' : 'Repetição de vencedores permitida.');
 
             if (resumo) {
                 resumo.textContent = texto;
@@ -384,12 +435,10 @@
                 }
                 var nome = enviar.getAttribute('data-nome') || '';
                 var eventoNome = enviar.getAttribute('data-evento') || 'nosso evento';
-                var premio = enviar.getAttribute('data-premio');
-                var assunto = 'Parabéns! Você ganhou o sorteio — ' + eventoNome;
+                var assunto = 'Parabéns! Você foi sorteado(a) — ' + eventoNome;
                 var corpo = 'Olá, ' + nome + '!\n\n'
-                    + 'Parabéns! Você foi sorteado(a) no evento ' + eventoNome
-                    + (premio ? ' e ganhou: ' + premio : '') + '.\n\n'
-                    + 'Entre em contato com a organização para combinar a retirada do prêmio.\n\n'
+                    + 'Parabéns! Você foi sorteado(a) no evento ' + eventoNome + '.\n\n'
+                    + 'Entre em contato com a organização para mais informações.\n\n'
                     + 'Equipe ' + eventoNome;
                 window.location.href = 'mailto:' + encodeURIComponent(email)
                     + '?subject=' + encodeURIComponent(assunto)
@@ -399,7 +448,7 @@
     })();
 
     // ---------------------------------------------------------------------
-    // Confirmação genérica (desfazer rodada / repor vencedor)
+    // Confirmação genérica (desfazer rodada)
     // ---------------------------------------------------------------------
     (function configurarConfirmacaoGenerica() {
         var dialogo = porId('dialog-confirmacao');
@@ -468,16 +517,12 @@
     var suspenseRoleta = porId('suspense-roleta');
     var suspenseResultado = porId('suspense-resultado');
     var suspenseVencedores = porId('suspense-vencedores');
-    var suspensePremio = porId('suspense-premio');
     var suspenseAcoes = porId('suspense-acoes');
     var suspenseStatus = porId('suspense-status');
     var apresentacao = porId('apresentacao');
-    var apresentacaoPremio = porId('apresentacao-premio');
-    var apresentacaoPremioLabel = porId('apresentacao-premio-label');
     var apresentacaoRodada = porId('apresentacao-rodada');
     var apresentacaoContador = porId('apresentacao-contador');
     var apresentacaoNome = porId('apresentacao-nome');
-    var apresentacaoCriterio = porId('apresentacao-criterio');
     var apresentacaoAnterior = porId('apresentacao-anterior');
     var apresentacaoProximo = porId('apresentacao-proximo');
     var canvasConfete = porId('confete');
@@ -506,8 +551,6 @@
             return null;
         }
         return {
-            premio: fonte.getAttribute('data-premio') || '—',
-            criterio: fonte.getAttribute('data-criterio') || '',
             rodada: fonte.getAttribute('data-rodada') || '',
             vencedores: vencedores
         };
@@ -529,8 +572,6 @@
             return null;
         }
         return {
-            premio: fonte.getAttribute('data-premio') || '—',
-            criterio: fonte.getAttribute('data-criterio') || '',
             rodada: fonte.getAttribute('data-rodada') || '',
             vencedores: vencedores
         };
@@ -644,9 +685,6 @@
         limparSuspense();
         if (suspenseTitulo) {
             suspenseTitulo.textContent = 'Preparando a revelação…';
-        }
-        if (suspensePremio) {
-            suspensePremio.textContent = dados.premio === '—' ? '' : 'Prêmio: ' + dados.premio;
         }
         esconder(suspenseResultado);
         esconder(suspenseAcoes);
@@ -779,14 +817,6 @@
         indiceApresentacao = indice;
 
         apresentacaoNome.textContent = dadosApresentacao.vencedores[indice];
-        var semPremio = !dadosApresentacao.premio || dadosApresentacao.premio === '—';
-        if (apresentacaoPremio) {
-            apresentacaoPremio.textContent = semPremio ? '' : dadosApresentacao.premio;
-            apresentacaoPremio.classList.toggle('hidden', semPremio);
-        }
-        if (apresentacaoPremioLabel) {
-            apresentacaoPremioLabel.classList.toggle('hidden', semPremio);
-        }
         if (apresentacaoRodada) {
             apresentacaoRodada.textContent = dadosApresentacao.rodada
                 ? 'Rodada ' + dadosApresentacao.rodada
@@ -794,9 +824,6 @@
         }
         if (apresentacaoContador) {
             apresentacaoContador.textContent = 'Vencedor ' + (indice + 1) + ' de ' + total;
-        }
-        if (apresentacaoCriterio) {
-            apresentacaoCriterio.textContent = dadosApresentacao.criterio;
         }
         if (apresentacaoAnterior) {
             apresentacaoAnterior.disabled = indice === 0;
