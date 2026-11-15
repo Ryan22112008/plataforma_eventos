@@ -332,15 +332,19 @@
         <button class="sorteios-apresentacao__sair" type="button" id="fechar-apresentacao"><i class="fa-solid fa-xmark" aria-hidden="true"></i> Sair</button>
     </header>
     <div class="sorteios-apresentacao__conteudo">
-        <p class="seplag-eyebrow">Sorteio do evento</p>
+        <p class="seplag-eyebrow">Resultado do sorteio</p>
         <p id="apresentacao-rodada" class="sorteios-apresentacao__rodada">Rodada 1</p>
         <div class="sorteios-apresentacao__palco">
-            <p id="apresentacao-contador" class="sorteios-apresentacao__contador">Vencedor 1 de 1</p>
+            <p id="apresentacao-contador" class="sorteios-apresentacao__contador" aria-live="polite">Participante 1 de 1</p>
             <h3 id="apresentacao-nome" class="sorteios-apresentacao__nome">Nome do vencedor</h3>
+            <div class="sorteios-apresentacao__progresso" role="progressbar" aria-label="Progresso dos resultados" aria-valuemin="1" aria-valuemax="1" aria-valuenow="1">
+                <span id="apresentacao-progresso"></span>
+            </div>
         </div>
+        <p class="sorteios-apresentacao__dica">Use as setas do teclado ou os botões para navegar.</p>
         <div class="sorteios-apresentacao__controles">
-            <button class="seplag-btn seplag-btn-secondary" type="button" id="apresentacao-anterior"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i> Anterior</button>
-            <button class="seplag-btn seplag-btn-primary" type="button" id="apresentacao-proximo">Próximo <i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+            <button class="seplag-btn seplag-btn-secondary" type="button" id="apresentacao-anterior"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i> Voltar</button>
+            <button class="seplag-btn seplag-btn-primary" type="button" id="apresentacao-proximo">Próximo participante <i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
         </div>
     </div>
 </div>

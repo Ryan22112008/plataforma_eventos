@@ -525,6 +525,7 @@
     var apresentacaoNome = porId('apresentacao-nome');
     var apresentacaoAnterior = porId('apresentacao-anterior');
     var apresentacaoProximo = porId('apresentacao-proximo');
+    var apresentacaoProgresso = porId('apresentacao-progresso');
     var canvasConfete = porId('confete');
     var temporizadorSuspense = null;
     var quadroSuspense = null;
@@ -823,13 +824,24 @@
                 : '';
         }
         if (apresentacaoContador) {
-            apresentacaoContador.textContent = 'Vencedor ' + (indice + 1) + ' de ' + total;
+            apresentacaoContador.textContent = 'Participante ' + (indice + 1) + ' de ' + total;
+        }
+        var barraProgresso = apresentacaoProgresso && apresentacaoProgresso.parentElement;
+        if (barraProgresso) {
+            barraProgresso.setAttribute('aria-valuemax', String(total));
+            barraProgresso.setAttribute('aria-valuenow', String(indice + 1));
+        }
+        if (apresentacaoProgresso) {
+            apresentacaoProgresso.style.width = (((indice + 1) / total) * 100) + '%';
         }
         if (apresentacaoAnterior) {
             apresentacaoAnterior.disabled = indice === 0;
         }
         if (apresentacaoProximo) {
-            apresentacaoProximo.disabled = indice >= total - 1;
+            var finalizado = indice >= total - 1;
+            apresentacaoProximo.innerHTML = finalizado
+                ? 'Concluir sorteio <i class="fa-solid fa-check" aria-hidden="true"></i>'
+                : 'Próximo participante <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>';
         }
         if (!prefereMenosMovimento()) {
             apresentacaoNome.classList.remove('is-revelando');
@@ -930,6 +942,8 @@
             if (dadosApresentacao && indiceApresentacao < dadosApresentacao.vencedores.length - 1) {
                 indiceApresentacao++;
                 renderizarApresentacao();
+            } else if (dadosApresentacao) {
+                fecharApresentacao();
             }
         });
     }
@@ -939,10 +953,13 @@
             if (evento.key === 'ArrowLeft' && indiceApresentacao > 0) {
                 indiceApresentacao--;
                 renderizarApresentacao();
-            } else if (evento.key === 'ArrowRight' && dadosApresentacao
-                && indiceApresentacao < dadosApresentacao.vencedores.length - 1) {
-                indiceApresentacao++;
-                renderizarApresentacao();
+            } else if (evento.key === 'ArrowRight' && dadosApresentacao) {
+                if (indiceApresentacao < dadosApresentacao.vencedores.length - 1) {
+                    indiceApresentacao++;
+                    renderizarApresentacao();
+                } else {
+                    fecharApresentacao();
+                }
             } else if (evento.key === 'Escape') {
                 fecharApresentacao();
             }

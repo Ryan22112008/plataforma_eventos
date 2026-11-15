@@ -6731,6 +6731,24 @@ html.v2-root {
     gap: clamp(8px, 1.4vh, 16px);
 }
 
+.sorteios-apresentacao__progresso {
+    width: min(420px, 72vw);
+    height: 6px;
+    margin-top: clamp(8px, 1.5vh, 16px);
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .14);
+}
+
+.sorteios-apresentacao__progresso span {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #A855F7, #E9D5FF);
+    transition: width .35s ease;
+}
+
 .sorteios-apresentacao__contador {
     margin: 0;
     color: rgba(255, 255, 255, .62);
@@ -6738,6 +6756,13 @@ html.v2-root {
     font-weight: 700;
     letter-spacing: .13em;
     text-transform: uppercase;
+}
+
+.sorteios-apresentacao__dica {
+    margin: 0;
+    color: rgba(255, 255, 255, .52);
+    font-size: .86rem;
+    text-align: center;
 }
 
 .sorteios-apresentacao__nome {
