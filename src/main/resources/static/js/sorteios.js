@@ -338,7 +338,7 @@
             var visiveis = 0;
 
             itens.forEach(function (item) {
-                var conteudo = normalizar(item.getAttribute('data-nome') + ' ' + item.getAttribute('data-email'));
+                var conteudo = normalizar(item.getAttribute('data-nome'));
                 var combina = termo === '' || conteudo.indexOf(termo) !== -1;
                 item.classList.toggle('hidden', !combina);
                 if (combina) {

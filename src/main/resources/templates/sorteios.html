@@ -61,9 +61,9 @@
                         <span id="elegiveis-contador-lista" th:text="${totalElegiveis}">0</span>
                     </div>
                     <div class="sorteios-eligible-list__search" th:if="${!participantesElegiveis.isEmpty()}">
-                        <label class="seplag-sr-only" for="buscaElegiveis">Buscar participante elegível por nome ou e-mail</label>
+                        <label class="seplag-sr-only" for="buscaElegiveis">Buscar participante elegível por nome</label>
                         <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                        <input class="seplag-input" id="buscaElegiveis" type="search" placeholder="Buscar por nome ou e-mail" autocomplete="off">
+                        <input class="seplag-input" id="buscaElegiveis" type="search" placeholder="Buscar por nome" autocomplete="off">
                     </div>
                     <p class="sorteios-eligible-list__empty" th:if="${participantesElegiveis.isEmpty()}">
                         <span class="sorteios-empty-icon" aria-hidden="true"><i class="fa-solid fa-user-clock"></i></span>
@@ -71,11 +71,10 @@
                     </p>
                     <ul class="sorteios-eligible-list__items" th:unless="${participantesElegiveis.isEmpty()}" id="lista-elegiveis">
                         <li th:each="elegivel : ${participantesElegiveis}"
-                            th:attr="data-nome=${elegivel.participante.nomeParticipante},data-email=${elegivel.participante.emailParticipante},data-vencedor=${elegivel.vencedorAtivo}">
+                            th:attr="data-nome=${elegivel.participante.nomeParticipante},data-vencedor=${elegivel.vencedorAtivo}">
                             <span class="sorteios-eligible-list__person">
                                 <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
-                                <span><strong th:text="${elegivel.participante.nomeParticipante}">Nome do participante</strong>
-                                    <small class="sorteios-eligible-list__email" th:text="${elegivel.participante.emailParticipante}">email@exemplo.com</small></span>
+                                <span><strong th:text="${elegivel.participante.nomeParticipante}">Nome do participante</strong></span>
                             </span>
                             <span class="sorteios-eligible-list__meta">
                                 <span class="seplag-badge seplag-badge--info sorteios-winner-tag" th:if="${elegivel.vencedorAtivo}">
