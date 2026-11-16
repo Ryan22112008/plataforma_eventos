@@ -147,14 +147,12 @@ public class SorteioService {
     }
 
     /**
-     * Filtro do histórico. Busca apenas por nome ou e-mail do vencedor.
+     * Filtro do histórico por nome do vencedor.
      */
     public List<SorteioResultado> filtrar(List<SorteioResultado> resultados, String busca) {
         String termo = normalizar(busca);
         return resultados.stream()
-                .filter(r -> termo == null
-                        || contem(r.getNomeVencedor(), termo)
-                        || contem(r.getEmailVencedor(), termo))
+                .filter(r -> termo == null || contem(r.getNomeVencedor(), termo))
                 .toList();
     }
 
@@ -410,11 +408,10 @@ public class SorteioService {
     public String gerarCsv(List<SorteioResultado> resultados) {
         StringBuilder csv = new StringBuilder();
         csv.append('\uFEFF');
-        csv.append("Rodada;Vencedor;E-mail;Frequência;Data\n");
+        csv.append("Rodada;Vencedor;Frequência;Data\n");
         for (SorteioResultado resultado : resultados) {
             csv.append(csvEscape(numeroRodada(resultado))).append(';')
                     .append(csvEscape(valorOuVazio(resultado.getNomeVencedor()))).append(';')
-                    .append(csvEscape(valorOuVazio(resultado.getEmailVencedor()))).append(';')
                     .append(csvEscape(formatarPercentual(resultado.getPercentualFrequencia()))).append(';')
                     .append(csvEscape(formatarDataExportacao(resultado.getRealizadoEm())))
                     .append('\n');
@@ -445,10 +442,10 @@ public class SorteioService {
             if (resultados.isEmpty()) {
                 document.add(new Paragraph("Nenhum sorteio registrado para este evento.", corpo));
             } else {
-                PdfPTable tabela = new PdfPTable(new float[]{0.6f, 2.0f, 2.4f, 0.9f, 1.3f});
+                PdfPTable tabela = new PdfPTable(new float[]{0.6f, 2.0f, 0.9f, 1.3f});
                 tabela.setWidthPercentage(100);
                 tabela.setHeaderRows(1);
-                String[] colunas = {"Rodada", "Vencedor", "E-mail", "Freq.", "Data"};
+                String[] colunas = {"Rodada", "Vencedor", "Freq.", "Data"};
                 for (String coluna : colunas) {
                     PdfPCell celula = new PdfPCell(new Phrase(coluna, cabecalho));
                     celula.setBackgroundColor(new Color(237, 231, 248));
@@ -459,7 +456,6 @@ public class SorteioService {
                 for (SorteioResultado resultado : resultados) {
                     adicionarCelulaPdf(tabela, numeroRodada(resultado), corpo);
                     adicionarCelulaPdf(tabela, valorOuVazio(resultado.getNomeVencedor()), corpo);
-                    adicionarCelulaPdf(tabela, valorOuVazio(resultado.getEmailVencedor()), corpo);
                     adicionarCelulaPdf(tabela, formatarPercentual(resultado.getPercentualFrequencia()), corpo);
                     adicionarCelulaPdf(tabela, formatarDataHora(resultado.getRealizadoEm()), corpo);
                 }

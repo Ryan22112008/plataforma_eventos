@@ -198,8 +198,8 @@
 
                 <form class="sorteios-filter sorteios-filter--simple" method="get" th:action="@{/organizador/eventos/{id}/sorteios(id=${evento.id})}" role="search" aria-label="Filtrar histórico de sorteios">
                     <div class="seplag-field">
-                        <label class="seplag-label" for="filtro-vencedor">Vencedor ou e-mail</label>
-                        <input class="seplag-input" id="filtro-vencedor" name="q" type="search" th:value="${filtroBusca}" placeholder="Nome ou e-mail" autocomplete="off">
+                        <label class="seplag-label" for="filtro-vencedor">Nome do vencedor</label>
+                        <input class="seplag-input" id="filtro-vencedor" name="q" type="search" th:value="${filtroBusca}" placeholder="Buscar por nome" autocomplete="off">
                     </div>
                     <div class="sorteios-filter__actions">
                         <button class="seplag-btn seplag-btn-secondary" type="submit"><i class="fa-solid fa-filter" aria-hidden="true"></i> Filtrar</button>
@@ -216,7 +216,7 @@
                 <p th:if="${!resultadosSorteio.isEmpty() && resultadosPagina.isEmpty()}" class="sorteios-empty-state sorteios-empty-state--compact">
                     <span class="sorteios-empty-icon" aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></span>
                     <strong>Nenhum resultado encontrado para a busca.</strong>
-                    <span>Tente outro nome ou e-mail.</span>
+                    <span>Tente outro nome.</span>
                 </p>
 
                 <div class="seplag-table-wrap" th:if="${!resultadosPagina.isEmpty()}">
@@ -233,10 +233,8 @@
                                 <span class="sorteios-round-number" th:text="${resultado.rodada}">1</span>
                                 <span class="sorteios-round-date" th:text="${#temporals.format(resultado.realizadoEm, 'dd/MM/yyyy HH:mm')}">11/11/2026 10:00</span>
                             </td>
-                            <td data-label="Vencedor / e-mail" class="seplag-table__title">
+                            <td data-label="Vencedor" class="seplag-table__title">
                                 <span class="sorteios-winner-name" th:text="${resultado.nomeVencedor}">Participante</span>
-                                <a class="sorteios-email" th:if="${resultado.emailVencedor != null}" th:href="|mailto:${resultado.emailVencedor}|" th:text="${resultado.emailVencedor}">email@exemplo.com</a>
-                                <span class="sorteios-email" th:if="${resultado.emailVencedor == null}">—</span>
                             </td>
                             <td data-label="Frequência" th:text="|${#numbers.formatDecimal(resultado.percentualFrequencia, 1, 1)}%|">100%</td>
                             <td data-label="Ações"><span class="seplag-sr-only">Resultado do sorteio</span></td>
@@ -258,26 +256,7 @@
             </div>
         </section>
 
-        <section class="seplag-card sorteios-audit-card" aria-labelledby="auditoria-sorteios">
-            <div class="seplag-card__header"><div><h2 class="seplag-card__title" id="auditoria-sorteios">Log de auditoria</h2>
-                <p class="seplag-card__hint">Somente leitura. Registra quem realizou cada ação e quando, para consulta do organizador.</p></div></div>
-            <div class="seplag-card__body">
-                <p th:if="${auditoria.isEmpty()}" class="seplag-card__hint">Nenhuma ação registrada ainda.</p>
-                <div class="seplag-table-wrap sorteios-audit-scroll" th:unless="${auditoria.isEmpty()}">
-                    <table class="seplag-table sorteios-audit-table">
-                        <thead><tr><th scope="col">Data/hora</th><th scope="col">Ação</th><th scope="col">Responsável</th><th scope="col">Detalhes</th></tr></thead>
-                        <tbody>
-                        <tr th:each="registro : ${auditoria}">
-                            <td data-label="Data/hora" th:text="${#temporals.format(registro.realizadoEm, 'dd/MM/yyyy HH:mm:ss')}">15/11/2026 14:00:00</td>
-                            <td data-label="Ação"><span class="seplag-badge seplag-badge--neutral" th:text="${registro.acao.descricao}">Sorteio realizado</span></td>
-                            <td data-label="Responsável" th:text="${registro.autorEmail != null ? registro.autorEmail : 'sistema'}">organizador@seplag.mt.gov.br</td>
-                            <td data-label="Detalhes" th:text="${registro.detalhes}">Detalhes</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
+
     </main>
 </div>
 
