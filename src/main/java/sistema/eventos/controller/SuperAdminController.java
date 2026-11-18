@@ -160,13 +160,14 @@ public class SuperAdminController {
         charts.add(chart("Modalidade dos eventos", todosEventos, e -> e.getModalidade() == null ? "Não informado" : rotulo(e.getModalidade().name()), List.of("Presencial", "Online", "Híbrido", "Não informado"), e -> String.valueOf(e.getModalidade())));
         charts.add(chart("Temas dos eventos", todosEventos, e -> e.getNicho() == null ? "Não informado" : rotulo(e.getNicho().name()), List.of("Tecnologia", "Tecnologia e inovação", "Gestão pública", "Saúde", "Outros", "Não informado"), e -> String.valueOf(e.getNicho())));
         charts.add(chart("Situação das inscrições", todasInscricoes, i -> rotulo(i.getStatus().name()), Arrays.stream(StatusInscricao.values()).map(s -> rotulo(s.name())).toList(), i -> i.getStatus().name()));
-        charts.add(chart("Novos eventos por período", eventos, e -> e.getDataCriacao() == null ? "Sem data" : e.getDataCriacao().toLocalDate().getYear() + "-T" + ((e.getDataCriacao().toLocalDate().getMonthValue() - 1) / 3 + 1), List.of("Sem data"), e -> e.getDataCriacao() == null ? "Sem data" : e.getDataCriacao().toLocalDate().getYear() + "-T" + ((e.getDataCriacao().toLocalDate().getMonthValue() - 1) / 3 + 1)));
+        charts.add(chart("Eventos cadastrados por trimestre", eventos, e -> e.getDataCriacao() == null ? "Sem data de cadastro" : rotuloTrimestre(e.getDataCriacao().toLocalDate()), List.of(), e -> e.getDataCriacao() == null ? "Sem data de cadastro" : rotuloTrimestre(e.getDataCriacao().toLocalDate())));
         model.addAttribute("charts", charts);
         model.addAttribute("inscricoes", todasInscricoes);
         return "super-admin-relatorios";
     }
 
     private long percentual(long parte, long total) { return total == 0 ? 0 : Math.round(parte * 100.0 / total); }
+    private String rotuloTrimestre(LocalDate data) { return "" + ((data.getMonthValue() - 1) / 3 + 1) + "º tri de " + data.getYear(); }
     private String rotulo(String codigo) {
         return switch (codigo) {
             case "ROLE_PARTICIPANTE" -> "Participante"; case "ROLE_ORGANIZADOR" -> "Organizador";
