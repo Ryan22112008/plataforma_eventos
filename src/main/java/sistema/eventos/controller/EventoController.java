@@ -71,7 +71,9 @@ public class EventoController {
         List<Map<String,Object>> charts = new java.util.ArrayList<>();
         charts.add(chartInscricoes("Situação das inscrições", inscricoes, i -> rotuloInscricao(i.getStatus())));
         charts.add(chartInscricoes("Participantes com check-in", inscricoes, i -> i.getStatus()==StatusInscricao.UTILIZADO ? "Presença confirmada" : i.getStatus()==StatusInscricao.CANCELADO ? "Inscrição cancelada" : "Aguardando presença"));
-        charts.add(chartInscricoes("Inscrições por mês", inscricoes, i -> i.getDataCriacao()==null ? "Sem data" : String.format("%02d/%d",i.getDataCriacao().getMonthValue(),i.getDataCriacao().getYear())));
+        long certificadosGerados=inscricoes.stream().filter(i->i.getCertificadoGeradoEm()!=null).count();
+        long certificadosDisponiveis=inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.UTILIZADO&&i.getCertificadoGeradoEm()==null).count();
+        Map<String,Object> chartCertificados=new LinkedHashMap<>();chartCertificados.put("titulo","Certificados gerados");chartCertificados.put("labels",List.of("Gerados","Disponíveis para geração"));chartCertificados.put("values",List.of(certificadosGerados,certificadosDisponiveis));chartCertificados.put("total",certificadosGerados+certificadosDisponiveis);charts.add(chartCertificados);
         model.addAttribute("evento",evento);model.addAttribute("inscricoes",inscricoes);model.addAttribute("charts",charts);
         model.addAttribute("totalInscricoes",inscricoes.size());
         model.addAttribute("totalCheckins",inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.UTILIZADO).count());
