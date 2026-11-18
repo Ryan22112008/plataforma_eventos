@@ -174,6 +174,7 @@
                                     <i class="fa-solid fa-users" aria-hidden="true"></i>
                                     Ver Inscritos
                                 </a>
+                                <a th:href="@{/organizador/eventos/{id}/relatorios(id=${evento.id})}" class="seplag-action"><i class="fa-solid fa-chart-pie" aria-hidden="true"></i> Relatórios</a>
                                 <a th:href="@{/organizador/evento/editar/{id}(id=${evento.id})}" class="seplag-action seplag-action--warning">
                                     <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
                                     Editar Evento

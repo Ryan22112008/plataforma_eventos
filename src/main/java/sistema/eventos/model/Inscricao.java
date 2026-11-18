@@ -56,6 +56,9 @@ public class Inscricao extends EntidadeAuditavel {
     @Column(name = "data_check_in")
     private LocalDateTime dataCheckIn;
 
+    @Column(name = "certificado_gerado_em")
+    private LocalDateTime certificadoGeradoEm;
+
      public void realizarCheckIn() {
         if (this.status == StatusInscricao.UTILIZADO) {
             throw new IllegalStateException("Este ingresso já foi utilizado!");

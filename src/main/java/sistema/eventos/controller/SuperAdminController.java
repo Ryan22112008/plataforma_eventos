@@ -44,7 +44,10 @@ import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.stream.Collectors;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.transaction.annotation.Transactional;
@@ -161,12 +164,35 @@ public class SuperAdminController {
         charts.add(chart("Temas dos eventos", todosEventos, e -> e.getNicho() == null ? "Não informado" : rotulo(e.getNicho().name()), List.of("Tecnologia", "Tecnologia e inovação", "Gestão pública", "Saúde", "Outros", "Não informado"), e -> String.valueOf(e.getNicho())));
         charts.add(chart("Situação das inscrições", todasInscricoes, i -> rotulo(i.getStatus().name()), Arrays.stream(StatusInscricao.values()).map(s -> rotulo(s.name())).toList(), i -> i.getStatus().name()));
         charts.add(chart("Eventos cadastrados por trimestre", eventos, e -> e.getDataCriacao() == null ? "Sem data de cadastro" : rotuloTrimestre(e.getDataCriacao().toLocalDate()), List.of(), e -> e.getDataCriacao() == null ? "Sem data de cadastro" : rotuloTrimestre(e.getDataCriacao().toLocalDate())));
+        long certificadosGerados = inscricaoRepository.countByCertificadoGeradoEmIsNotNull();
+        charts.add(metricaChart("Total de participantes", usuarioService.contarPorPerfil(Perfil.ROLE_PARTICIPANTE)));
+        charts.add(metricaChart("Certificados gerados", certificadosGerados));
         model.addAttribute("charts", charts);
         model.addAttribute("inscricoes", todasInscricoes);
         return "super-admin-relatorios";
     }
 
+    @GetMapping("/relatorios/excel")
+    @Transactional(readOnly = true)
+    public void exportarRelatoriosExcel(HttpServletResponse response) throws IOException {
+        List<Usuario> usuarios = usuarioService.listarUsuarios(null, null, null, null, PageRequest.of(0, 100000)).getContent();
+        List<Evento> eventos = eventoRepository.findAll();
+        List<Inscricao> inscricoes = inscricaoRepository.findAll();
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet resumo = workbook.createSheet("Resumo");
+            String[][] linhas = {{"Indicador", "Quantidade"}, {"Usuários", String.valueOf(usuarios.size())}, {"Participantes", String.valueOf(usuarioService.contarPorPerfil(Perfil.ROLE_PARTICIPANTE))}, {"Organizadores", String.valueOf(usuarioService.contarPorPerfil(Perfil.ROLE_ORGANIZADOR))}, {"Eventos", String.valueOf(eventos.size())}, {"Inscrições", String.valueOf(inscricoes.size())}, {"Certificados gerados", String.valueOf(inscricaoRepository.countByCertificadoGeradoEmIsNotNull())}};
+            for (int r=0;r<linhas.length;r++){Row row=resumo.createRow(r);row.createCell(0).setCellValue(linhas[r][0]);row.createCell(1).setCellValue(linhas[r][1]);}
+            Sheet userSheet=workbook.createSheet("Usuários");Row userHead=userSheet.createRow(0);String[] userCols={"Nome","E-mail","Perfil","Ativo","Data de cadastro"};for(int c=0;c<userCols.length;c++)userHead.createCell(c).setCellValue(userCols[c]);int ur=1;for(Usuario u:usuarios){Row row=userSheet.createRow(ur++);row.createCell(0).setCellValue(u.getNome());row.createCell(1).setCellValue(u.getEmail());row.createCell(2).setCellValue(rotulo(u.getPerfil().name()));row.createCell(3).setCellValue(u.isAtivo()?"Sim":"Não");row.createCell(4).setCellValue(u.getDataCriacao()==null?"":u.getDataCriacao().toString());}
+            Sheet sheet=workbook.createSheet("Eventos"); Row head=sheet.createRow(0); String[] cols={"Evento","Organizador","Status","Modalidade","Tema","Inscrições","Certificados gerados"};for(int i=0;i<cols.length;i++)head.createCell(i).setCellValue(cols[i]);
+            int r=1;for(Evento e:eventos){Row row=sheet.createRow(r++);row.createCell(0).setCellValue(e.getTitulo());row.createCell(1).setCellValue(e.getOrganizador().getNome());row.createCell(2).setCellValue(rotulo(e.getStatus().name()));row.createCell(3).setCellValue(e.getModalidade()==null?"Não informado":rotulo(e.getModalidade().name()));row.createCell(4).setCellValue(e.getNicho()==null?"Não informado":rotulo(e.getNicho().name()));row.createCell(5).setCellValue(inscricoes.stream().filter(i->i.getEvento().getId().equals(e.getId())).count());row.createCell(6).setCellValue(inscricaoRepository.countByEventoIdAndCertificadoGeradoEmIsNotNull(e.getId()));}
+            for(Sheet sh:workbook)for(int i=0;i<sh.getRow(0).getLastCellNum();i++)sh.autoSizeColumn(i);
+            Sheet insSheet=workbook.createSheet("Inscrições");Row ih=insSheet.createRow(0);String[] ic={"Participante","E-mail","Evento","Status","Inscrito em","Check-in em","Certificado gerado em"};for(int c=0;c<ic.length;c++)ih.createCell(c).setCellValue(ic[c]);int ir=1;for(Inscricao i:inscricoes){Row row=insSheet.createRow(ir++);row.createCell(0).setCellValue(i.getParticipante().getNome());row.createCell(1).setCellValue(i.getParticipante().getEmail());row.createCell(2).setCellValue(i.getEvento().getTitulo());row.createCell(3).setCellValue(rotulo(i.getStatus().name()));row.createCell(4).setCellValue(i.getDataCriacao()==null?"":i.getDataCriacao().toString());row.createCell(5).setCellValue(i.getDataCheckIn()==null?"":i.getDataCheckIn().toString());row.createCell(6).setCellValue(i.getCertificadoGeradoEm()==null?"":i.getCertificadoGeradoEm().toString());}for(int c=0;c<ih.getLastCellNum();c++)insSheet.autoSizeColumn(c);
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");response.setHeader(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=relatorios-super-admin.xlsx");workbook.write(response.getOutputStream());
+        }
+    }
+
     private long percentual(long parte, long total) { return total == 0 ? 0 : Math.round(parte * 100.0 / total); }
+    private Map<String,Object> metricaChart(String titulo,long valor){Map<String,Object> m=new LinkedHashMap<>();m.put("titulo",titulo);m.put("labels",List.of(titulo));m.put("values",List.of(valor));m.put("total",valor);return m;}
     private String rotuloTrimestre(LocalDate data) { return "" + ((data.getMonthValue() - 1) / 3 + 1) + "º tri de " + data.getYear(); }
     private String rotulo(String codigo) {
         return switch (codigo) {
@@ -282,7 +308,7 @@ public class SuperAdminController {
         return "super-admin-detalhes-usuario";
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     @GetMapping("/usuarios/{usuarioId}/inscricoes/{inscricaoId}/certificado")
     public void baixarCertificadoParticipante(
             @PathVariable Long usuarioId,

@@ -12,6 +12,8 @@ import org.xhtmlrenderer.pdf.ITextRenderer;
 import sistema.eventos.exception.NegocioException;
 import sistema.eventos.model.Inscricao;
 import sistema.eventos.model.StatusInscricao;
+import sistema.eventos.repository.InscricaoRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
@@ -27,16 +29,18 @@ public class CertificadoService {
 
     private final TemplateEngine templateEngine;
     private final FileStorageService fileStorageService;
+    private final InscricaoRepository inscricaoRepository;
 
     @Value("${app.public-url:}")
     private String urlPublicaConfigurada;
 
-    public CertificadoService(TemplateEngine templateEngine, FileStorageService fileStorageService) {
+    public CertificadoService(TemplateEngine templateEngine, FileStorageService fileStorageService, InscricaoRepository inscricaoRepository) {
         this.templateEngine = templateEngine;
         this.fileStorageService = fileStorageService;
+        this.inscricaoRepository = inscricaoRepository;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public byte[] gerarCertificadoPdf(Inscricao inscricao) {
         if (inscricao.getStatus() != StatusInscricao.UTILIZADO) {
             throw new NegocioException("O certificado só pode ser emitido após a confirmação de presença.");
@@ -91,6 +95,8 @@ public class CertificadoService {
             renderer.setDocumentFromString(htmlProcessado);
             renderer.layout();
             renderer.createPDF(out);
+
+            if (inscricao.getId() != null) inscricaoRepository.registrarCertificadoGerado(inscricao.getId());
 
             return out.toByteArray();
 

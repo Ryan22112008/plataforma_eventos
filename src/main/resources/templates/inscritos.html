@@ -43,6 +43,7 @@
                class="seplag-subnav__link">
                 <i class="fa-solid fa-ticket" aria-hidden="true"></i> Sorteios
             </a>
+            <a th:href="@{/organizador/eventos/{id}/relatorios(id=${evento.id})}" th:classappend="${paginaAtiva == 'relatorios' ? 'is-active' : ''}" class="seplag-subnav__link"><i class="fa-solid fa-chart-pie" aria-hidden="true"></i> Relatórios</a>
         </nav>
 
         <div th:if="${sucesso}" class="seplag-flash">

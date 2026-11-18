@@ -31,6 +31,8 @@ import sistema.eventos.model.SorteioResultado;
 import sistema.eventos.model.SorteioRodada;
 import sistema.eventos.model.Usuario;
 import sistema.eventos.repository.SessaoRepository;
+import sistema.eventos.repository.InscricaoRepository;
+import sistema.eventos.model.StatusInscricao;
 import sistema.eventos.service.InscricaoService;
 import sistema.eventos.service.EventoService;
 import sistema.eventos.service.SorteioService;
@@ -41,7 +43,12 @@ import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.stream.Collectors;
+import java.util.function.Function;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 @Slf4j
 @Controller
@@ -55,6 +62,41 @@ public class EventoController {
     private final SorteioService sorteioService;
     private final SessaoRepository sessaoRepository;
     private final CertificadoService certificadoService;
+    private final InscricaoRepository inscricaoRepository;
+
+    @GetMapping("/eventos/{id}/relatorios")
+    public String relatoriosEvento(@PathVariable Long id, Authentication authentication, Model model) {
+        Evento evento = exigirAcessoAoEvento(id, authentication);
+        List<Inscricao> inscricoes = inscricaoRepository.findByEventoId(id);
+        List<Map<String,Object>> charts = new java.util.ArrayList<>();
+        charts.add(chartInscricoes("Situação das inscrições", inscricoes, i -> rotuloInscricao(i.getStatus())));
+        charts.add(chartInscricoes("Participantes com check-in", inscricoes, i -> i.getStatus()==StatusInscricao.UTILIZADO ? "Presença confirmada" : i.getStatus()==StatusInscricao.CANCELADO ? "Inscrição cancelada" : "Aguardando presença"));
+        charts.add(chartInscricoes("Inscrições por mês", inscricoes, i -> i.getDataCriacao()==null ? "Sem data" : String.format("%02d/%d",i.getDataCriacao().getMonthValue(),i.getDataCriacao().getYear())));
+        model.addAttribute("evento",evento);model.addAttribute("inscricoes",inscricoes);model.addAttribute("charts",charts);
+        model.addAttribute("totalInscricoes",inscricoes.size());
+        model.addAttribute("totalCheckins",inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.UTILIZADO).count());
+        model.addAttribute("totalCanceladas",inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.CANCELADO).count());
+        model.addAttribute("certificadosGerados",inscricaoRepository.countByEventoIdAndCertificadoGeradoEmIsNotNull(id));
+        model.addAttribute("taxaOcupacao",evento.getVagasTotais()==null||evento.getVagasTotais()==0?0:Math.round((evento.getVagasTotais()-evento.getVagasRestantes())*100.0/evento.getVagasTotais()));
+        model.addAttribute("paginaAtiva","relatorios");
+        return "organizador-relatorios-evento";
+    }
+
+    @GetMapping("/eventos/{id}/relatorios/excel")
+    public void exportarRelatorioEvento(@PathVariable Long id, Authentication authentication, HttpServletResponse response) throws java.io.IOException {
+        Evento evento=exigirAcessoAoEvento(id,authentication);List<Inscricao> inscricoes=inscricaoRepository.findByEventoId(id);
+        try(Workbook wb=new XSSFWorkbook()){
+            Sheet resumo=wb.createSheet("Resumo");String[][] metrics={{"Evento",evento.getTitulo()},{"Inscrições",String.valueOf(inscricoes.size())},{"Check-ins",String.valueOf(inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.UTILIZADO).count())},{"Canceladas",String.valueOf(inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.CANCELADO).count())},{"Certificados gerados",String.valueOf(inscricaoRepository.countByEventoIdAndCertificadoGeradoEmIsNotNull(id))}};
+            for(int r=0;r<metrics.length;r++){Row row=resumo.createRow(r);row.createCell(0).setCellValue(metrics[r][0]);row.createCell(1).setCellValue(metrics[r][1]);}
+            Sheet sheet=wb.createSheet("Inscrições");Row head=sheet.createRow(0);String[] cols={"Participante","E-mail","Status","Data da inscrição","Check-in","Certificado gerado em"};for(int c=0;c<cols.length;c++)head.createCell(c).setCellValue(cols[c]);int r=1;
+            for(Inscricao i:inscricoes){Row row=sheet.createRow(r++);row.createCell(0).setCellValue(i.getParticipante().getNome());row.createCell(1).setCellValue(i.getParticipante().getEmail());row.createCell(2).setCellValue(rotuloInscricao(i.getStatus()));row.createCell(3).setCellValue(i.getDataCriacao()==null?"":i.getDataCriacao().toString());row.createCell(4).setCellValue(i.getDataCheckIn()==null?"":i.getDataCheckIn().toString());row.createCell(5).setCellValue(i.getCertificadoGeradoEm()==null?"":i.getCertificadoGeradoEm().toString());}
+            for(Sheet s:wb)for(int c=0;c<s.getRow(0).getLastCellNum();c++)s.autoSizeColumn(c);
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");response.setHeader(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=relatorios-evento-"+id+".xlsx");wb.write(response.getOutputStream());
+        }
+    }
+
+    private Map<String,Object> chartInscricoes(String titulo,List<Inscricao> inscricoes,Function<Inscricao,String> categoria){Map<String,Long> counts=new LinkedHashMap<>();inscricoes.forEach(i->counts.merge(categoria.apply(i),1L,Long::sum));Map<String,Object> m=new LinkedHashMap<>();m.put("titulo",titulo);m.put("labels",new java.util.ArrayList<>(counts.keySet()));m.put("values",new java.util.ArrayList<>(counts.values()));m.put("total",inscricoes.size());return m;}
+    private String rotuloInscricao(StatusInscricao status){return switch(status){case ATIVO->"Ativa";case UTILIZADO->"Check-in realizado";case CANCELADO->"Cancelada";};}
 
     @GetMapping("/painel")
     public String painelOrganizador(Model model, @AuthenticationPrincipal UserDetails userDetails,

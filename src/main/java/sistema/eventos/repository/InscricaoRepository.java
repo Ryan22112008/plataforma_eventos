@@ -2,6 +2,7 @@ package sistema.eventos.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import sistema.eventos.dto.UsuarioEventoTituloProjection;
@@ -15,6 +16,13 @@ import java.util.Optional;
 
 @Repository
 public interface InscricaoRepository extends JpaRepository<Inscricao, Long> {
+
+    long countByCertificadoGeradoEmIsNotNull();
+    long countByEventoIdAndCertificadoGeradoEmIsNotNull(Long eventoId);
+
+    @Modifying
+    @Query("UPDATE Inscricao i SET i.certificadoGeradoEm = CURRENT_TIMESTAMP WHERE i.id = :id AND i.certificadoGeradoEm IS NULL")
+    int registrarCertificadoGerado(@Param("id") Long id);
 
     @Query("SELECT i FROM Inscricao i JOIN FETCH i.evento WHERE i.participante.id = :participanteId")
     List<Inscricao> findByParticipanteIdComEvento(@Param("participanteId") Long participanteId);
