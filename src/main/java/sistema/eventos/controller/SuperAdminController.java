@@ -20,8 +20,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import sistema.eventos.exception.NegocioException;
 import sistema.eventos.model.Inscricao;
+import sistema.eventos.model.Evento;
+import sistema.eventos.model.ModalidadeEvento;
+import sistema.eventos.model.NichoEvento;
 import sistema.eventos.model.Perfil;
+import sistema.eventos.model.StatusEvento;
+import sistema.eventos.model.StatusInscricao;
 import sistema.eventos.model.Usuario;
+import sistema.eventos.repository.EventoRepository;
+import sistema.eventos.repository.InscricaoRepository;
 import sistema.eventos.service.CertificadoService;
 import sistema.eventos.service.FileStorageService;
 import sistema.eventos.service.InscricaoService;
@@ -34,6 +41,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -52,6 +62,8 @@ public class SuperAdminController {
     private final InscricaoService inscricaoService;
     private final CertificadoService certificadoService;
     private final FileStorageService fileStorageService;
+    private final EventoRepository eventoRepository;
+    private final InscricaoRepository inscricaoRepository;
 
     private Long idDoUsuarioLogado() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -103,6 +115,80 @@ public class SuperAdminController {
         model.addAttribute("perfis", Perfil.values());
 
         return "super-admin-usuarios";
+    }
+
+    @GetMapping("/relatorios")
+    public String relatorios(Model model,
+            @RequestParam(value = "periodo", defaultValue = "todos") String periodo,
+            @RequestParam(value = "tipo", defaultValue = "pizza") String tipo) {
+        LocalDate hoje = LocalDate.now();
+        LocalDate inicio = switch (periodo) {
+            case "30" -> hoje.minusDays(29);
+            case "90" -> hoje.minusDays(89);
+            case "ano" -> hoje.withDayOfYear(1);
+            default -> null;
+        };
+        List<Usuario> usuarios = usuarioService.listarUsuarios(null, null, null, null,
+                PageRequest.of(0, 100000)).getContent();
+        List<Evento> todosEventos = eventoRepository.findAll();
+        List<Inscricao> todasInscricoes = inscricaoRepository.findAll();
+        List<Usuario> filtrados = usuarios.stream().filter(u -> inicio == null ||
+                (u.getDataCriacao() != null && !u.getDataCriacao().toLocalDate().isBefore(inicio))).toList();
+        List<Evento> eventos = todosEventos.stream().filter(e -> inicio == null ||
+                (e.getDataCriacao() != null && !e.getDataCriacao().toLocalDate().isBefore(inicio))).toList();
+        List<Inscricao> inscricoes = todasInscricoes.stream().filter(i -> inicio == null ||
+                (i.getDataCriacao() != null && !i.getDataCriacao().toLocalDate().isBefore(inicio))).toList();
+
+        model.addAttribute("periodo", periodo);
+        model.addAttribute("tipo", tipo);
+        model.addAttribute("inicioPeriodo", inicio);
+        model.addAttribute("totalUsuarios", usuarios.size());
+        model.addAttribute("totalEventos", todosEventos.size());
+        model.addAttribute("totalInscricoes", todasInscricoes.size());
+        model.addAttribute("totalOrganizadores", usuarioService.contarPorPerfil(Perfil.ROLE_ORGANIZADOR));
+        model.addAttribute("totalParticipantes", usuarioService.contarPorPerfil(Perfil.ROLE_PARTICIPANTE));
+        model.addAttribute("eventosPublicados", todosEventos.stream().filter(e -> e.getStatus() == StatusEvento.PUBLICADO).count());
+        model.addAttribute("novosUsuarios", filtrados.size());
+        model.addAttribute("novosEventos", eventos.size());
+        model.addAttribute("novasInscricoes", inscricoes.size());
+        model.addAttribute("taxaCheckin", percentual(inscricoes.stream().filter(i -> i.getStatus() == StatusInscricao.UTILIZADO).count(), inscricoes.size()));
+        model.addAttribute("taxaOcupacao", percentual(eventos.stream().mapToLong(e -> Math.max(0, (e.getVagasTotais() == null ? 0 : e.getVagasTotais()) - (e.getVagasRestantes() == null ? 0 : e.getVagasRestantes()))).sum(), eventos.stream().mapToLong(e -> e.getVagasTotais() == null ? 0 : e.getVagasTotais()).sum()));
+        List<Map<String, Object>> charts = new ArrayList<>();
+        charts.add(chart("Perfil de usuário", usuarios, u -> rotulo(u.getPerfil().name()), Arrays.asList("Participante", "Organizador", "Avaliador", "Super admin"), u -> u.getPerfil().name()));
+        charts.add(chart("Situação das contas", usuarios, u -> u.isAtivo() ? "Ativos" : "Inativos", List.of("Ativos", "Inativos"), u -> String.valueOf(u.isAtivo())));
+        charts.add(chart("Status dos eventos", todosEventos, e -> rotulo(e.getStatus().name()), Arrays.stream(StatusEvento.values()).map(s -> rotulo(s.name())).toList(), e -> e.getStatus().name()));
+        charts.add(chart("Modalidade dos eventos", todosEventos, e -> e.getModalidade() == null ? "Não informado" : rotulo(e.getModalidade().name()), List.of("Presencial", "Online", "Híbrido", "Não informado"), e -> String.valueOf(e.getModalidade())));
+        charts.add(chart("Temas dos eventos", todosEventos, e -> e.getNicho() == null ? "Não informado" : rotulo(e.getNicho().name()), List.of("Tecnologia", "Tecnologia e inovação", "Gestão pública", "Saúde", "Outros", "Não informado"), e -> String.valueOf(e.getNicho())));
+        charts.add(chart("Situação das inscrições", todasInscricoes, i -> rotulo(i.getStatus().name()), Arrays.stream(StatusInscricao.values()).map(s -> rotulo(s.name())).toList(), i -> i.getStatus().name()));
+        charts.add(chart("Novos eventos por período", eventos, e -> e.getDataCriacao() == null ? "Sem data" : e.getDataCriacao().toLocalDate().getYear() + "-T" + ((e.getDataCriacao().toLocalDate().getMonthValue() - 1) / 3 + 1), List.of("Sem data"), e -> e.getDataCriacao() == null ? "Sem data" : e.getDataCriacao().toLocalDate().getYear() + "-T" + ((e.getDataCriacao().toLocalDate().getMonthValue() - 1) / 3 + 1)));
+        model.addAttribute("charts", charts);
+        model.addAttribute("inscricoes", todasInscricoes);
+        return "super-admin-relatorios";
+    }
+
+    private long percentual(long parte, long total) { return total == 0 ? 0 : Math.round(parte * 100.0 / total); }
+    private String rotulo(String codigo) {
+        return switch (codigo) {
+            case "ROLE_PARTICIPANTE" -> "Participante"; case "ROLE_ORGANIZADOR" -> "Organizador";
+            case "ROLE_AVALIADOR" -> "Avaliador"; case "ROLE_SUPER_ADMIN" -> "Super admin";
+            case "PUBLICADO" -> "Publicado"; case "RASCUNHO" -> "Rascunho";
+            case "CANCELADO" -> "Cancelado"; case "ENCERRADO" -> "Encerrado";
+            case "PRESENCIAL" -> "Presencial"; case "ONLINE" -> "Online"; case "HIBRIDO" -> "Híbrido";
+            case "TECNOLOGIA_E_INOVACAO" -> "Tecnologia e inovação"; case "GESTAO_PUBLICA" -> "Gestão pública";
+            case "SAUDE" -> "Saúde"; case "TECNOLOGIA" -> "Tecnologia"; case "OUTROS" -> "Outros";
+            case "ATIVO" -> "Ativa"; case "UTILIZADO" -> "Check-in realizado";
+            default -> codigo.substring(0, 1) + codigo.substring(1).toLowerCase(Locale.ROOT);
+        };
+    }
+    private <T> Map<String, Object> chart(String titulo, List<T> dados, java.util.function.Function<T, String> chave,
+            List<String> categorias, java.util.function.Function<T, String> categoriaRaw) {
+        Map<String, Long> contagens = new java.util.LinkedHashMap<>();
+        categorias.forEach(c -> contagens.put(c, 0L));
+        dados.forEach(d -> { String c = chave.apply(d); if (!contagens.containsKey(c)) contagens.put(c, 0L); contagens.merge(c, 1L, Long::sum); });
+        Map<String, Object> resultado = new HashMap<>();
+        resultado.put("titulo", titulo); resultado.put("labels", new ArrayList<>(contagens.keySet()));
+        resultado.put("values", new ArrayList<>(contagens.values())); resultado.put("total", dados.size());
+        return resultado;
     }
 
     @GetMapping("/organizadores")

@@ -14,6 +14,7 @@
         <nav aria-label="Navegação do Super Admin" class="seplag-admin-nav">
             <a th:href="@{/super-admin/usuarios}" class="seplag-admin-nav__link" th:classappend="${active == 'usuarios'} ? ' is-active'" th:attr="aria-current=${active == 'usuarios' ? 'page' : null}"><i class="fa-solid fa-users" aria-hidden="true"></i>Usuários</a>
             <a th:href="@{/super-admin/organizadores}" class="seplag-admin-nav__link" th:classappend="${active == 'organizadores'} ? ' is-active'" th:attr="aria-current=${active == 'organizadores' ? 'page' : null}"><i class="fa-solid fa-user-group" aria-hidden="true"></i>Organizadores</a>
+            <a th:href="@{/super-admin/relatorios}" class="seplag-admin-nav__link" th:classappend="${active == 'relatorios'} ? ' is-active'" th:attr="aria-current=${active == 'relatorios' ? 'page' : null}"><i class="fa-solid fa-chart-pie" aria-hidden="true"></i>Relatórios</a>
             <a th:href="@{/super-admin/solicitacoes}" class="seplag-admin-nav__link" th:classappend="${active == 'solicitacoes'} ? ' is-active'" th:attr="aria-current=${active == 'solicitacoes' ? 'page' : null}"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i>Solicitações</a>
         </nav>
 

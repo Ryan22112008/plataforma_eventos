@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/seplag-ui :: head('Relatórios do sistema')}"><title>Relatórios</title></head>
+<body class="v2 seplag-admin-body">
+<a class="seplag-skip-link" href="#conteudo">Ir para o conteúdo</a>
+<header th:replace="~{fragments/super-admin-header :: header('relatorios')}"></header>
+<main class="seplag-content" id="conteudo">
+  <div class="seplag-page-head">
+    <div class="seplag-page-head__copy"><p class="seplag-eyebrow">Super Administração</p><h1>Relatórios da plataforma</h1><p>Uma visão completa de usuários, eventos e participação.</p></div>
+  </div>
+  <form class="reports-filters" method="get" th:action="@{/super-admin/relatorios}">
+    <label>Período dos indicadores recentes
+      <select name="periodo">
+        <option value="todos" th:selected="${periodo == 'todos'}">Todo o período</option>
+        <option value="30" th:selected="${periodo == '30'}">Últimos 30 dias</option>
+        <option value="90" th:selected="${periodo == '90'}">Últimos 90 dias</option>
+        <option value="ano" th:selected="${periodo == 'ano'}">Este ano</option>
+      </select>
+    </label>
+    <button class="seplag-btn seplag-btn-primary" type="submit"><i class="fa-solid fa-filter"></i> Aplicar período</button>
+    <span>Os gráficos mostram a distribuição geral da base.</span>
+  </form>
+  <section class="reports-kpis" aria-label="Indicadores gerais">
+    <article class="reports-kpi"><span><i class="fa-solid fa-users"></i> Usuários cadastrados</span><strong th:text="${totalUsuarios}">0</strong><small><b th:text="${novosUsuarios}">0</b> no período selecionado</small></article>
+    <article class="reports-kpi"><span><i class="fa-solid fa-calendar-days"></i> Eventos</span><strong th:text="${totalEventos}">0</strong><small><b th:text="${eventosPublicados}">0</b> publicados · <b th:text="${novosEventos}">0</b> novos no período</small></article>
+    <article class="reports-kpi"><span><i class="fa-solid fa-ticket"></i> Inscrições</span><strong th:text="${totalInscricoes}">0</strong><small><b th:text="${novasInscricoes}">0</b> no período selecionado</small></article>
+    <article class="reports-kpi"><span><i class="fa-solid fa-user-check"></i> Check-ins</span><strong th:text="${taxaCheckin + '%'}">0%</strong><small>Percentual entre as inscrições do período</small></article>
+    <article class="reports-kpi"><span><i class="fa-solid fa-chair"></i> Ocupação das vagas</span><strong th:text="${taxaOcupacao + '%'}">0%</strong><small>Vagas preenchidas nos eventos do período</small></article>
+  </section>
+  <section class="reports-section"><div class="reports-section-head"><div><p class="seplag-eyebrow">ANÁLISES</p><h2>Distribuição e tendências</h2></div><label class="reports-chart-type">Visualização<select id="reports-chart-type"><option value="doughnut">Pizza</option><option value="bar">Barras</option></select></label></div>
+    <div class="reports-charts"><article class="reports-chart-card" th:each="chart,iter : ${charts}"><h3 th:text="${chart.titulo}">Relatório</h3><div class="reports-chart-wrap"><canvas th:id="'report-chart-' + ${iter.index}" role="img" th:aria-label="${chart.titulo}"></canvas></div><p class="reports-chart-total">Total: <b th:text="${chart.total}">0</b></p></article></div>
+  </section>
+  <section class="reports-ideas"><h2>Outros indicadores possíveis</h2><div><span>Inscrições por evento</span><span>Top eventos por procura</span><span>Participação por município</span><span>Presença por evento</span><span>Cancelamentos ao longo do tempo</span><span>Novos usuários por mês</span><span>Eventos por organizador</span><span>Ocupação por modalidade</span><span>Certificados emitidos</span><span>Feedback médio dos eventos</span><span>Trabalhos científicos por status</span><span>Solicitações de organizador</span></div></section>
+</main>
+<style>
+.reports-filters,.reports-kpi,.reports-chart-card,.reports-ideas{background:var(--surface-elevated,#101116);border:1px solid var(--border,rgba(255,255,255,.08));border-radius:16px}.reports-filters{display:flex;align-items:end;gap:16px;padding:18px 20px;margin:24px 0;flex-wrap:wrap}.reports-filters label,.reports-chart-type{display:grid;gap:7px;font-size:.85rem;font-weight:700}.reports-filters select,.reports-chart-type select{min-width:190px;padding:10px 12px;border-radius:9px;color:inherit;background:#15121d;border:1px solid rgba(255,255,255,.15)}.reports-filters>span{font-size:.8rem;opacity:.7;padding-bottom:10px}.reports-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;background:none;border:0}.reports-kpi{padding:20px;display:grid;gap:10px}.reports-kpi>span{font-size:.83rem;opacity:.85}.reports-kpi>span i{color:#bd83ff;margin-right:7px}.reports-kpi>strong{font-size:2rem;letter-spacing:-.04em}.reports-kpi>small{font-size:.78rem;opacity:.68}.reports-section{margin-top:38px}.reports-section-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px}.reports-section-head h2,.reports-ideas h2{margin:0}.reports-charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}.reports-chart-card{padding:20px}.reports-chart-card h3{margin:0 0 12px;font-size:1rem}.reports-chart-wrap{height:250px;position:relative}.reports-chart-total{font-size:.8rem;opacity:.7;margin:10px 0 0}.reports-ideas{margin:30px 0;padding:22px}.reports-ideas>div{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}.reports-ideas span{padding:8px 12px;border-radius:999px;background:rgba(168,85,247,.12);font-size:.8rem}.reports-ideas+*{margin-top:20px}@media(max-width:600px){.reports-section-head{align-items:start;gap:12px;flex-direction:column}.reports-chart-wrap{height:220px}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script th:inline="javascript">
+const reportData = /*[[${charts}]]*/ [];
+const reportColors = ['#8b5cf6','#ec4899','#14b8a6','#f59e0b','#3b82f6','#ef4444','#a3e635','#06b6d4'];
+const reportInstances=[];
+function drawReports(type){reportInstances.forEach(c=>c.destroy());reportInstances.length=0;reportData.forEach((item,index)=>{const canvas=document.getElementById('report-chart-'+index);if(!canvas)return;reportInstances.push(new Chart(canvas,{type,data:{labels:item.labels,datasets:[{data:item.values,backgroundColor:reportColors,borderColor:'#101116',borderWidth:2,borderRadius:type==='bar'?6:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#d7d2df',padding:14,usePointStyle:true}},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} (${item.total?Math.round(ctx.raw/item.total*100):0}%)`}}},...(type==='bar'?{scales:{x:{ticks:{color:'#aaa'},grid:{display:false}},y:{beginAtZero:true,ticks:{precision:0,color:'#aaa'},grid:{color:'rgba(255,255,255,.08)'}}}}:{cutout:'58%'})}})});}
+document.getElementById('reports-chart-type').addEventListener('change',e=>drawReports(e.target.value));
+if(window.Chart)drawReports('doughnut');
+</script>
+</body></html>
