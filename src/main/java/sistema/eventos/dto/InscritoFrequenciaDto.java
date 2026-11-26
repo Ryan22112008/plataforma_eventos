@@ -31,6 +31,18 @@ public class InscritoFrequenciaDto {
     private boolean certificadoLiberado;
     private boolean inscricaoCancelada;
 
+    public boolean isInscricaoPendente() {
+        return statusInscricao == StatusInscricao.PENDENTE;
+    }
+
+    public boolean isInscricaoRecusada() {
+        return statusInscricao == StatusInscricao.RECUSADO;
+    }
+
+    public boolean isInscricaoAprovada() {
+        return statusInscricao == StatusInscricao.ATIVO || statusInscricao == StatusInscricao.UTILIZADO;
+    }
+
     public String getFrequenciaFormatada() {
         if (percentualFrequencia == null) {
             return null;

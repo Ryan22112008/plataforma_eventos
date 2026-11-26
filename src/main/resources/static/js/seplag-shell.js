@@ -105,3 +105,157 @@
         }
     });
 })();
+
+/* Modal de compartilhamento estilo YouTube */
+(function () {
+    'use strict';
+
+    var dialog = document.getElementById('seplagShareModal');
+    if (!dialog) {
+        return;
+    }
+
+    var titleEl = document.getElementById('shareModalEventoNome');
+    var inputEl = document.getElementById('shareLinkInput');
+    var copyBtn = document.getElementById('shareCopyBtn');
+    var feedbackEl = document.getElementById('shareCopyFeedback');
+    var nativeBtn = document.getElementById('shareNativeBtn');
+    var whatsAppEl = document.getElementById('shareWhatsApp');
+    var facebookEl = document.getElementById('shareFacebook');
+    var xEl = document.getElementById('shareX');
+    var linkedInEl = document.getElementById('shareLinkedIn');
+    var telegramEl = document.getElementById('shareTelegram');
+    var emailEl = document.getElementById('shareEmail');
+
+    var currentUrl = '';
+    var currentTitle = '';
+    var copyTimer = null;
+
+    function resolveUrl(raw) {
+        if (!raw) {
+            return window.location.href;
+        }
+        try {
+            return new URL(raw, window.location.origin).toString();
+        } catch (e) {
+            return window.location.href;
+        }
+    }
+
+    function resetCopyState() {
+        if (copyTimer) {
+            window.clearTimeout(copyTimer);
+            copyTimer = null;
+        }
+        if (copyBtn) {
+            copyBtn.textContent = 'Copiar';
+            copyBtn.classList.remove('is-copied');
+        }
+        if (feedbackEl) {
+            feedbackEl.textContent = '';
+        }
+    }
+
+    function openShareModal(url, title) {
+        currentUrl = resolveUrl(url);
+        currentTitle = title || 'Evento SEPLAG-MT';
+        resetCopyState();
+
+        if (titleEl) {
+            titleEl.textContent = currentTitle;
+        }
+        if (inputEl) {
+            inputEl.value = currentUrl;
+        }
+
+        var textoShare = 'Confira este evento na SEPLAG-MT: ' + currentTitle;
+        var encUrl = encodeURIComponent(currentUrl);
+        var encTexto = encodeURIComponent(textoShare);
+        var encCompleto = encodeURIComponent(textoShare + ' ' + currentUrl);
+
+        if (whatsAppEl) whatsAppEl.href = 'https://wa.me/?text=' + encCompleto;
+        if (facebookEl) facebookEl.href = 'https://www.facebook.com/sharer/sharer.php?u=' + encUrl;
+        if (xEl) xEl.href = 'https://twitter.com/intent/tweet?url=' + encUrl + '&text=' + encTexto;
+        if (linkedInEl) linkedInEl.href = 'https://www.linkedin.com/sharing/share-offsite/?url=' + encUrl;
+        if (telegramEl) telegramEl.href = 'https://t.me/share/url?url=' + encUrl + '&text=' + encTexto;
+        if (emailEl) {
+            emailEl.href = 'mailto:?subject=' + encodeURIComponent('Convite: ' + currentTitle)
+                + '&body=' + encCompleto;
+        }
+        if (nativeBtn) {
+            nativeBtn.classList.toggle('hidden', typeof navigator.share !== 'function');
+        }
+
+        if (typeof dialog.showModal === 'function') {
+            if (!dialog.open) {
+                dialog.showModal();
+            }
+        } else {
+            dialog.setAttribute('open', 'open');
+        }
+    }
+
+    function closeShareModal() {
+        if (typeof dialog.close === 'function') {
+            if (dialog.open) {
+                dialog.close();
+            }
+        } else {
+            dialog.removeAttribute('open');
+        }
+    }
+
+    document.addEventListener('click', function (event) {
+        var trigger = event.target.closest('[data-share-trigger]');
+        if (trigger) {
+            event.preventDefault();
+            openShareModal(
+                trigger.getAttribute('data-share-url'),
+                trigger.getAttribute('data-share-title')
+            );
+            return;
+        }
+        if (event.target.closest('[data-share-close]') || event.target === dialog) {
+            closeShareModal();
+        }
+    });
+
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function () {
+            if (!currentUrl) return;
+            var finish = function () {
+                copyBtn.textContent = 'Copiado!';
+                copyBtn.classList.add('is-copied');
+                if (feedbackEl) {
+                    feedbackEl.textContent = 'Link copiado para a área de transferência.';
+                }
+                copyTimer = window.setTimeout(resetCopyState, 2500);
+            };
+            if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                navigator.clipboard.writeText(currentUrl).then(finish, function () {
+                    if (inputEl) {
+                        inputEl.select();
+                        document.execCommand('copy');
+                        finish();
+                    }
+                });
+            } else if (inputEl) {
+                inputEl.select();
+                document.execCommand('copy');
+                finish();
+            }
+        });
+    }
+
+    if (nativeBtn) {
+        nativeBtn.addEventListener('click', function () {
+            if (typeof navigator.share === 'function') {
+                navigator.share({
+                    title: currentTitle,
+                    text: 'Confira este evento na SEPLAG-MT: ' + currentTitle,
+                    url: currentUrl
+                }).catch(function () {});
+            }
+        });
+    }
+})();

@@ -216,7 +216,7 @@
             var valido = true;
 
             if (totalElegiveis === 0) {
-                mensagem = 'Ainda não há participantes elegíveis. Registre presenças e confira o percentual mínimo.';
+                mensagem = 'Ainda não há participantes elegíveis nesta data e período. Confira as sessões e presenças.';
                 valido = false;
             } else if (total === 0) {
                 mensagem = 'Todos os elegíveis já venceram. Desative a opção de não repetir vencedores para sortear novamente.';
@@ -286,8 +286,12 @@
             evento.preventDefault();
 
             var quantidade = resultado.quantidade;
+            var campoData = formulario.querySelector('input[name="data"]');
+            var campoPeriodo = formulario.querySelector('input[name="periodo"]');
+            var dataSorteio = campoData ? campoData.value.split('-').reverse().join('/') : '';
+            var periodoSorteio = campoPeriodo ? campoPeriodo.value.toLowerCase() : '';
             var texto = 'Sortear ' + quantidade + (quantidade === 1 ? ' pessoa' : ' pessoas')
-                + ' entre ' + resultado.total + ' disponíveis (frequência ≥ ' + percentual + '%). '
+                + ' entre ' + resultado.total + ' presentes em ' + dataSorteio + ' (' + periodoSorteio + '). '
                 + (naoRepetir() ? 'Sem repetir vencedores.' : 'Repetição de vencedores permitida.');
 
             if (resumo) {

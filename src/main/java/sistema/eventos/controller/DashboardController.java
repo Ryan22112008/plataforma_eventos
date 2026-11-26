@@ -6,14 +6,19 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model; // ADICIONADO: Necessário para passar dados ao HTML
 import org.springframework.web.bind.annotation.GetMapping;
 import sistema.eventos.model.Evento;
+import sistema.eventos.model.Inscricao;
+import sistema.eventos.model.StatusInscricao;
 import sistema.eventos.model.Usuario;
 import sistema.eventos.model.StatusSolicitacao;
+import sistema.eventos.repository.InscricaoRepository;
 import sistema.eventos.repository.SolicitacaoRepository;
-import sistema.eventos.service.EventoService; // ADICIONADO: Injeção do serviço de eventos
-import sistema.eventos.service.UsuarioService; // ADICIONADO: Injeção do serviço de usuários
+import sistema.eventos.service.EventoService;
+import sistema.eventos.service.UsuarioService;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Controller
 public class DashboardController {
@@ -21,13 +26,16 @@ public class DashboardController {
     private final EventoService eventoService;
     private final UsuarioService usuarioService;
     private final SolicitacaoRepository solicitacaoRepository;
+    private final InscricaoRepository inscricaoRepository;
 
     // Injeção de dependências via construtor (Melhor prática de arquitetura)
     public DashboardController(EventoService eventoService, UsuarioService usuarioService,
-                               SolicitacaoRepository solicitacaoRepository) {
+                               SolicitacaoRepository solicitacaoRepository,
+                               InscricaoRepository inscricaoRepository) {
         this.eventoService = eventoService;
         this.usuarioService = usuarioService;
         this.solicitacaoRepository = solicitacaoRepository;
+        this.inscricaoRepository = inscricaoRepository;
     }
 
     @GetMapping("/dashboard")
@@ -52,7 +60,14 @@ public class DashboardController {
 
             // 3. Consulta os eventos daquele ID e joga no Model para o Thymeleaf ler
             List<Evento> eventos = eventoService.listarPorOrganizador(organizador.getId());
+            List<Long> eventoIds = eventos.stream().map(Evento::getId).toList();
+            Map<Long, Long> pendentesPorEvento = eventoIds.isEmpty()
+                    ? Map.of()
+                    : inscricaoRepository.findByEventoIdInComRelacoes(eventoIds).stream()
+                            .filter(i -> i.getStatus() == StatusInscricao.PENDENTE)
+                            .collect(Collectors.groupingBy(i -> i.getEvento().getId(), Collectors.counting()));
             model.addAttribute("eventos", eventos);
+            model.addAttribute("pendentesPorEvento", pendentesPorEvento);
             // ------------------------------------------------
 
             // Aponta para templates/painel-organizador.html com os dados preenchidos

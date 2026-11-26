@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
 <head>
     <meta charset="UTF-8" />
-    <title>Certificado de Conclusão</title>
+    <title>Declaração de Presença</title>
     <style>
         /* Define o tamanho físico exato do A4 Paisagem sem margens de escape */
         @page {
@@ -211,14 +211,14 @@
 
 <div class="certificado-container">
 
-    <img th:src="${imagemFundoBase64}" class="background-fundo" alt="Fundo Certificado" />
+    <img th:src="${imagemFundoBase64}" class="background-fundo" alt="Fundo da declaração de presença" />
     <div class="preview-watermark" th:if="${isPreview}">PRÉ-VISUALIZAÇÃO — NÃO VÁLIDO</div>
 
     <div class="conteudo">
         <div class="nome-aluno" th:text="${usuario.nome}">Nome do Participante</div>
 
         <p class="texto-principal">
-            concluiu com êxito o curso de capacitação em <strong th:text="${evento.titulo}">Título do Evento</strong>, <br/>
+            participou do evento <strong th:text="${evento.titulo}">Título do Evento</strong>, <br/>
             realizado no período de
             <strong th:text="${#temporals.format(evento.dataInicio, 'dd/MM/yyyy')}">01/01/2026</strong> a
             <strong th:text="${#temporals.format(evento.dataTermino, 'dd/MM/yyyy')}">02/01/2026</strong>,
@@ -231,7 +231,7 @@
 
 <div class="certificado-container-verso">
 
-    <img th:src="${imagemVersoBase64}" class="background-fundo" alt="Fundo Verso Certificado" />
+    <img th:src="${imagemVersoBase64}" class="background-fundo" alt="Fundo do verso da declaração de presença" />
     <div class="preview-watermark" th:if="${isPreview}">PRÉ-VISUALIZAÇÃO — NÃO VÁLIDO</div>
 
     <div class="conteudo-verso-restrito">

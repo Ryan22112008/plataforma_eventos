@@ -84,8 +84,19 @@ public class SorteioResultado extends EntidadeAuditavel {
         if (rodadaSorteio == null) {
             return "Registro anterior — critério não detalhado";
         }
+        if (rodadaSorteio.getDataReferencia() != null && rodadaSorteio.getPeriodoReferencia() != null) {
+            return "Sorteado entre " + rodadaSorteio.getTotalElegiveis()
+                    + " presente(s) em " + rodadaSorteio.getCriterioDataPeriodoExibicao();
+        }
         return "Sorteado entre " + rodadaSorteio.getTotalElegiveis()
                 + " elegíveis com frequência ≥ " + rodadaSorteio.getPercentualMinimo() + "%";
+    }
+
+    public String getCriterioDataPeriodo() {
+        if (rodadaSorteio == null) {
+            return "—";
+        }
+        return rodadaSorteio.getCriterioDataPeriodoExibicao();
     }
 
     public String getStatusExibicao() {

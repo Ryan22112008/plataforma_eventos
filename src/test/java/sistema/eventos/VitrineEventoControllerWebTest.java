@@ -21,6 +21,7 @@ import sistema.eventos.dto.AvaliacaoResumoDto;
 import sistema.eventos.model.Evento;
 import sistema.eventos.model.StatusEvento;
 import sistema.eventos.model.Usuario;
+import sistema.eventos.repository.InscricaoRepository;
 import sistema.eventos.service.AvaliacaoEventoService;
 import sistema.eventos.service.EventoService;
 import sistema.eventos.service.UsuarioService;
@@ -56,6 +57,9 @@ class VitrineEventoControllerWebTest {
 
     @MockBean
     private UsuarioService usuarioService;
+
+    @MockBean
+    private InscricaoRepository inscricaoRepository;
 
     @AfterEach
     void limparContextoDeSeguranca() {

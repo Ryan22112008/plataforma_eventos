@@ -60,6 +60,9 @@ public class RequestEventoDto {
     @Min(value = 1, message = "A carga horária deve ser de no mínimo 1 hora.")
     private Integer cargaHoraria;
 
+    @Builder.Default
+    private Boolean privado = false;
+
     // --- NOVOS CAMPOS SÊNIOR ADICIONADOS PARA COMPATIBILIDADE COM O CANVA E FORMULÁRIO ---
 
     private MultipartFile imagemFrente;

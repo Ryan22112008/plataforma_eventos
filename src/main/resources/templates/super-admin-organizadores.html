@@ -125,7 +125,7 @@
                                 <i class="fa-regular fa-eye" aria-hidden="true"></i> Detalhes
                             </a>
                             <form th:if="${idUsuarioLogado == null or organizador.id != idUsuarioLogado}" th:action="@{/super-admin/usuarios/{id}/remover-organizador(id=${organizador.id})}" method="post"
-                                  onsubmit="return confirm('Revogar acesso de organizador? O usuário voltará para participante. Os eventos, inscrições, presenças e certificados não serão excluídos.');">
+                                  onsubmit="return confirm('Revogar acesso de organizador? O usuário voltará para participante. Os eventos, inscrições, presenças e declarações de presença não serão excluídos.');">
                                 <button type="submit" class="seplag-btn seplag-btn-danger seplag-btn--sm">
                                     <i class="fa-solid fa-user-shield" aria-hidden="true"></i> Revogar
                                 </button>

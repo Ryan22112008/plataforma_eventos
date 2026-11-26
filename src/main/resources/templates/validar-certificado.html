@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <th:block th:replace="~{fragments/seplag-ui :: head-content('Validar certificado')}"></th:block>
+    <th:block th:replace="~{fragments/seplag-ui :: head-content('Validar declaração de presença')}"></th:block>
     <meta name="robots" content="noindex,nofollow">
 </head>
 <body class="v2 seplag-public">
@@ -14,7 +14,7 @@
 
     <section class="seplag-card seplag-verify"
              th:classappend="${valido} ? ' seplag-verify--valid' : (${codigoInformado} ? ' seplag-verify--invalid' : '')"
-             aria-label="Validação de certificado">
+             aria-label="Validação de declaração de presença">
 
         <div class="seplag-verify__icon" aria-hidden="true">
             <i th:class="${valido} ? 'fa-solid fa-circle-check' : (${codigoInformado} ? 'fa-solid fa-circle-xmark' : 'fa-solid fa-magnifying-glass')"></i>
@@ -22,11 +22,11 @@
 
         <p class="seplag-eyebrow">Verificação de autenticidade</p>
 
-        <h1 th:if="${valido}">Certificado válido</h1>
+        <h1 th:if="${valido}">Declaração de presença válida</h1>
         <h1 th:if="${!valido and codigoInformado}">Não foi possível validar</h1>
-        <h1 th:if="${!codigoInformado}">Validar certificado</h1>
+        <h1 th:if="${!codigoInformado}">Validar declaração de presença</h1>
 
-        <p th:if="${!codigoInformado}" class="seplag-verify__hint">Informe o código impresso no certificado para verificar sua autenticidade.</p>
+        <p th:if="${!codigoInformado}" class="seplag-verify__hint">Informe o código impresso na declaração de presença para verificar sua autenticidade.</p>
 
         <form th:if="${!codigoInformado}" th:action="@{/certificados/validar}" method="get"
               class="seplag-verify__form">
@@ -64,7 +64,7 @@
         </dl>
 
         <p th:if="${!valido and codigoInformado}" class="seplag-verify__hint">
-            O código informado é inválido ou não corresponde a um certificado com presença confirmada.
+            O código informado é inválido ou não corresponde a uma declaração de presença com presença confirmada.
             Confira o QR Code ou o código impresso no documento.
         </p>
 

@@ -88,6 +88,26 @@
                                   class="seplag-input seplag-textarea" placeholder="Detalhes sobre cronograma, público-alvo e conteúdo do evento."></textarea>
                         <p th:if="${#fields.hasErrors('descricao')}" th:errors="*{descricao}" id="descricao-erro" class="seplag-field__error"></p>
                     </div>
+
+                    <div class="seplag-field">
+                        <span class="seplag-label">Visibilidade e controle de acesso</span>
+                        <div class="seplag-visibility-toggle" role="radiogroup" aria-label="Visibilidade do evento">
+                            <label class="seplag-visibility-option">
+                                <input type="radio" th:field="*{privado}" value="false">
+                                <span>
+                                    <strong><i class="fa-solid fa-globe" aria-hidden="true"></i> Evento Público</strong>
+                                    <small>Aparece na vitrine oficial e qualquer pessoa pode se inscrever diretamente.</small>
+                                </span>
+                            </label>
+                            <label class="seplag-visibility-option">
+                                <input type="radio" th:field="*{privado}" value="true">
+                                <span>
+                                    <strong><i class="fa-solid fa-lock" aria-hidden="true"></i> Evento Privado</strong>
+                                    <small>Oculto na vitrine pública. Acessível por link direto e você decide quem participa.</small>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -197,12 +217,12 @@
                 </div>
             </section>
 
-            <!-- Imagens do evento e do certificado -->
+            <!-- Imagens do evento e da declaração de presença -->
             <section class="seplag-card seplag-form-card" aria-labelledby="secao-imagens">
                 <div class="seplag-card__header">
                     <div>
                         <h2 class="seplag-card__title" id="secao-imagens">Imagens do evento</h2>
-                        <p class="seplag-card__hint">Banner da vitrine e artes usadas na emissão dos certificados.</p>
+                        <p class="seplag-card__hint">Banner da vitrine e artes usadas na emissão das declarações de presença.</p>
                     </div>
                 </div>
 
@@ -231,10 +251,10 @@
 
                     <div class="seplag-form-grid seplag-form-grid--2">
                         <div class="seplag-upload-block">
-                            <label class="seplag-label" for="certificadoFrenteInput">Layout do Certificado (Frente)</label>
+                            <label class="seplag-label" for="certificadoFrenteInput">Layout da Declaração de Presença (Frente)</label>
 
                             <div th:if="${eventoDto.imagemFrenteAtual != null and !eventoDto.imagemFrenteAtual.startsWith('default-')}" class="seplag-current">
-                                <img th:src="${#strings.startsWith(eventoDto.imagemFrenteAtual, 'https://res.cloudinary.com/') ? eventoDto.imagemFrenteAtual : '/imagens-eventos/' + eventoDto.imagemFrenteAtual}" alt="Frente do certificado atualmente salva"
+                                <img th:src="${#strings.startsWith(eventoDto.imagemFrenteAtual, 'https://res.cloudinary.com/') ? eventoDto.imagemFrenteAtual : '/imagens-eventos/' + eventoDto.imagemFrenteAtual}" alt="Frente da declaração de presença atualmente salva"
                                      onerror="this.hidden=true; this.nextElementSibling.classList.remove('hidden')">
                                 <p class="hidden seplag-current__missing">A arte atual não está disponível no armazenamento. Envie-a novamente.</p>
                                 <p>Arte atual. Selecione outra somente para substituí-la.</p>
@@ -253,10 +273,10 @@
                         </div>
 
                         <div class="seplag-upload-block">
-                            <label class="seplag-label" for="certificadoVersoInput">Layout do Certificado (Verso)</label>
+                            <label class="seplag-label" for="certificadoVersoInput">Layout da Declaração de Presença (Verso)</label>
 
                             <div th:if="${eventoDto.imagemVersoAtual != null and !eventoDto.imagemVersoAtual.startsWith('default-')}" class="seplag-current">
-                                <img th:src="${#strings.startsWith(eventoDto.imagemVersoAtual, 'https://res.cloudinary.com/') ? eventoDto.imagemVersoAtual : '/imagens-eventos/' + eventoDto.imagemVersoAtual}" alt="Verso do certificado atualmente salvo"
+                                <img th:src="${#strings.startsWith(eventoDto.imagemVersoAtual, 'https://res.cloudinary.com/') ? eventoDto.imagemVersoAtual : '/imagens-eventos/' + eventoDto.imagemVersoAtual}" alt="Verso da declaração de presença atualmente salva"
                                      onerror="this.hidden=true; this.nextElementSibling.classList.remove('hidden')">
                                 <p class="hidden seplag-current__missing">A arte atual não está disponível no armazenamento. Envie-a novamente.</p>
                                 <p>Arte atual. Selecione outra somente para substituí-la.</p>
@@ -277,12 +297,12 @@
                 </div>
             </section>
 
-            <!-- Disciplinas / temas do curso -->
+            <!-- Disciplinas / temas do evento -->
             <section class="seplag-card seplag-form-card" aria-labelledby="secao-disciplinas">
                 <div class="seplag-card__header">
                     <div>
-                        <h2 class="seplag-card__title" id="secao-disciplinas">Disciplinas / Temas do Curso</h2>
-                        <p class="seplag-card__hint">Histórico impresso no verso do certificado.</p>
+                        <h2 class="seplag-card__title" id="secao-disciplinas">Disciplinas / Temas do Evento</h2>
+                        <p class="seplag-card__hint">Histórico impresso no verso da declaração de presença.</p>
                     </div>
                     <button type="button" onclick="adicionarLinhaDisciplina()" class="seplag-btn seplag-btn-secondary seplag-btn--sm">
                         <i class="fa-solid fa-plus" aria-hidden="true"></i>

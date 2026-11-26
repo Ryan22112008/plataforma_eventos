@@ -74,6 +74,7 @@ public class EventoService {
         evento.setLatitude(dto.getLatitude());
         evento.setLongitude(dto.getLongitude());
         evento.setCargaHoraria(dto.getCargaHoraria());
+        evento.setPrivado(Boolean.TRUE.equals(dto.getPrivado()));
 
         if (dto.getVagasTotais() != null) {
             evento.setVagasTotais(dto.getVagasTotais());
@@ -135,6 +136,7 @@ public class EventoService {
         eventoOriginal.setLocal(dto.getLocal());
         eventoOriginal.setLatitude(dto.getLatitude());
         eventoOriginal.setLongitude(dto.getLongitude());
+        eventoOriginal.setPrivado(Boolean.TRUE.equals(dto.getPrivado()));
 
         if (banner != null && !banner.isEmpty()) {
             String novoBanner = fileStorageService.storeImage(banner, "banner");
@@ -333,6 +335,7 @@ public class EventoService {
         dto.setDataTermino(evento.getDataTermino());
         dto.setModalidade(evento.getModalidade());
         dto.setCargaHoraria(evento.getCargaHoraria());
+        dto.setPrivado(evento.isPrivado());
         dto.setVagasTotais(evento.getVagasTotais());
         dto.setLocal(evento.getLocal());
         dto.setLatitude(evento.getLatitude());

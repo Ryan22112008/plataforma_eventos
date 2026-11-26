@@ -17,8 +17,10 @@ import sistema.eventos.dto.AvaliacaoEventoRequestDto;
 import sistema.eventos.dto.AvaliacaoEventoResponseDto;
 import sistema.eventos.exception.NegocioException;
 import sistema.eventos.model.Evento;
+import sistema.eventos.model.Inscricao;
 import sistema.eventos.model.StatusEvento;
 import sistema.eventos.model.Usuario;
+import sistema.eventos.repository.InscricaoRepository;
 import sistema.eventos.service.AvaliacaoEventoService;
 import sistema.eventos.service.EventoService;
 import sistema.eventos.service.UsuarioService;
@@ -32,6 +34,7 @@ public class VitrineEventoController {
     private final EventoService eventoService;
     private final AvaliacaoEventoService avaliacaoEventoService;
     private final UsuarioService usuarioService;
+    private final InscricaoRepository inscricaoRepository;
 
     @GetMapping("/eventos/{id}")
     public String exibirDetalhesDoEvento(@PathVariable("id") Long id,
@@ -58,9 +61,13 @@ public class VitrineEventoController {
                 : avaliacaoEventoService.buscarDoUsuarioNoEvento(id, usuario.getId()).orElse(null);
         boolean ehOrganizador = usuario != null && evento.getOrganizador() != null
                 && usuario.getId().equals(evento.getOrganizador().getId());
+        Inscricao inscricaoUsuario = usuario == null
+                ? null
+                : inscricaoRepository.findByParticipanteIdAndEventoIdComEvento(usuario.getId(), id).orElse(null);
 
         model.addAttribute("usuarioAutenticado", usuario != null);
         model.addAttribute("ehOrganizador", ehOrganizador);
+        model.addAttribute("inscricaoUsuario", inscricaoUsuario);
         model.addAttribute("avaliacaoDoUsuario", avaliacaoDoUsuario);
         model.addAttribute("usuarioPodeAvaliar", usuario != null && avaliacaoDoUsuario == null
                 && avaliacaoEventoService.podeAvaliar(evento, usuario.getId()));

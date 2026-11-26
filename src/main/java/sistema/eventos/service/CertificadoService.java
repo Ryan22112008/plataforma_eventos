@@ -43,7 +43,7 @@ public class CertificadoService {
     @Transactional
     public byte[] gerarCertificadoPdf(Inscricao inscricao) {
         if (inscricao.getStatus() != StatusInscricao.UTILIZADO) {
-            throw new NegocioException("O certificado só pode ser emitido após a confirmação de presença.");
+            throw new NegocioException("A declaração de presença só pode ser emitida após a confirmação de presença.");
         }
 
         // CORREÇÃO 1: Buscando os campos corretos da Frente e do Verso na Entidade
@@ -51,10 +51,10 @@ public class CertificadoService {
         String nomeArteVerso = inscricao.getEvento().getCertificadoTemplateVerso();
 
         if (nomeArteFrente == null || nomeArteFrente.trim().isEmpty()) {
-            throw new NegocioException("O organizador ainda não realizou o upload da arte da frente do certificado.");
+            throw new NegocioException("O organizador ainda não realizou o upload da arte da frente da declaração de presença.");
         }
         if (nomeArteVerso == null || nomeArteVerso.trim().isEmpty()) {
-            throw new NegocioException("O organizador ainda não realizou o upload da arte do verso do certificado.");
+            throw new NegocioException("O organizador ainda não realizou o upload da arte do verso da declaração de presença.");
         }
 
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -103,8 +103,8 @@ public class CertificadoService {
         } catch (NegocioException ne) {
             throw ne;
         } catch (Exception e) {
-            log.error("Falha interna ao renderizar o certificado da inscrição {}.", inscricao.getId(), e);
-            throw new NegocioException("Não foi possível gerar o certificado no momento.");
+            log.error("Falha interna ao renderizar a declaração de presença da inscrição {}.", inscricao.getId(), e);
+            throw new NegocioException("Não foi possível gerar a declaração de presença no momento.");
         }
     }
 
@@ -112,7 +112,7 @@ public class CertificadoService {
         UriComponentsBuilder urlBase = urlPublicaConfigurada == null || urlPublicaConfigurada.isBlank()
                 ? ServletUriComponentsBuilder.fromCurrentContextPath()
                 : UriComponentsBuilder.fromUriString(urlPublicaConfigurada.trim().replaceAll("/+$", ""));
-        return urlBase.path("/certificados/validar")
+        return urlBase.path("/declaracoes/validar")
                 .queryParam("codigo", codigo).build().encode().toUriString();
     }
 
@@ -134,14 +134,14 @@ public class CertificadoService {
         int slashIndex = path.lastIndexOf('/');
         int dotIndex = path.lastIndexOf('.');
         if (dotIndex <= slashIndex || dotIndex == path.length() - 1) {
-            throw new NegocioException("Arquivo de certificado inválido.");
+            throw new NegocioException("Arquivo de declaração de presença inválido.");
         }
         return path.substring(dotIndex + 1).toLowerCase();
     }
 
     private void validarExtensaoImagem(String extension) {
         if (!extension.equals("png") && !extension.equals("jpg") && !extension.equals("jpeg")) {
-            throw new NegocioException("O template do certificado precisa ser uma imagem PNG ou JPEG.");
+            throw new NegocioException("O template da declaração de presença precisa ser uma imagem PNG ou JPEG.");
         }
     }
 }

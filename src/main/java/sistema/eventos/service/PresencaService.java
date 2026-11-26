@@ -42,10 +42,12 @@ public class PresencaService {
             throw new IllegalStateException("Esta sessão não está aberta para check-in.");
         }
 
-        // 3. Validação de Inscrição (O aluno tem direito a estar aqui?)
-        if (!inscricaoRepository.existsByParticipanteIdAndEventoIdAndStatusNot(
-                alunoId, sessao.getEvento().getId(), StatusInscricao.CANCELADO)) {
-            throw new SecurityException("Aluno não possui inscrição válida neste evento.");
+        // 3. Validação de Inscrição (O participante tem inscrição aprovada?)
+        Inscricao inscricao = inscricaoRepository
+                .findByParticipanteIdAndEventoIdComEvento(alunoId, sessao.getEvento().getId())
+                .orElseThrow(() -> new SecurityException("Participante não possui inscrição neste evento."));
+        if (inscricao.getStatus() != StatusInscricao.ATIVO && inscricao.getStatus() != StatusInscricao.UTILIZADO) {
+            throw new SecurityException("Participante não possui inscrição aprovada neste evento.");
         }
 
         // 4. Idempotência (Já marcou?)

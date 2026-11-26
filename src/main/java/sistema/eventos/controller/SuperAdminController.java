@@ -166,7 +166,7 @@ public class SuperAdminController {
         charts.add(chart("Eventos cadastrados por trimestre", eventos, e -> e.getDataCriacao() == null ? "Sem data de cadastro" : rotuloTrimestre(e.getDataCriacao().toLocalDate()), List.of(), e -> e.getDataCriacao() == null ? "Sem data de cadastro" : rotuloTrimestre(e.getDataCriacao().toLocalDate())));
         long certificadosGerados = inscricaoRepository.countByCertificadoGeradoEmIsNotNull();
         charts.add(metricaChart("Total de participantes", usuarioService.contarPorPerfil(Perfil.ROLE_PARTICIPANTE)));
-        charts.add(metricaChart("Certificados gerados", certificadosGerados));
+        charts.add(metricaChart("Declarações de presença geradas", certificadosGerados));
         model.addAttribute("charts", charts);
         model.addAttribute("inscricoes", todasInscricoes);
         return "super-admin-relatorios";
@@ -180,13 +180,13 @@ public class SuperAdminController {
         List<Inscricao> inscricoes = inscricaoRepository.findAll();
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet resumo = workbook.createSheet("Resumo");
-            String[][] linhas = {{"Indicador", "Quantidade"}, {"Usuários", String.valueOf(usuarios.size())}, {"Participantes", String.valueOf(usuarioService.contarPorPerfil(Perfil.ROLE_PARTICIPANTE))}, {"Organizadores", String.valueOf(usuarioService.contarPorPerfil(Perfil.ROLE_ORGANIZADOR))}, {"Eventos", String.valueOf(eventos.size())}, {"Inscrições", String.valueOf(inscricoes.size())}, {"Certificados gerados", String.valueOf(inscricaoRepository.countByCertificadoGeradoEmIsNotNull())}};
+            String[][] linhas = {{"Indicador", "Quantidade"}, {"Usuários", String.valueOf(usuarios.size())}, {"Participantes", String.valueOf(usuarioService.contarPorPerfil(Perfil.ROLE_PARTICIPANTE))}, {"Organizadores", String.valueOf(usuarioService.contarPorPerfil(Perfil.ROLE_ORGANIZADOR))}, {"Eventos", String.valueOf(eventos.size())}, {"Inscrições", String.valueOf(inscricoes.size())}, {"Declarações de presença geradas", String.valueOf(inscricaoRepository.countByCertificadoGeradoEmIsNotNull())}};
             for (int r=0;r<linhas.length;r++){Row row=resumo.createRow(r);row.createCell(0).setCellValue(linhas[r][0]);row.createCell(1).setCellValue(linhas[r][1]);}
             Sheet userSheet=workbook.createSheet("Usuários");Row userHead=userSheet.createRow(0);String[] userCols={"Nome","E-mail","Perfil","Ativo","Data de cadastro"};for(int c=0;c<userCols.length;c++)userHead.createCell(c).setCellValue(userCols[c]);int ur=1;for(Usuario u:usuarios){Row row=userSheet.createRow(ur++);row.createCell(0).setCellValue(u.getNome());row.createCell(1).setCellValue(u.getEmail());row.createCell(2).setCellValue(rotulo(u.getPerfil().name()));row.createCell(3).setCellValue(u.isAtivo()?"Sim":"Não");row.createCell(4).setCellValue(u.getDataCriacao()==null?"":u.getDataCriacao().toString());}
-            Sheet sheet=workbook.createSheet("Eventos"); Row head=sheet.createRow(0); String[] cols={"Evento","Organizador","Status","Modalidade","Tema","Inscrições","Certificados gerados"};for(int i=0;i<cols.length;i++)head.createCell(i).setCellValue(cols[i]);
+            Sheet sheet=workbook.createSheet("Eventos"); Row head=sheet.createRow(0); String[] cols={"Evento","Organizador","Status","Modalidade","Tema","Inscrições","Declarações de presença geradas"};for(int i=0;i<cols.length;i++)head.createCell(i).setCellValue(cols[i]);
             int r=1;for(Evento e:eventos){Row row=sheet.createRow(r++);row.createCell(0).setCellValue(e.getTitulo());row.createCell(1).setCellValue(e.getOrganizador().getNome());row.createCell(2).setCellValue(rotulo(e.getStatus().name()));row.createCell(3).setCellValue(e.getModalidade()==null?"Não informado":rotulo(e.getModalidade().name()));row.createCell(4).setCellValue(e.getNicho()==null?"Não informado":rotulo(e.getNicho().name()));row.createCell(5).setCellValue(inscricoes.stream().filter(i->i.getEvento().getId().equals(e.getId())).count());row.createCell(6).setCellValue(inscricaoRepository.countByEventoIdAndCertificadoGeradoEmIsNotNull(e.getId()));}
             for(Sheet sh:workbook)for(int i=0;i<sh.getRow(0).getLastCellNum();i++)sh.autoSizeColumn(i);
-            Sheet insSheet=workbook.createSheet("Inscrições");Row ih=insSheet.createRow(0);String[] ic={"Participante","E-mail","Evento","Status","Inscrito em","Check-in em","Certificado gerado em"};for(int c=0;c<ic.length;c++)ih.createCell(c).setCellValue(ic[c]);int ir=1;for(Inscricao i:inscricoes){Row row=insSheet.createRow(ir++);row.createCell(0).setCellValue(i.getParticipante().getNome());row.createCell(1).setCellValue(i.getParticipante().getEmail());row.createCell(2).setCellValue(i.getEvento().getTitulo());row.createCell(3).setCellValue(rotulo(i.getStatus().name()));row.createCell(4).setCellValue(i.getDataCriacao()==null?"":i.getDataCriacao().toString());row.createCell(5).setCellValue(i.getDataCheckIn()==null?"":i.getDataCheckIn().toString());row.createCell(6).setCellValue(i.getCertificadoGeradoEm()==null?"":i.getCertificadoGeradoEm().toString());}for(int c=0;c<ih.getLastCellNum();c++)insSheet.autoSizeColumn(c);
+            Sheet insSheet=workbook.createSheet("Inscrições");Row ih=insSheet.createRow(0);String[] ic={"Participante","E-mail","Evento","Status","Inscrito em","Check-in em","Declaração de presença gerada em"};for(int c=0;c<ic.length;c++)ih.createCell(c).setCellValue(ic[c]);int ir=1;for(Inscricao i:inscricoes){Row row=insSheet.createRow(ir++);row.createCell(0).setCellValue(i.getParticipante().getNome());row.createCell(1).setCellValue(i.getParticipante().getEmail());row.createCell(2).setCellValue(i.getEvento().getTitulo());row.createCell(3).setCellValue(rotulo(i.getStatus().name()));row.createCell(4).setCellValue(i.getDataCriacao()==null?"":i.getDataCriacao().toString());row.createCell(5).setCellValue(i.getDataCheckIn()==null?"":i.getDataCheckIn().toString());row.createCell(6).setCellValue(i.getCertificadoGeradoEm()==null?"":i.getCertificadoGeradoEm().toString());}for(int c=0;c<ih.getLastCellNum();c++)insSheet.autoSizeColumn(c);
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");response.setHeader(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=relatorios-super-admin.xlsx");workbook.write(response.getOutputStream());
         }
     }
@@ -203,7 +203,8 @@ public class SuperAdminController {
             case "PRESENCIAL" -> "Presencial"; case "ONLINE" -> "Online"; case "HIBRIDO" -> "Híbrido";
             case "TECNOLOGIA_E_INOVACAO" -> "Tecnologia e inovação"; case "GESTAO_PUBLICA" -> "Gestão pública";
             case "SAUDE" -> "Saúde"; case "TECNOLOGIA" -> "Tecnologia"; case "OUTROS" -> "Outros";
-            case "ATIVO" -> "Ativa"; case "UTILIZADO" -> "Check-in realizado";
+            case "ATIVO" -> "Ativa"; case "PENDENTE" -> "Pendente de aprovação";
+            case "RECUSADO" -> "Recusada"; case "UTILIZADO" -> "Check-in realizado";
             default -> codigo.substring(0, 1) + codigo.substring(1).toLowerCase(Locale.ROOT);
         };
     }
@@ -309,7 +310,8 @@ public class SuperAdminController {
     }
 
     @Transactional
-    @GetMapping("/usuarios/{usuarioId}/inscricoes/{inscricaoId}/certificado")
+    @GetMapping({"/usuarios/{usuarioId}/inscricoes/{inscricaoId}/declaracao",
+            "/usuarios/{usuarioId}/inscricoes/{inscricaoId}/certificado"})
     public void baixarCertificadoParticipante(
             @PathVariable Long usuarioId,
             @PathVariable Long inscricaoId,
@@ -319,12 +321,12 @@ public class SuperAdminController {
 
         if (!inscricao.getParticipante().getId().equals(usuarioId)) {
             throw new org.springframework.security.access.AccessDeniedException(
-                    "Este certificado não pertence ao usuário informado.");
+                    "Esta declaração de presença não pertence ao usuário informado.");
         }
 
         byte[] pdfBytes = certificadoService.gerarCertificadoPdf(inscricao);
 
-        String nomeArquivo = "certificado-evento-" + inscricaoId + ".pdf";
+        String nomeArquivo = "declaracao-presenca-evento-" + inscricaoId + ".pdf";
 
         response.setContentType(MediaType.APPLICATION_PDF_VALUE);
         response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nomeArquivo + "\"");
@@ -336,7 +338,7 @@ public class SuperAdminController {
             os.write(pdfBytes);
             os.flush();
         } catch (IOException e) {
-            throw new NegocioException("Não foi possível escrever o certificado na resposta.");
+            throw new NegocioException("Não foi possível escrever a declaração de presença na resposta.");
         }
     }
 

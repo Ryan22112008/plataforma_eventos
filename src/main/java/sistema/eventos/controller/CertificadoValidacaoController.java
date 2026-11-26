@@ -18,7 +18,7 @@ public class CertificadoValidacaoController {
     private static final String PREFIXO_CODIGO = "EV3-";
     private final InscricaoRepository inscricaoRepository;
 
-    @GetMapping("/certificados/validar")
+    @GetMapping({"/declaracoes/validar", "/certificados/validar"})
     @Transactional(readOnly = true)
     public String validar(@RequestParam(name = "codigo", defaultValue = "") String codigo,
                           Model model, HttpServletResponse response) {
