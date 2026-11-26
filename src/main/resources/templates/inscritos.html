@@ -180,7 +180,7 @@
                                    form="formValidarLote"
                                    name="inscricoesSelecionadas"
                                    th:value="${i.inscricaoId}"
-                                   th:disabled="${i.certificadoLiberado or i.inscricaoCancelada or i.inscricaoPendente or i.inscricaoRecusada}"
+                                   th:disabled="${i.certificadoLiberado or i.inscricaoCancelada or i.solicitacaoPendente or i.inscricaoRecusada}"
                                    th:aria-label="|Selecionar ${i.nomeParticipante}|">
                         </td>
 
@@ -228,17 +228,17 @@
 
                         <td data-label="Ações" class="seplag-table__actions">
                             <div class="seplag-row-actions inscritos-actions">
-                                <form th:if="${i.inscricaoPendente}" th:action="@{/organizador/eventos/{eventoId}/inscricoes/{inscricaoId}/aprovar(eventoId=${evento.id},inscricaoId=${i.inscricaoId})}" method="post" class="seplag-inline-form">
+                                <form th:if="${i.solicitacaoPendente}" th:action="@{/organizador/eventos/{eventoId}/inscricoes/{inscricaoId}/aprovar(eventoId=${evento.id},inscricaoId=${i.inscricaoId})}" method="post" class="seplag-inline-form">
                                     <button type="submit" class="seplag-action seplag-action--success"><i class="fa-solid fa-check" aria-hidden="true"></i> Aprovar participação</button>
                                 </form>
-                                <form th:if="${i.inscricaoPendente}" th:action="@{/organizador/eventos/{eventoId}/inscricoes/{inscricaoId}/recusar(eventoId=${evento.id},inscricaoId=${i.inscricaoId})}" method="post" class="seplag-inline-form" onsubmit="return confirm('Recusar a solicitação de participação?');">
+                                <form th:if="${i.solicitacaoPendente}" th:action="@{/organizador/eventos/{eventoId}/inscricoes/{inscricaoId}/recusar(eventoId=${evento.id},inscricaoId=${i.inscricaoId})}" method="post" class="seplag-inline-form" onsubmit="return confirm('Recusar a solicitação de participação?');">
                                     <button type="submit" class="seplag-action seplag-action--danger"><i class="fa-solid fa-xmark" aria-hidden="true"></i> Recusar</button>
                                 </form>
-                                <span th:if="${i.inscricaoPendente}" class="seplag-badge seplag-badge--warning">Aguardando decisão</span>
+                                <span th:if="${i.solicitacaoPendente}" class="seplag-badge seplag-badge--warning">Aguardando decisão</span>
                                 <span th:if="${i.inscricaoRecusada}" class="seplag-badge seplag-badge--neutral">Solicitação recusada</span>
                                 <a th:href="@{/organizador/declaracao-preview/{id}(id=${evento.id})}"
                                    target="_blank"
-                                   class="seplag-action" th:unless="${i.inscricaoPendente or i.inscricaoRecusada}">
+                                   class="seplag-action" th:unless="${i.solicitacaoPendente or i.inscricaoRecusada}">
                                     <i class="fa-solid fa-eye" aria-hidden="true"></i> Pré-visualizar
                                 </a>
 
