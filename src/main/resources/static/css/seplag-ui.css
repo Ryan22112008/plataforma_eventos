@@ -268,14 +268,14 @@ footer { color: #b7c8d8; background-color: #091a2c !important; border-color: var
 .certificados-empty-icon { width: 56px; height: 56px; margin-bottom: 18px; font-size: 1.35rem; }
 .certificados-empty h2 { margin: 0; color: var(--ink); font-size: 1.2rem; font-weight: 700; }
 .certificados-empty p { margin: 8px 0 0; color: var(--muted); font-size: .925rem; }
-.validacao-certificado {
+.validacao-declaracao-presenca {
   display: flex; flex-direction: column; align-items: center; margin: clamp(28px, 7vh, 64px) auto 0; padding: clamp(26px, 5vw, 44px);
   color: var(--ink); background: linear-gradient(145deg, #142f4a, #10253d); border: 1px solid var(--line);
   border-radius: 18px; box-shadow: var(--shadow-card); text-align: center;
 }
 .validacao-icone { display: grid; place-items: center; width: 64px; height: 64px; margin-bottom: 20px; border-radius: 50%; font-size: 1.65rem; }
-.validacao-certificado--valido .validacao-icone { color: #8be0b5; background: rgba(16,112,79,.2); }
-.validacao-certificado--invalido .validacao-icone { color: #ff9da6; background: rgba(145,43,56,.22); }
+.validacao-declaracao-presenca--valido .validacao-icone { color: #8be0b5; background: rgba(16,112,79,.2); }
+.validacao-declaracao-presenca--invalido .validacao-icone { color: #ff9da6; background: rgba(145,43,56,.22); }
 .validacao-dados { overflow: hidden; border: 1px solid var(--line); border-radius: 12px; }
 .validacao-dados > div { display: grid; grid-template-columns: minmax(130px,.7fr) minmax(0,1.3fr); gap: 16px; padding: 13px 16px; border-bottom: 1px solid var(--line); }
 .validacao-dados > div:last-child { border-bottom: 0; }

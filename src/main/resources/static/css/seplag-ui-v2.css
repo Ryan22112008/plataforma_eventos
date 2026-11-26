@@ -2179,7 +2179,7 @@ html.v2-root {
 }
 
 /* ==========================================================================
-   Páginas públicas — vitrine, detalhes do evento e validação de certificado
+   Páginas públicas — vitrine, detalhes do evento e validação de declaração de presença
    Reaproveita tokens, botões, badges, cards e formulários da fundação v2.
    ========================================================================== */
 
@@ -3104,7 +3104,7 @@ html.v2-root {
 }
 
 /* --------------------------------------------------------------------------
-   Validação de certificado
+   Validação de declaração de presença
    -------------------------------------------------------------------------- */
 
 .v2 .seplag-verify {
@@ -5462,7 +5462,7 @@ html.v2-root {
 }
 
 /* ==========================================================================
-   Área do participante — Meus certificados
+   Área do participante — Minhas declarações de presença
    ========================================================================== */
 
 .v2 .seplag-cert-page .seplag-page-head {

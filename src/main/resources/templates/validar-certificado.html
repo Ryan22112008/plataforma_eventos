@@ -28,7 +28,7 @@
 
         <p th:if="${!codigoInformado}" class="seplag-verify__hint">Informe o código impresso na declaração de presença para verificar sua autenticidade.</p>
 
-        <form th:if="${!codigoInformado}" th:action="@{/certificados/validar}" method="get"
+        <form th:if="${!codigoInformado}" th:action="@{/declaracoes/validar}" method="get"
               class="seplag-verify__form">
             <div class="seplag-verify__field">
                 <label for="codigo" class="seplag-sr-only">Código de verificação</label>
@@ -69,7 +69,7 @@
         </p>
 
         <div class="seplag-verify__actions">
-            <a th:href="@{/certificados/validar}" class="seplag-btn seplag-btn-secondary">
+            <a th:href="@{/declaracoes/validar}" class="seplag-btn seplag-btn-secondary">
                 <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
                 Fazer outra validação
             </a>

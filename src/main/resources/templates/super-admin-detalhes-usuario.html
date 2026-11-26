@@ -236,7 +236,7 @@
                             <span th:if="${item.certificadoDisponivel}" class="seplag-badge seplag-badge--success">Disponível</span>
                             <span th:unless="${item.certificadoDisponivel}" class="seplag-badge seplag-badge--neutral">Não disponível</span>
                             <a th:if="${item.certificadoDisponivel}"
-                               th:href="@{/super-admin/usuarios/{usuarioId}/inscricoes/{inscricaoId}/certificado(usuarioId=${usuario.id}, inscricaoId=${item.inscricaoId})}"
+                               th:href="@{/super-admin/usuarios/{usuarioId}/inscricoes/{inscricaoId}/declaracao(usuarioId=${usuario.id}, inscricaoId=${item.inscricaoId})}"
                                class="seplag-btn seplag-btn-secondary seplag-btn--sm">
                                 <i class="fa-solid fa-download" aria-hidden="true"></i> Baixar declaração de presença
                             </a>

@@ -225,7 +225,7 @@
                                 </form>
                                 <span th:if="${i.inscricaoPendente}" class="seplag-badge seplag-badge--warning">Aguardando decisão</span>
                                 <span th:if="${i.inscricaoRecusada}" class="seplag-badge seplag-badge--neutral">Solicitação recusada</span>
-                                <a th:href="@{/organizador/certificado-preview/{id}(id=${evento.id})}"
+                                <a th:href="@{/organizador/declaracao-preview/{id}(id=${evento.id})}"
                                    target="_blank"
                                    class="seplag-action" th:unless="${i.inscricaoPendente or i.inscricaoRecusada}">
                                     <i class="fa-solid fa-eye" aria-hidden="true"></i> Pré-visualizar
@@ -255,7 +255,7 @@
                                 </span>
 
                                 <a th:if="${i.certificadoLiberado}"
-                                   th:href="@{/organizador/inscricoes/{inscricaoId}/certificado(inscricaoId=${i.inscricaoId})}"
+                                   th:href="@{/organizador/inscricoes/{inscricaoId}/declaracao(inscricaoId=${i.inscricaoId})}"
                                    target="_blank"
                                    class="seplag-action seplag-action--success">
                                     <i class="fa-solid fa-download" aria-hidden="true"></i> Baixar declaração de presença
