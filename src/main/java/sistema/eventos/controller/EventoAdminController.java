@@ -67,7 +67,7 @@ public class EventoAdminController {
 
             removeOldImage(frenteAntiga, novaFrente);
             removeOldImage(versoAntigo, novoVerso);
-            return ResponseEntity.ok("Configuração do certificado salva.");
+            return ResponseEntity.ok("Configuração da declaração de presença salva.");
         } catch (NegocioException e) {
             removeOldImage(novaFrente, null);
             removeOldImage(novoVerso, null);
@@ -75,9 +75,9 @@ public class EventoAdminController {
         } catch (Exception e) {
             removeOldImage(novaFrente, null);
             removeOldImage(novoVerso, null);
-            log.error("Falha ao atualizar configuração de certificado para evento {}", eventoId, e);
+            log.error("Falha ao atualizar configuração da declaração de presença para evento {}", eventoId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Não foi possível salvar a configuração do certificado.");
+                    .body("Não foi possível salvar a configuração da declaração de presença.");
         }
     }
 
@@ -86,7 +86,7 @@ public class EventoAdminController {
         try {
             fileStorageService.deleteStoredImage(oldName);
         } catch (Exception e) {
-            log.warn("Não foi possível remover um arquivo antigo de certificado.", e);
+            log.warn("Não foi possível remover um arquivo antigo da declaração de presença.", e);
         }
     }
 }

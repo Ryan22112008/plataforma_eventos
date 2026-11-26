@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.security.SecureRandom;
 import java.util.stream.Collectors;
 
@@ -50,60 +51,144 @@ public class InscricaoService {
         this.sorteioResultadoRepository = sorteioResultadoRepository;
     }
 
+    /**
+     * Inscreve em evento público ou registra uma solicitação em evento privado.
+     *
+     * <p>Em eventos públicos a vaga é reservada imediatamente. Em eventos
+     * privados a inscrição fica como {@link StatusInscricao#PENDENTE} e a vaga
+     * só é consumida quando o organizador aprova a solicitação.</p>
+     */
     @Transactional
-    public void inscreverUsuario(Long eventoId, Usuario participante) {
-        // 1. CHECAGEM DE DUPLICIDADE EM PRIMEIRO LUGAR ABSOLUTO
-        boolean jaExiste = inscricaoRepository.existsByParticipanteIdAndEventoId(participante.getId(), eventoId);
-        if (jaExiste) {
-            throw new NegocioException("Você já possui uma inscrição activa para este evento.");
+    public StatusInscricao inscreverUsuario(Long eventoId, Usuario participante) {
+        if (participante == null || participante.getId() == null) {
+            throw new NegocioException("Usuário inválido para inscrição.");
         }
 
-        // 2. Busca o evento aplicando o Lock Pessimista para evitar concorrência de vagas
+        // Lock pessimista evita overbooking em inscrições simultâneas.
         Evento evento = eventoRepository.findByIdForUpdate(eventoId)
                 .orElseThrow(() -> new NegocioException("Evento não encontrado."));
 
-        // --- 3. VALIDAÇÃO DE STATUS REFORMULADA (À Prova de Falhas) ---
-        // Em vez de exigir PUBLICADO, nós só barramos se o evento estiver explicitamente cancelado
-        if (evento.getStatus() != null &&
-                (evento.getStatus().name().equals("CANCELADO") || evento.getStatus().name().equals("ENCERRADO"))) {
-            throw new NegocioException("Não é possível se inscrever: este evento foi cancelada ou já se encerrou.");
-        }
+        validarEventoAbertoParaInscricao(evento);
+        boolean privado = evento.isEventoPrivado();
 
-        // --- 4. VALIDAÇÃO DE DATA TOLERANTE ---
-        LocalDate hoje = LocalDate.now();
+        Optional<Inscricao> existente = inscricaoRepository
+                .findByParticipanteIdAndEventoIdComEvento(participante.getId(), eventoId);
 
-        if (evento.getDataTermino() != null) {
-            LocalDate dataFechamento = evento.getDataTermino();
-
-            // Só barra se o dia de hoje já passou da data de término
-            if (hoje.isAfter(dataFechamento)) {
-                throw new NegocioException("Não é possível se inscrever: este evento já foi encerrado.");
+        if (existente.isPresent()) {
+            Inscricao inscricao = existente.get();
+            if (inscricao.getStatus() == StatusInscricao.PENDENTE) {
+                throw new NegocioException("Sua solicitação de participação já está aguardando aprovação do organizador.");
             }
+            if (inscricao.getStatus() == StatusInscricao.ATIVO || inscricao.getStatus() == StatusInscricao.UTILIZADO) {
+                throw new NegocioException("Você já possui uma inscrição ativa para este evento.");
+            }
+
+            // Inscrições canceladas/recusadas podem ser reabertas.
+            inscricao.setDataCheckIn(null);
+            inscricao.setCertificadoGeradoEm(null);
+            if (privado) {
+                inscricao.setStatus(StatusInscricao.PENDENTE);
+                inscricaoRepository.save(inscricao);
+                return StatusInscricao.PENDENTE;
+            }
+
+            reservarVaga(evento);
+            inscricao.setStatus(StatusInscricao.ATIVO);
+            inscricaoRepository.save(inscricao);
+            return StatusInscricao.ATIVO;
         }
 
-        // Daqui para baixo o código segue igual (Validação de vagas e salvar...)
-
-        // 5. Validação de vagas seguras contra nulos
-        if (evento.getVagasRestantes() == null) {
-            evento.setVagasRestantes(evento.getVagasTotais() != null ? evento.getVagasTotais() : 100);
-        }
-
-        if (evento.getVagasRestantes() <= 0) {
-            throw new NegocioException("Não há vagas disponíveis para este evento.");
-        }
-
-        // 6. Decrementa a vaga e sincroniza o estado da entidade
-        evento.setVagasRestantes(evento.getVagasRestantes() - 1);
-        eventoRepository.save(evento);
-
-        // 7. Grava a nova inscrição vinculada de forma limpa
         Inscricao novaInscricao = Inscricao.builder()
                 .participante(participante)
                 .evento(evento)
-                .status(StatusInscricao.ATIVO)
+                .status(privado ? StatusInscricao.PENDENTE : StatusInscricao.ATIVO)
                 .build();
 
+        if (!privado) {
+            reservarVaga(evento);
+        }
+
         inscricaoRepository.save(novaInscricao);
+        return novaInscricao.getStatus();
+    }
+
+    private void validarEventoAbertoParaInscricao(Evento evento) {
+        if (evento.getStatus() != null &&
+                (evento.getStatus().name().equals("CANCELADO") || evento.getStatus().name().equals("ENCERRADO"))) {
+            throw new NegocioException("Não é possível se inscrever: este evento foi cancelado ou já se encerrou.");
+        }
+        if (evento.getDataTermino() != null && LocalDate.now().isAfter(evento.getDataTermino())) {
+            throw new NegocioException("Não é possível se inscrever: este evento já foi encerrado.");
+        }
+    }
+
+    private void reservarVaga(Evento evento) {
+        if (evento.getVagasRestantes() == null) {
+            evento.setVagasRestantes(evento.getVagasTotais() != null ? evento.getVagasTotais() : 100);
+        }
+        if (evento.getVagasRestantes() <= 0) {
+            throw new NegocioException("Não há vagas disponíveis para este evento.");
+        }
+        evento.setVagasRestantes(evento.getVagasRestantes() - 1);
+        eventoRepository.save(evento);
+    }
+
+    /**
+     * Aprova uma solicitação pendente de evento privado. A vaga só é
+     * consumida neste momento e a operação é bloqueada se o evento lotar.
+     */
+    @Transactional
+    public Inscricao aprovarSolicitacao(Long eventoId, Long inscricaoId, String emailOrganizador) {
+        Evento evento = eventoRepository.findByIdForUpdate(eventoId)
+                .orElseThrow(() -> new NegocioException("Evento não encontrado."));
+        validarOrganizador(evento, emailOrganizador);
+
+        Inscricao inscricao = inscricaoRepository.findById(inscricaoId)
+                .orElseThrow(() -> new NegocioException("Solicitação de participação não encontrada."));
+        if (inscricao.getEvento() == null || !eventoId.equals(inscricao.getEvento().getId())) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "A solicitação não pertence a este evento.");
+        }
+        if (inscricao.getStatus() != StatusInscricao.PENDENTE) {
+            throw new NegocioException("Esta solicitação não está aguardando aprovação.");
+        }
+
+        reservarVaga(evento);
+        inscricao.setStatus(StatusInscricao.ATIVO);
+        inscricao.setDataCheckIn(null);
+        return inscricaoRepository.save(inscricao);
+    }
+
+    /** Recusa uma solicitação pendente sem consumir vaga. */
+    @Transactional
+    public Inscricao recusarSolicitacao(Long eventoId, Long inscricaoId, String emailOrganizador) {
+        Evento evento = eventoRepository.findByIdForUpdate(eventoId)
+                .orElseThrow(() -> new NegocioException("Evento não encontrado."));
+        validarOrganizador(evento, emailOrganizador);
+
+        Inscricao inscricao = inscricaoRepository.findById(inscricaoId)
+                .orElseThrow(() -> new NegocioException("Solicitação de participação não encontrada."));
+        if (inscricao.getEvento() == null || !eventoId.equals(inscricao.getEvento().getId())) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "A solicitação não pertence a este evento.");
+        }
+        if (inscricao.getStatus() != StatusInscricao.PENDENTE) {
+            throw new NegocioException("Esta solicitação não está aguardando aprovação.");
+        }
+
+        inscricao.setStatus(StatusInscricao.RECUSADO);
+        return inscricaoRepository.save(inscricao);
+    }
+
+    private void validarOrganizador(Evento evento, String emailOrganizador) {
+        if (emailOrganizador == null) {
+            return; // SUPER_ADMIN já autorizado na camada de controller
+        }
+        if (evento.getOrganizador() == null
+                || !evento.getOrganizador().getEmail().equalsIgnoreCase(emailOrganizador)) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Você não tem acesso a este evento.");
+        }
     }
 
     // --- Célula de Portaria / Check-in via QR Code ---
@@ -123,6 +208,14 @@ public class InscricaoService {
 
         if (inscricao.getStatus() == StatusInscricao.UTILIZADO) {
             throw new NegocioException("Alerta de fraude: Este ingresso já foi utilizado para realizar check-in.");
+        }
+
+        if (inscricao.getStatus() == StatusInscricao.PENDENTE) {
+            throw new NegocioException("Check-in negado: a solicitação de participação ainda aguarda aprovação do organizador.");
+        }
+
+        if (inscricao.getStatus() == StatusInscricao.RECUSADO) {
+            throw new NegocioException("Check-in negado: a solicitação de participação foi recusada pelo organizador.");
         }
 
         inscricao.realizarCheckIn();
@@ -155,6 +248,15 @@ public class InscricaoService {
         return inscricaoRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Inscrição não encontrada com o ID: " + id));
     }
+
+    /** Busca a inscrição de um participante em um evento, se existir. */
+    @Transactional(readOnly = true)
+    public Optional<Inscricao> buscarDoParticipanteNoEvento(Long participanteId, Long eventoId) {
+        if (participanteId == null || eventoId == null) {
+            return Optional.empty();
+        }
+        return inscricaoRepository.findByParticipanteIdAndEventoIdComEvento(participanteId, eventoId);
+    }
     public List<Inscricao> buscarCertificadosDoUsuario(Long usuarioId) {
         return inscricaoRepository.findByParticipanteIdAndStatus(usuarioId, StatusInscricao.UTILIZADO);
     }
@@ -165,6 +267,12 @@ public class InscricaoService {
 
         if (inscricao.getStatus() == StatusInscricao.CANCELADO) {
             throw new NegocioException("Não é possível confirmar presença em uma inscrição cancelada.");
+        }
+        if (inscricao.getStatus() == StatusInscricao.PENDENTE) {
+            throw new NegocioException("Aprove a solicitação de participação antes de confirmar a presença.");
+        }
+        if (inscricao.getStatus() == StatusInscricao.RECUSADO) {
+            throw new NegocioException("Não é possível confirmar presença em uma solicitação recusada.");
         }
         inscricao.setStatus(StatusInscricao.UTILIZADO);
         inscricao.setDataCheckIn(java.time.LocalDateTime.now());
@@ -225,7 +333,7 @@ public class InscricaoService {
         }
         int minimo = evento.getSorteioFrequenciaMinima() == null ? 75 : evento.getSorteioFrequenciaMinima();
         List<InscritoFrequenciaDto> elegiveis = new ArrayList<>(listarInscritosComFrequencia(eventoId).stream()
-                .filter(i -> !i.isInscricaoCancelada())
+                .filter(i -> !i.isInscricaoCancelada() && !i.isSolicitacaoPendente() && !i.isInscricaoRecusada())
                 .filter(i -> i.getPercentualFrequencia() != null && i.getPercentualFrequencia() >= minimo)
                 .toList());
         if (elegiveis.isEmpty()) {
@@ -283,6 +391,8 @@ public class InscricaoService {
                 .percentualFrequencia(percentualFrequencia)
                 .certificadoLiberado(status == StatusInscricao.UTILIZADO)
                 .inscricaoCancelada(status == StatusInscricao.CANCELADO)
+                .solicitacaoPendente(status == StatusInscricao.PENDENTE)
+                .inscricaoRecusada(status == StatusInscricao.RECUSADO)
                 .build();
     }
 
@@ -307,6 +417,12 @@ public class InscricaoService {
         }
         if (inscricao.getStatus() == StatusInscricao.CANCELADO) {
             throw new NegocioException("Não é possível validar uma inscrição cancelada.");
+        }
+        if (inscricao.getStatus() == StatusInscricao.PENDENTE) {
+            throw new NegocioException("Aprove a solicitação de participação antes de validar a presença.");
+        }
+        if (inscricao.getStatus() == StatusInscricao.RECUSADO) {
+            throw new NegocioException("Não é possível validar uma solicitação recusada.");
         }
 
         if (inscricao.getStatus() != StatusInscricao.UTILIZADO) {
@@ -362,6 +478,12 @@ public class InscricaoService {
             if (inscricao.getStatus() == StatusInscricao.CANCELADO) {
                 throw new NegocioException("Não é possível validar uma inscrição cancelada.");
             }
+            if (inscricao.getStatus() == StatusInscricao.PENDENTE) {
+                throw new NegocioException("Aprove as solicitações de participação pendentes antes de validar a presença.");
+            }
+            if (inscricao.getStatus() == StatusInscricao.RECUSADO) {
+                throw new NegocioException("Não é possível validar uma solicitação recusada.");
+            }
             if (inscricao.getStatus() != StatusInscricao.UTILIZADO) {
                 paraAtualizar.add(inscricao);
             }
@@ -395,6 +517,8 @@ public class InscricaoService {
                         && inscricao.getParticipante().getId() != null)
                 .filter(inscricao -> inscricao.getStatus() != null
                         && inscricao.getStatus() != StatusInscricao.CANCELADO
+                        && inscricao.getStatus() != StatusInscricao.PENDENTE
+                        && inscricao.getStatus() != StatusInscricao.RECUSADO
                         && inscricao.getStatus() != StatusInscricao.UTILIZADO)
                 .toList();
 
@@ -417,10 +541,15 @@ public class InscricaoService {
 
         // 3. Varre a lista aplicando a regra de presença em lote (Estilo SEDUC)
         todasInscricoes.forEach(inscricao -> {
+            // Solicitações pendentes ou recusadas não participam do diário de classe.
+            if (inscricao.getStatus() == StatusInscricao.PENDENTE
+                    || inscricao.getStatus() == StatusInscricao.RECUSADO
+                    || inscricao.getStatus() == StatusInscricao.CANCELADO) {
+                return;
+            }
             if (idsPresentes != null && idsPresentes.contains(inscricao.getId())) {
 
                 // SE FOI SELECIONADO: Altera o status para UTILIZADO (Presença Confirmada)
-                // Nota: Altere 'InscricaoStatus' para o nome exato do seu Enum de Status se for diferente
                 inscricao.setStatus(StatusInscricao.UTILIZADO);
                 inscricao.setDataCheckIn(java.time.LocalDateTime.now());
 
@@ -453,6 +582,12 @@ public class InscricaoService {
         } else {
             if (inscricao.getStatus() == StatusInscricao.CANCELADO) {
                 throw new NegocioException("Não é possível confirmar presença em uma inscrição cancelada.");
+            }
+            if (inscricao.getStatus() == StatusInscricao.PENDENTE) {
+                throw new NegocioException("Aprove a solicitação de participação antes de confirmar a presença.");
+            }
+            if (inscricao.getStatus() == StatusInscricao.RECUSADO) {
+                throw new NegocioException("Não é possível confirmar presença em uma solicitação recusada.");
             }
             inscricao.setStatus(StatusInscricao.UTILIZADO);
             inscricao.setDataCheckIn(java.time.LocalDateTime.now());

@@ -51,9 +51,14 @@ public class InscricaoController {
                                     RedirectAttributes redirectAttributes) {
         try {
             Usuario participante = usuarioService.buscarPorEmail(userDetails.getUsername());
-            inscricaoService.inscreverUsuario(id, participante);
+            sistema.eventos.model.StatusInscricao status = inscricaoService.inscreverUsuario(id, participante);
 
-            redirectAttributes.addFlashAttribute("sucesso", "Sua inscrição foi realizada com sucesso!");
+            if (status == sistema.eventos.model.StatusInscricao.PENDENTE) {
+                redirectAttributes.addFlashAttribute("sucesso",
+                        "Solicitação de participação enviada! Aguarde a aprovação do organizador.");
+            } else {
+                redirectAttributes.addFlashAttribute("sucesso", "Sua inscrição foi realizada com sucesso!");
+            }
             return "redirect:/eventos/" + id;
 
         } catch (NegocioException e) {
@@ -94,7 +99,7 @@ public class InscricaoController {
 
             // --- VALIDAÇÃO SÊNIOR: O usuário logado é realmente o dono desta inscrição? ---
             if (!inscricao.getParticipante().getEmail().equals(userDetails.getUsername())) {
-                throw new org.springframework.security.access.AccessDeniedException("Acesso negado: Este certificado não pertence a você.");
+                throw new org.springframework.security.access.AccessDeniedException("Acesso negado: esta declaração de presença não pertence a você.");
             }
 
             // 2. Dispara a geração se passar na validação
@@ -115,7 +120,7 @@ public class InscricaoController {
         } catch (org.springframework.security.access.AccessDeniedException e) {
             throw e; // O Spring Security intercepta e gera um erro 403 Forbidden automático
         } catch (Exception e) {
-            throw new NegocioException("Não foi possível gerar o arquivo PDF do certificado devido a uma falha interna.");
+            throw new NegocioException("Não foi possível gerar o arquivo PDF da declaração de presença devido a uma falha interna.");
         }
     }
 }

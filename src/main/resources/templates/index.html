@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{fragments/seplag-ui :: head('Cursos e Eventos')}">
-    <title>Cursos e Eventos | SEPLAG-MT</title>
+<head th:replace="~{fragments/seplag-ui :: head('Eventos')}">
+    <title>Eventos | SEPLAG-MT</title>
 </head>
 <body class="v2 seplag-public">
 
@@ -17,17 +17,17 @@
             <p class="seplag-eyebrow">Plataforma de capacitação</p>
             <h1 id="vitrine-titulo">Capacitação que transforma.</h1>
             <p class="seplag-public-hero__lead">
-                Encontre cursos, eventos e oportunidades de aprendizagem da SEPLAG-MT.
+                Encontre eventos e oportunidades de aprendizagem da SEPLAG-MT.
             </p>
 
             <form th:action="@{/}" method="get" class="seplag-public-search" role="search">
                 <div class="seplag-public-search__main">
                     <div class="seplag-field seplag-public-search__query">
-                        <label for="busca" class="seplag-label">Buscar cursos</label>
+                        <label for="busca" class="seplag-label">Buscar eventos</label>
                         <div class="seplag-search-input">
                             <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                             <input id="busca" type="text" name="busca" th:value="${termoBusca}"
-                                   placeholder="Digite o nome ou tema do curso..." class="seplag-input" autocomplete="off">
+                                   placeholder="Digite o nome ou tema do evento..." class="seplag-input" autocomplete="off">
                         </div>
                     </div>
 
@@ -105,9 +105,9 @@
             <div class="seplag-alert seplag-alert--warning">
                 <i class="fa-solid fa-clock" aria-hidden="true"></i>
                 <div class="seplag-alert__body">
-                    <p class="seplag-alert__title">Solicitação de acesso para criar cursos</p>
+                    <p class="seplag-alert__title">Solicitação de acesso para criar eventos</p>
                     <p class="seplag-alert__meta">Aguardando aprovação</p>
-                    <p>Você já pode se inscrever em cursos enquanto a administração analisa a solicitação.</p>
+                    <p>Você já pode se inscrever em eventos enquanto a administração analisa a solicitação.</p>
                 </div>
             </div>
         </div>
@@ -129,7 +129,7 @@
         <div class="seplag-public-section">
             <div class="seplag-public-section__copy">
                 <p class="seplag-eyebrow">Oportunidades</p>
-                <h2>Explore nossos cursos</h2>
+                <h2>Explore nossos eventos</h2>
                 <p>Capacitações e eventos disponíveis para você.</p>
             </div>
 
@@ -147,8 +147,8 @@
         <div th:if="${eventos == null or eventos.isEmpty()}" class="seplag-card seplag-empty-card">
             <div class="seplag-empty">
                 <i class="fa-regular fa-calendar-xmark" aria-hidden="true"></i>
-                <strong>Nenhum curso localizado</strong>
-                <p>Não há cursos publicados no momento ou a busca não retornou resultados.</p>
+                <strong>Nenhum evento localizado</strong>
+                <p>Não há eventos publicados no momento ou a busca não retornou resultados.</p>
             </div>
         </div>
 
@@ -201,6 +201,12 @@
                             <i class="fa-solid fa-eye" aria-hidden="true"></i>
                             Ver Detalhes
                         </a>
+                        <button type="button" class="seplag-btn seplag-btn-secondary seplag-btn--block"
+                                data-share-open
+                                th:attr="data-share-title=${evento.titulo},data-share-url=@{/eventos/{id}(id=${evento.id})}">
+                            <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+                            Compartilhar
+                        </button>
                     </div>
                 </div>
             </article>
@@ -222,6 +228,8 @@
 </main>
 
 <footer th:replace="~{fragments/seplag-ui :: public-footer}"></footer>
+
+<div th:replace="~{fragments/seplag-ui :: share-sheet('Eventos SEPLAG-MT', @{/})}"></div>
 
 </body>
 </html>

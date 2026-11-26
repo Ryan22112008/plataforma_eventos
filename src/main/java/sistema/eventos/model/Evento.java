@@ -36,6 +36,22 @@ public class Evento extends EntidadeAuditavel {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String descricao;
 
+    /**
+     * Evento privado não aparece na vitrine pública. A participação só é
+     * liberada depois que o organizador aprova a solicitação.
+     */
+    @Builder.Default
+    @Column(name = "privado")
+    private Boolean privado = false;
+
+    /**
+     * Compatibilidade com registros criados antes do campo de privacidade.
+     * Um NULL legado é interpretado como público, sem atualizar o registro.
+     */
+    public Boolean getPrivado() {
+        return Boolean.TRUE.equals(privado);
+    }
+
     @NotNull
     @Column(name = "data_inicio", nullable = false)
     private LocalDate dataInicio;
@@ -132,6 +148,10 @@ public class Evento extends EntidadeAuditavel {
         return this.vagasRestantes != null && this.vagasRestantes > 0;
     }
 
+    public boolean isEventoPrivado() {
+        return Boolean.TRUE.equals(this.privado);
+    }
+
     public void decrementarVaga() {
         if (!possuiVagasDisponiveis()) {
             throw new IllegalStateException("Não há vagas disponíveis para este evento.");
@@ -145,6 +165,10 @@ public class Evento extends EntidadeAuditavel {
 
         if (this.status == null) {
             this.status = StatusEvento.PUBLICADO;
+        }
+
+        if (this.privado == null) {
+            this.privado = false;
         }
 
         if (this.vagasTotais == null) {

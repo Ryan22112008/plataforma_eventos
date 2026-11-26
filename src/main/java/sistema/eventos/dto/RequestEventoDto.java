@@ -41,6 +41,9 @@ public class RequestEventoDto {
 
     private Integer vagasTotais;
 
+    /** Evento privado exige aprovação do organizador para cada participante. */
+    private boolean privado;
+
     private String local;
 
     @NotNull(message = "A modalidade é obrigatória.")

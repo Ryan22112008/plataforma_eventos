@@ -21,6 +21,7 @@ import sistema.eventos.dto.AvaliacaoResumoDto;
 import sistema.eventos.model.Evento;
 import sistema.eventos.model.StatusEvento;
 import sistema.eventos.model.Usuario;
+import sistema.eventos.service.InscricaoService;
 import sistema.eventos.service.AvaliacaoEventoService;
 import sistema.eventos.service.EventoService;
 import sistema.eventos.service.UsuarioService;
@@ -56,6 +57,9 @@ class VitrineEventoControllerWebTest {
 
     @MockBean
     private UsuarioService usuarioService;
+
+    @MockBean
+    private InscricaoService inscricaoService;
 
     @AfterEach
     void limparContextoDeSeguranca() {
@@ -102,6 +106,55 @@ class VitrineEventoControllerWebTest {
                 .andExpect(content().string(containsString("Comentário")))
                 .andExpect(content().string(containsString("Máximo de 1000 caracteres.")))
                 .andExpect(content().string(not(containsString("Apenas participantes com presença confirmada"))));
+    }
+
+    @Test
+    void eventoPrivadoDeveExibirSolicitacaoDeParticipacao() throws Exception {
+        autenticar(1L, "Maria Silva");
+        Evento evento = eventoPublicado(2L);
+        evento.setPrivado(true);
+        when(eventoService.buscarPorId(EVENTO_ID)).thenReturn(evento);
+        when(inscricaoService.buscarDoParticipanteNoEvento(1L, EVENTO_ID)).thenReturn(Optional.empty());
+        when(avaliacaoEventoService.obterResumo(EVENTO_ID)).thenReturn(resumoSemAvaliacoes());
+        when(avaliacaoEventoService.listarDoEvento(eq(EVENTO_ID), any(Pageable.class))).thenReturn(Page.empty());
+        when(avaliacaoEventoService.buscarDoUsuarioNoEvento(EVENTO_ID, 1L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/eventos/{id}", EVENTO_ID))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Solicitar participação")))
+                .andExpect(content().string(not(containsString("Realizar Inscrição"))));
+    }
+
+    @Test
+    void eventoPublicoDeveExibirInscricaoNormal() throws Exception {
+        autenticar(1L, "Maria Silva");
+        when(eventoService.buscarPorId(EVENTO_ID)).thenReturn(eventoPublicado(2L));
+        when(inscricaoService.buscarDoParticipanteNoEvento(1L, EVENTO_ID)).thenReturn(Optional.empty());
+        when(avaliacaoEventoService.obterResumo(EVENTO_ID)).thenReturn(resumoSemAvaliacoes());
+        when(avaliacaoEventoService.listarDoEvento(eq(EVENTO_ID), any(Pageable.class))).thenReturn(Page.empty());
+        when(avaliacaoEventoService.buscarDoUsuarioNoEvento(EVENTO_ID, 1L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/eventos/{id}", EVENTO_ID))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Realizar Inscrição")))
+                .andExpect(content().string(not(containsString("Solicitar participação"))));
+    }
+
+    @Test
+    void eventoComPrivadoNuloDeveSerTratadoComoPublicoSemErro() throws Exception {
+        autenticar(1L, "Maria Silva");
+        Evento evento = eventoPublicado(2L);
+        evento.setPrivado(null);
+        when(eventoService.buscarPorId(EVENTO_ID)).thenReturn(evento);
+        when(inscricaoService.buscarDoParticipanteNoEvento(1L, EVENTO_ID)).thenReturn(Optional.empty());
+        when(avaliacaoEventoService.obterResumo(EVENTO_ID)).thenReturn(resumoSemAvaliacoes());
+        when(avaliacaoEventoService.listarDoEvento(eq(EVENTO_ID), any(Pageable.class))).thenReturn(Page.empty());
+        when(avaliacaoEventoService.buscarDoUsuarioNoEvento(EVENTO_ID, 1L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/eventos/{id}", EVENTO_ID))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Realizar Inscrição")))
+                .andExpect(content().string(not(containsString("Solicitar participação"))));
     }
 
     @Test
@@ -155,7 +208,6 @@ class VitrineEventoControllerWebTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Curso de Teste")))
                 .andExpect(content().string(containsString("url(&#39;/imagens-eventos/banner-do-evento.jpg&#39;)")))
-                .andExpect(content().string(containsString("Realizar Inscrição")))
                 .andExpect(content().string(containsString("Sobre o evento")))
                 .andExpect(content().string(containsString("Informações do evento")))
                 .andExpect(content().string(containsString("Local do evento")))

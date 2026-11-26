@@ -73,11 +73,13 @@ public class EventoController {
         charts.add(chartInscricoes("Participantes com check-in", inscricoes, i -> i.getStatus()==StatusInscricao.UTILIZADO ? "Presença confirmada" : i.getStatus()==StatusInscricao.CANCELADO ? "Inscrição cancelada" : "Aguardando presença"));
         long certificadosGerados=inscricoes.stream().filter(i->i.getCertificadoGeradoEm()!=null).count();
         long certificadosDisponiveis=inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.UTILIZADO&&i.getCertificadoGeradoEm()==null).count();
-        Map<String,Object> chartCertificados=new LinkedHashMap<>();chartCertificados.put("titulo","Certificados gerados");chartCertificados.put("labels",List.of("Gerados","Disponíveis para geração"));chartCertificados.put("values",List.of(certificadosGerados,certificadosDisponiveis));chartCertificados.put("total",certificadosGerados+certificadosDisponiveis);charts.add(chartCertificados);
+        Map<String,Object> chartCertificados=new LinkedHashMap<>();chartCertificados.put("titulo","Declarações de presença geradas");chartCertificados.put("labels",List.of("Geradas","Disponíveis para geração"));chartCertificados.put("values",List.of(certificadosGerados,certificadosDisponiveis));chartCertificados.put("total",certificadosGerados+certificadosDisponiveis);charts.add(chartCertificados);
         model.addAttribute("evento",evento);model.addAttribute("inscricoes",inscricoes);model.addAttribute("charts",charts);
         model.addAttribute("totalInscricoes",inscricoes.size());
         model.addAttribute("totalCheckins",inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.UTILIZADO).count());
         model.addAttribute("totalCanceladas",inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.CANCELADO).count());
+        model.addAttribute("totalPendentes",inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.PENDENTE).count());
+        model.addAttribute("totalRecusadas",inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.RECUSADO).count());
         model.addAttribute("certificadosGerados",inscricaoRepository.countByEventoIdAndCertificadoGeradoEmIsNotNull(id));
         model.addAttribute("taxaOcupacao",evento.getVagasTotais()==null||evento.getVagasTotais()==0?0:Math.round((evento.getVagasTotais()-evento.getVagasRestantes())*100.0/evento.getVagasTotais()));
         model.addAttribute("paginaAtiva","relatorios");
@@ -88,9 +90,9 @@ public class EventoController {
     public void exportarRelatorioEvento(@PathVariable Long id, Authentication authentication, HttpServletResponse response) throws java.io.IOException {
         Evento evento=exigirAcessoAoEvento(id,authentication);List<Inscricao> inscricoes=inscricaoRepository.findByEventoId(id);
         try(Workbook wb=new XSSFWorkbook()){
-            Sheet resumo=wb.createSheet("Resumo");String[][] metrics={{"Evento",evento.getTitulo()},{"Inscrições",String.valueOf(inscricoes.size())},{"Check-ins",String.valueOf(inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.UTILIZADO).count())},{"Canceladas",String.valueOf(inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.CANCELADO).count())},{"Certificados gerados",String.valueOf(inscricaoRepository.countByEventoIdAndCertificadoGeradoEmIsNotNull(id))}};
+            Sheet resumo=wb.createSheet("Resumo");String[][] metrics={{"Evento",evento.getTitulo()},{"Inscrições",String.valueOf(inscricoes.size())},{"Check-ins",String.valueOf(inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.UTILIZADO).count())},{"Canceladas",String.valueOf(inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.CANCELADO).count())},{"Aguardando aprovação",String.valueOf(inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.PENDENTE).count())},{"Declarações de presença geradas",String.valueOf(inscricaoRepository.countByEventoIdAndCertificadoGeradoEmIsNotNull(id))}};
             for(int r=0;r<metrics.length;r++){Row row=resumo.createRow(r);row.createCell(0).setCellValue(metrics[r][0]);row.createCell(1).setCellValue(metrics[r][1]);}
-            Sheet sheet=wb.createSheet("Inscrições");Row head=sheet.createRow(0);String[] cols={"Participante","E-mail","Status","Data da inscrição","Check-in","Certificado gerado em"};for(int c=0;c<cols.length;c++)head.createCell(c).setCellValue(cols[c]);int r=1;
+            Sheet sheet=wb.createSheet("Inscrições");Row head=sheet.createRow(0);String[] cols={"Participante","E-mail","Status","Data da inscrição","Check-in","Declaração gerada em"};for(int c=0;c<cols.length;c++)head.createCell(c).setCellValue(cols[c]);int r=1;
             for(Inscricao i:inscricoes){Row row=sheet.createRow(r++);row.createCell(0).setCellValue(i.getParticipante().getNome());row.createCell(1).setCellValue(i.getParticipante().getEmail());row.createCell(2).setCellValue(rotuloInscricao(i.getStatus()));row.createCell(3).setCellValue(i.getDataCriacao()==null?"":i.getDataCriacao().toString());row.createCell(4).setCellValue(i.getDataCheckIn()==null?"":i.getDataCheckIn().toString());row.createCell(5).setCellValue(i.getCertificadoGeradoEm()==null?"":i.getCertificadoGeradoEm().toString());}
             for(Sheet s:wb)for(int c=0;c<s.getRow(0).getLastCellNum();c++)s.autoSizeColumn(c);
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");response.setHeader(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=relatorios-evento-"+id+".xlsx");wb.write(response.getOutputStream());
@@ -98,7 +100,7 @@ public class EventoController {
     }
 
     private Map<String,Object> chartInscricoes(String titulo,List<Inscricao> inscricoes,Function<Inscricao,String> categoria){Map<String,Long> counts=new LinkedHashMap<>();inscricoes.forEach(i->counts.merge(categoria.apply(i),1L,Long::sum));Map<String,Object> m=new LinkedHashMap<>();m.put("titulo",titulo);m.put("labels",new java.util.ArrayList<>(counts.keySet()));m.put("values",new java.util.ArrayList<>(counts.values()));m.put("total",inscricoes.size());return m;}
-    private String rotuloInscricao(StatusInscricao status){return switch(status){case ATIVO->"Ativa";case UTILIZADO->"Check-in realizado";case CANCELADO->"Cancelada";};}
+    private String rotuloInscricao(StatusInscricao status){return switch(status){case ATIVO->"Ativa";case PENDENTE->"Aguardando aprovação";case RECUSADO->"Solicitação recusada";case UTILIZADO->"Check-in realizado";case CANCELADO->"Cancelada";};}
 
     @GetMapping("/painel")
     public String painelOrganizador(Model model, @AuthenticationPrincipal UserDetails userDetails,
@@ -176,12 +178,12 @@ public class EventoController {
                                             RedirectAttributes redirectAttributes) {
         try {
             eventoService.atualizarArteCertificado(id, certificadoImagem, userDetails.getUsername());
-            redirectAttributes.addFlashAttribute("sucesso", "Arte do certificado do Canva updated!");
+            redirectAttributes.addFlashAttribute("sucesso", "Arte da declaração de presença atualizada!");
         } catch (org.springframework.security.access.AccessDeniedException e) {
             throw e;
         } catch (Exception e) {
             log.error("Erro ao salvar imagem do certificado para o evento ID: " + id, e);
-            redirectAttributes.addFlashAttribute("erroNegocio", "Não foi possível salvar a arte do certificado.");
+            redirectAttributes.addFlashAttribute("erroNegocio", "Não foi possível salvar a arte da declaração de presença.");
         }
 
         return "redirect:/organizador/painel";
@@ -197,6 +199,8 @@ public class EventoController {
 
             model.addAttribute("evento", evento);
             model.addAttribute("inscritos", listaInscritos);
+            model.addAttribute("totalPendentes", listaInscritos.stream()
+                    .filter(InscritoFrequenciaDto::isSolicitacaoPendente).count());
 
             // 🎯 ADICIONE ESTA LINHA AQUI PARA ENVIAR O ESTADO PARA O HTML:
             model.addAttribute("paginaAtiva", "inscritos");
@@ -420,7 +424,7 @@ public class EventoController {
             exigirAcessoAoEvento(eventoId, authentication);
             inscricaoService.validarParticipacaoDoParticipante(eventoId, inscricaoId);
             redirectAttributes.addFlashAttribute("sucesso",
-                    "Participação validada! O certificado do participante foi liberado.");
+                    "Participação validada! A declaração de presença do participante foi liberada.");
         } catch (org.springframework.security.access.AccessDeniedException e) {
             throw e;
         } catch (NegocioException e) {
@@ -450,7 +454,7 @@ public class EventoController {
             int validadas = inscricaoService.validarParticipacaoEmLote(eventoId, inscricoesSelecionadas);
             if (validadas > 0) {
                 redirectAttributes.addFlashAttribute("sucesso",
-                        "Participação validada em lote! Os certificados dos participantes selecionados foram liberados.");
+                        "Participação validada em lote! As declarações de presença dos participantes selecionados foram liberadas.");
             } else {
                 redirectAttributes.addFlashAttribute("sucesso",
                         "As participações selecionadas já estavam validadas.");
@@ -478,9 +482,59 @@ public class EventoController {
             redirectAttributes.addFlashAttribute("erroNegocio", "Selecione ao menos um participante para validar.");
         } else {
             int validadas = inscricaoService.validarParticipacoesEmLote(eventoId, inscricaoIds);
-            redirectAttributes.addFlashAttribute("sucesso", validadas + " participante(s) validado(s). Certificados liberados.");
+            redirectAttributes.addFlashAttribute("sucesso", validadas + " participante(s) validado(s). Declarações de presença liberadas.");
         }
         return "redirect:/organizador/eventos/" + eventoId + "/inscritos";
+    }
+
+    /** Aprova a solicitação de participação de um evento privado. */
+    @PreAuthorize("hasAnyRole('ORGANIZADOR', 'SUPER_ADMIN')")
+    @PostMapping("/eventos/{eventoId}/inscricoes/{inscricaoId}/aprovar")
+    public String aprovarSolicitacao(@PathVariable("eventoId") Long eventoId,
+                                     @PathVariable("inscricaoId") Long inscricaoId,
+                                     Authentication authentication,
+                                     RedirectAttributes redirectAttributes) {
+        try {
+            boolean admin = ehSuperAdmin(authentication);
+            inscricaoService.aprovarSolicitacao(eventoId, inscricaoId, admin ? null : authentication.getName());
+            redirectAttributes.addFlashAttribute("sucesso",
+                    "Solicitação aprovada! A participação foi confirmada e a vaga reservada.");
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            throw e;
+        } catch (NegocioException e) {
+            redirectAttributes.addFlashAttribute("erroNegocio", e.getMessage());
+        } catch (Exception e) {
+            log.error("Erro ao aprovar a solicitação {} do evento {}.", inscricaoId, eventoId, e);
+            redirectAttributes.addFlashAttribute("erroNegocio", "Não foi possível aprovar a solicitação agora.");
+        }
+        return "redirect:/organizador/eventos/" + eventoId + "/inscritos";
+    }
+
+    /** Recusa a solicitação de participação de um evento privado. */
+    @PreAuthorize("hasAnyRole('ORGANIZADOR', 'SUPER_ADMIN')")
+    @PostMapping("/eventos/{eventoId}/inscricoes/{inscricaoId}/recusar")
+    public String recusarSolicitacao(@PathVariable("eventoId") Long eventoId,
+                                     @PathVariable("inscricaoId") Long inscricaoId,
+                                     Authentication authentication,
+                                     RedirectAttributes redirectAttributes) {
+        try {
+            boolean admin = ehSuperAdmin(authentication);
+            inscricaoService.recusarSolicitacao(eventoId, inscricaoId, admin ? null : authentication.getName());
+            redirectAttributes.addFlashAttribute("sucesso", "Solicitação recusada. O participante não ocupará vaga.");
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            throw e;
+        } catch (NegocioException e) {
+            redirectAttributes.addFlashAttribute("erroNegocio", e.getMessage());
+        } catch (Exception e) {
+            log.error("Erro ao recusar a solicitação {} do evento {}.", inscricaoId, eventoId, e);
+            redirectAttributes.addFlashAttribute("erroNegocio", "Não foi possível recusar a solicitação agora.");
+        }
+        return "redirect:/organizador/eventos/" + eventoId + "/inscritos";
+    }
+
+    private boolean ehSuperAdmin(Authentication authentication) {
+        return authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_SUPER_ADMIN".equals(authority.getAuthority()));
     }
 
     @PostMapping("/inscricoes/{inscricaoId}/checkin")
@@ -495,7 +549,7 @@ public class EventoController {
                 throw new org.springframework.security.access.AccessDeniedException("Inscrição não pertence a este evento.");
             }
             inscricaoService.confirmarPresenca(inscricaoId);
-            redirectAttributes.addFlashAttribute("sucesso", "Presença confirmada com sucesso! Certificado liberado.");
+            redirectAttributes.addFlashAttribute("sucesso", "Presença confirmada com sucesso! Declaração de presença liberada.");
         } catch (org.springframework.security.access.AccessDeniedException e) {
             throw e;
         } catch (Exception e) {
@@ -578,7 +632,7 @@ public class EventoController {
             // Invoca o método que criamos no InscricaoService para processar o lote
             inscricaoService.fecharDiarioClasse(id, idsInscricoesPresentes);
 
-            redirectAttributes.addFlashAttribute("sucesso", "Diário de classe homologado! Certificados liberados para os alunos presentes.");
+            redirectAttributes.addFlashAttribute("sucesso", "Diário de classe homologado! Declarações de presença liberadas para os participantes presentes.");
         } catch (org.springframework.security.access.AccessDeniedException e) {
             throw e;
         } catch (Exception e) {
@@ -652,7 +706,7 @@ public class EventoController {
             throw e;
         } catch (Exception e) {
             log.error("Falha ao gerar certificado da inscrição {}", inscricaoId, e);
-            throw new NegocioException("Não foi possível gerar o certificado no momento.");
+            throw new NegocioException("Não foi possível gerar a declaração de presença no momento.");
         }
     }
 
@@ -748,6 +802,221 @@ public class EventoController {
         }
         inscricaoService.alternarPresenca(id);
         return "redirect:/organizador/eventos/" + eventoId + "/inscritos";
+    }
+
+    /**
+     * Relatório consolidado de todos os eventos do organizador autenticado.
+     * Diferente do relatório por evento, reúne inscrições, presenças,
+     * solicitações pendentes e declarações de presença de toda a carteira.
+     */
+    @GetMapping("/relatorios")
+    public String relatoriosConsolidados(Authentication authentication, Model model) {
+        Usuario organizador = usuarioService.buscarPorEmail(authentication.getName());
+        List<Evento> eventos = eventoService.listarPorOrganizador(organizador.getId());
+        List<Inscricao> inscricoes = inscricaoRepository.findByOrganizadorIdComRelacoes(organizador.getId());
+
+        long totalInscricoes = inscricoes.size();
+        long totalCheckins = contarStatus(inscricoes, StatusInscricao.UTILIZADO);
+        long totalAtivos = contarStatus(inscricoes, StatusInscricao.ATIVO);
+        long totalPendentes = contarStatus(inscricoes, StatusInscricao.PENDENTE);
+        long totalRecusadas = contarStatus(inscricoes, StatusInscricao.RECUSADO);
+        long totalCanceladas = contarStatus(inscricoes, StatusInscricao.CANCELADO);
+        long totalDeclaracoes = inscricoes.stream().filter(i -> i.getCertificadoGeradoEm() != null).count();
+        long eventosPublicados = eventos.stream()
+                .filter(e -> e.getStatus() != null && "PUBLICADO".equals(e.getStatus().name())).count();
+        long eventosPrivados = eventos.stream().filter(Evento::isEventoPrivado).count();
+
+        int vagasTotais = eventos.stream().mapToInt(e -> e.getVagasTotais() == null ? 0 : e.getVagasTotais()).sum();
+        int vagasRestantes = eventos.stream().mapToInt(e -> e.getVagasRestantes() == null ? 0 : e.getVagasRestantes()).sum();
+        int taxaOcupacao = vagasTotais <= 0 ? 0
+                : (int) Math.max(0, Math.min(100, Math.round((vagasTotais - vagasRestantes) * 100.0 / vagasTotais)));
+        long confirmadas = totalAtivos + totalCheckins;
+        int taxaPresenca = confirmadas == 0 ? 0
+                : (int) Math.round(totalCheckins * 100.0 / confirmadas);
+
+        List<Map<String, Object>> charts = new java.util.ArrayList<>();
+        charts.add(serieChart("Situação geral das inscrições",
+                List.of("Presença confirmada", "Inscrições ativas", "Aguardando aprovação", "Recusadas", "Canceladas"),
+                List.of(totalCheckins, totalAtivos, totalPendentes, totalRecusadas, totalCanceladas)));
+
+        Map<Long, Long> inscricoesPorEvento = new LinkedHashMap<>();
+        Map<Long, Long> checkinsPorEvento = new LinkedHashMap<>();
+        for (Evento evento : eventos) {
+            inscricoesPorEvento.put(evento.getId(), 0L);
+            checkinsPorEvento.put(evento.getId(), 0L);
+        }
+        for (Inscricao inscricao : inscricoes) {
+            if (inscricao.getEvento() == null || inscricao.getEvento().getId() == null) continue;
+            Long id = inscricao.getEvento().getId();
+            inscricoesPorEvento.merge(id, 1L, Long::sum);
+            if (inscricao.getStatus() == StatusInscricao.UTILIZADO) {
+                checkinsPorEvento.merge(id, 1L, Long::sum);
+            }
+        }
+        charts.add(serieChart("Inscrições por evento",
+                eventos.stream().map(e -> abreviar(e.getTitulo(), 24)).toList(),
+                eventos.stream().map(e -> inscricoesPorEvento.getOrDefault(e.getId(), 0L)).toList()));
+        charts.add(serieChart("Check-ins por evento",
+                eventos.stream().map(e -> abreviar(e.getTitulo(), 24)).toList(),
+                eventos.stream().map(e -> checkinsPorEvento.getOrDefault(e.getId(), 0L)).toList()));
+        charts.add(serieChart("Eventos por situação",
+                List.of("Publicados", "Rascunhos", "Encerrados", "Cancelados"),
+                List.of(eventosPublicados,
+                        eventos.stream().filter(e -> e.getStatus() != null && "RASCUNHO".equals(e.getStatus().name())).count(),
+                        eventos.stream().filter(e -> e.getStatus() != null && "ENCERRADO".equals(e.getStatus().name())).count(),
+                        eventos.stream().filter(e -> e.getStatus() != null && "CANCELADO".equals(e.getStatus().name())).count())));
+
+        List<Map<String, Object>> resumoEventos = new java.util.ArrayList<>();
+        for (Evento evento : eventos) {
+            long doEvento = inscricoesPorEvento.getOrDefault(evento.getId(), 0L);
+            long checkins = checkinsPorEvento.getOrDefault(evento.getId(), 0L);
+            long pendentes = inscricoes.stream()
+                    .filter(i -> i.getEvento() != null && evento.getId().equals(i.getEvento().getId()))
+                    .filter(i -> i.getStatus() == StatusInscricao.PENDENTE).count();
+            long canceladas = inscricoes.stream()
+                    .filter(i -> i.getEvento() != null && evento.getId().equals(i.getEvento().getId()))
+                    .filter(i -> i.getStatus() == StatusInscricao.CANCELADO).count();
+            long declaracoes = inscricoes.stream()
+                    .filter(i -> i.getEvento() != null && evento.getId().equals(i.getEvento().getId()))
+                    .filter(i -> i.getCertificadoGeradoEm() != null).count();
+            int ocupacao = evento.getVagasTotais() == null || evento.getVagasTotais() <= 0 ? 0
+                    : (int) Math.max(0, Math.min(100, Math.round(
+                    (evento.getVagasTotais() - (evento.getVagasRestantes() == null ? 0 : evento.getVagasRestantes()))
+                            * 100.0 / evento.getVagasTotais())));
+            Map<String, Object> linha = new LinkedHashMap<>();
+            linha.put("id", evento.getId());
+            linha.put("titulo", evento.getTitulo());
+            linha.put("status", evento.getStatus() == null ? "Sem status" : rotuloStatusEvento(evento.getStatus().name()));
+            linha.put("privado", evento.isEventoPrivado());
+            linha.put("inscricoes", doEvento);
+            linha.put("checkins", checkins);
+            linha.put("pendentes", pendentes);
+            linha.put("canceladas", canceladas);
+            linha.put("declaracoes", declaracoes);
+            linha.put("ocupacao", ocupacao);
+            resumoEventos.add(linha);
+        }
+
+        model.addAttribute("organizador", organizador);
+        model.addAttribute("totalEventos", eventos.size());
+        model.addAttribute("eventosPublicados", eventosPublicados);
+        model.addAttribute("eventosPrivados", eventosPrivados);
+        model.addAttribute("totalInscricoes", totalInscricoes);
+        model.addAttribute("totalCheckins", totalCheckins);
+        model.addAttribute("totalPendentes", totalPendentes);
+        model.addAttribute("totalRecusadas", totalRecusadas);
+        model.addAttribute("totalCanceladas", totalCanceladas);
+        model.addAttribute("totalDeclaracoes", totalDeclaracoes);
+        model.addAttribute("taxaOcupacao", taxaOcupacao);
+        model.addAttribute("taxaPresenca", taxaPresenca);
+        model.addAttribute("charts", charts);
+        model.addAttribute("resumoEventos", resumoEventos);
+        model.addAttribute("paginaAtiva", "relatorios");
+        return "organizador-relatorios";
+    }
+
+    @GetMapping("/relatorios/excel")
+    public void exportarRelatoriosConsolidados(Authentication authentication, HttpServletResponse response)
+            throws java.io.IOException {
+        Usuario organizador = usuarioService.buscarPorEmail(authentication.getName());
+        List<Evento> eventos = eventoService.listarPorOrganizador(organizador.getId());
+        List<Inscricao> inscricoes = inscricaoRepository.findByOrganizadorIdComRelacoes(organizador.getId());
+
+        long totalCheckins = contarStatus(inscricoes, StatusInscricao.UTILIZADO);
+        long totalPendentes = contarStatus(inscricoes, StatusInscricao.PENDENTE);
+        long totalDeclaracoes = inscricoes.stream().filter(i -> i.getCertificadoGeradoEm() != null).count();
+
+        try (Workbook wb = new XSSFWorkbook()) {
+            Sheet resumo = wb.createSheet("Resumo");
+            String[][] metricas = {
+                    {"Organizador", organizador.getNome()},
+                    {"Eventos", String.valueOf(eventos.size())},
+                    {"Inscrições", String.valueOf(inscricoes.size())},
+                    {"Check-ins", String.valueOf(totalCheckins)},
+                    {"Solicitações pendentes", String.valueOf(totalPendentes)},
+                    {"Declarações de presença geradas", String.valueOf(totalDeclaracoes)}
+            };
+            for (int r = 0; r < metricas.length; r++) {
+                Row row = resumo.createRow(r);
+                row.createCell(0).setCellValue(metricas[r][0]);
+                row.createCell(1).setCellValue(metricas[r][1]);
+            }
+
+            Sheet sheetEventos = wb.createSheet("Eventos");
+            String[] colunasEventos = {"Evento", "Situação", "Privado", "Inscrições", "Check-ins",
+                    "Aguardando aprovação", "Canceladas", "Declarações geradas", "Ocupação (%)"};
+            Row cabecalhoEventos = sheetEventos.createRow(0);
+            for (int c = 0; c < colunasEventos.length; c++) {
+                cabecalhoEventos.createCell(c).setCellValue(colunasEventos[c]);
+            }
+            int linha = 1;
+            for (Evento evento : eventos) {
+                long doEvento = inscricoes.stream()
+                        .filter(i -> i.getEvento() != null && evento.getId().equals(i.getEvento().getId())).count();
+                long checkins = inscricoes.stream()
+                        .filter(i -> i.getEvento() != null && evento.getId().equals(i.getEvento().getId()))
+                        .filter(i -> i.getStatus() == StatusInscricao.UTILIZADO).count();
+                long pendentes = inscricoes.stream()
+                        .filter(i -> i.getEvento() != null && evento.getId().equals(i.getEvento().getId()))
+                        .filter(i -> i.getStatus() == StatusInscricao.PENDENTE).count();
+                long canceladas = inscricoes.stream()
+                        .filter(i -> i.getEvento() != null && evento.getId().equals(i.getEvento().getId()))
+                        .filter(i -> i.getStatus() == StatusInscricao.CANCELADO).count();
+                long declaracoes = inscricoes.stream()
+                        .filter(i -> i.getEvento() != null && evento.getId().equals(i.getEvento().getId()))
+                        .filter(i -> i.getCertificadoGeradoEm() != null).count();
+                int ocupacao = evento.getVagasTotais() == null || evento.getVagasTotais() <= 0 ? 0
+                        : (int) Math.max(0, Math.min(100, Math.round(
+                        (evento.getVagasTotais() - (evento.getVagasRestantes() == null ? 0 : evento.getVagasRestantes()))
+                                * 100.0 / evento.getVagasTotais())));
+                Row row = sheetEventos.createRow(linha++);
+                row.createCell(0).setCellValue(evento.getTitulo());
+                row.createCell(1).setCellValue(evento.getStatus() == null ? "Sem status" : rotuloStatusEvento(evento.getStatus().name()));
+                row.createCell(2).setCellValue(evento.isEventoPrivado() ? "Sim" : "Não");
+                row.createCell(3).setCellValue(doEvento);
+                row.createCell(4).setCellValue(checkins);
+                row.createCell(5).setCellValue(pendentes);
+                row.createCell(6).setCellValue(canceladas);
+                row.createCell(7).setCellValue(declaracoes);
+                row.createCell(8).setCellValue(ocupacao);
+            }
+            for (Sheet sheet : wb) {
+                if (sheet.getRow(0) != null) {
+                    for (int c = 0; c < sheet.getRow(0).getLastCellNum(); c++) sheet.autoSizeColumn(c);
+                }
+            }
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorios-organizador.xlsx");
+            wb.write(response.getOutputStream());
+        }
+    }
+
+    private long contarStatus(List<Inscricao> inscricoes, StatusInscricao status) {
+        return inscricoes.stream().filter(i -> i.getStatus() == status).count();
+    }
+
+    private Map<String, Object> serieChart(String titulo, List<String> labels, List<Long> values) {
+        Map<String, Object> chart = new LinkedHashMap<>();
+        chart.put("titulo", titulo);
+        chart.put("labels", new java.util.ArrayList<>(labels));
+        chart.put("values", new java.util.ArrayList<>(values));
+        chart.put("total", values.stream().mapToLong(Long::longValue).sum());
+        return chart;
+    }
+
+    private String abreviar(String texto, int limite) {
+        if (texto == null) return "";
+        return texto.length() <= limite ? texto : texto.substring(0, limite - 1) + "…";
+    }
+
+    private String rotuloStatusEvento(String status) {
+        return switch (status) {
+            case "PUBLICADO" -> "Publicado";
+            case "RASCUNHO" -> "Rascunho";
+            case "CANCELADO" -> "Cancelado";
+            case "ENCERRADO" -> "Encerrado";
+            default -> status;
+        };
     }
 
     private Evento exigirAcessoAoEvento(Long eventoId, Authentication authentication) {

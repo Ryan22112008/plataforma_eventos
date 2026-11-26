@@ -88,7 +88,7 @@ public class ParticipanteController {
         // Deixe as exceções subirem livremente. O GlobalExceptionHandler cuida delas.
         Inscricao inscricao = inscricaoService.buscarPorId(id);
         if (!inscricao.getParticipante().getEmail().equalsIgnoreCase(userDetails.getUsername())) {
-            throw new org.springframework.security.access.AccessDeniedException("Este certificado não pertence à sua conta.");
+            throw new org.springframework.security.access.AccessDeniedException("Esta declaração de presença não pertence à sua conta.");
         }
         byte[] pdfBytes = certificadoService.gerarCertificadoPdf(inscricao);
 

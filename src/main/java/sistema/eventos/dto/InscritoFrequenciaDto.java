@@ -31,6 +31,20 @@ public class InscritoFrequenciaDto {
     private boolean certificadoLiberado;
     private boolean inscricaoCancelada;
 
+    /** Solicitação de participação em evento privado aguardando aprovação. */
+    private boolean solicitacaoPendente;
+
+    /** Solicitação de participação recusada pelo organizador. */
+    private boolean inscricaoRecusada;
+
+    public String getRotuloStatus() {
+        if (solicitacaoPendente) return "Aguardando aprovação";
+        if (inscricaoRecusada) return "Solicitação recusada";
+        if (inscricaoCancelada) return "Cancelada";
+        if (certificadoLiberado) return "Presença confirmada";
+        return "Inscrição ativa";
+    }
+
     public String getFrequenciaFormatada() {
         if (percentualFrequencia == null) {
             return null;

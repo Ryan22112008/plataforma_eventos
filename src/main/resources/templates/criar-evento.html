@@ -88,6 +88,20 @@
                                   class="seplag-input seplag-textarea" placeholder="Detalhes sobre cronograma, público-alvo e conteúdo do evento."></textarea>
                         <p th:if="${#fields.hasErrors('descricao')}" th:errors="*{descricao}" id="descricao-erro" class="seplag-field__error"></p>
                     </div>
+
+                    <div class="seplag-field">
+                        <label class="seplag-label" for="privado">Visibilidade do evento</label>
+                        <label class="seplag-check-line" for="privado">
+                            <input type="checkbox" th:field="*{privado}" id="privado" class="seplag-checkbox">
+                            <span>
+                                <strong>Evento privado</strong>
+                                <span class="seplag-card__hint">
+                                    Não aparece na vitrine pública. O acesso é feito pelo link compartilhado e cada
+                                    solicitação de participação precisa ser aprovada pelo organizador.
+                                </span>
+                            </span>
+                        </label>
+                    </div>
                 </div>
             </section>
 
@@ -197,12 +211,12 @@
                 </div>
             </section>
 
-            <!-- Imagens do evento e do certificado -->
+            <!-- Imagens do evento e da declaração de presença -->
             <section class="seplag-card seplag-form-card" aria-labelledby="secao-imagens">
                 <div class="seplag-card__header">
                     <div>
                         <h2 class="seplag-card__title" id="secao-imagens">Imagens do evento</h2>
-                        <p class="seplag-card__hint">Banner da vitrine e artes usadas na emissão dos certificados.</p>
+                        <p class="seplag-card__hint">Banner da vitrine e artes usadas na emissão das declarações de presença.</p>
                     </div>
                 </div>
 
@@ -231,7 +245,7 @@
 
                     <div class="seplag-form-grid seplag-form-grid--2">
                         <div class="seplag-upload-block">
-                            <label class="seplag-label" for="certificadoFrenteInput">Layout do Certificado (Frente)</label>
+                            <label class="seplag-label" for="certificadoFrenteInput">Layout da Declaração de Presença (Frente)</label>
 
                             <div th:if="${eventoDto.imagemFrenteAtual != null and !eventoDto.imagemFrenteAtual.startsWith('default-')}" class="seplag-current">
                                 <img th:src="${#strings.startsWith(eventoDto.imagemFrenteAtual, 'https://res.cloudinary.com/') ? eventoDto.imagemFrenteAtual : '/imagens-eventos/' + eventoDto.imagemFrenteAtual}" alt="Frente do certificado atualmente salva"
@@ -253,7 +267,7 @@
                         </div>
 
                         <div class="seplag-upload-block">
-                            <label class="seplag-label" for="certificadoVersoInput">Layout do Certificado (Verso)</label>
+                            <label class="seplag-label" for="certificadoVersoInput">Layout da Declaração de Presença (Verso)</label>
 
                             <div th:if="${eventoDto.imagemVersoAtual != null and !eventoDto.imagemVersoAtual.startsWith('default-')}" class="seplag-current">
                                 <img th:src="${#strings.startsWith(eventoDto.imagemVersoAtual, 'https://res.cloudinary.com/') ? eventoDto.imagemVersoAtual : '/imagens-eventos/' + eventoDto.imagemVersoAtual}" alt="Verso do certificado atualmente salvo"
@@ -277,12 +291,12 @@
                 </div>
             </section>
 
-            <!-- Disciplinas / temas do curso -->
+            <!-- Disciplinas / temas do evento -->
             <section class="seplag-card seplag-form-card" aria-labelledby="secao-disciplinas">
                 <div class="seplag-card__header">
                     <div>
-                        <h2 class="seplag-card__title" id="secao-disciplinas">Disciplinas / Temas do Curso</h2>
-                        <p class="seplag-card__hint">Histórico impresso no verso do certificado.</p>
+                        <h2 class="seplag-card__title" id="secao-disciplinas">Disciplinas / Temas do Evento</h2>
+                        <p class="seplag-card__hint">Histórico impresso no verso da declaração de presença.</p>
                     </div>
                     <button type="button" onclick="adicionarLinhaDisciplina()" class="seplag-btn seplag-btn-secondary seplag-btn--sm">
                         <i class="fa-solid fa-plus" aria-hidden="true"></i>

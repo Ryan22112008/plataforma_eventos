@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
 <head th:replace="~{fragments/seplag-ui :: head('Detalhes do Evento')}">
     <title>Detalhes do Evento | SEPLAG-MT</title>
 </head>
@@ -14,7 +15,7 @@
     <nav class="seplag-breadcrumb" aria-label="Trilha de navegação">
         <ol>
             <li><a th:href="@{/}">Início</a></li>
-            <li><a th:href="@{/eventos}">Cursos</a></li>
+            <li><a th:href="@{/eventos}">Eventos</a></li>
             <li aria-current="page" th:text="${evento.titulo}">Evento</li>
         </ol>
     </nav>
@@ -37,6 +38,10 @@
     <div th:if="${evento.bannerUrl != null}" class="seplag-event-hero"
          th:style="|background-image: linear-gradient(115deg, rgba(3, 3, 5, 0.62), rgba(15, 8, 24, 0.82)), url('${#strings.startsWith(evento.bannerUrl, 'https://res.cloudinary.com/') ? evento.bannerUrl : '/imagens-eventos/' + evento.bannerUrl}');|">
         <div class="seplag-event-hero__content">
+            <span th:if="${eventoPrivado}" class="seplag-badge seplag-badge--warning">
+                <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                Evento privado · participação mediante aprovação
+            </span>
             <p th:if="${evento.nicho != null}" class="seplag-eyebrow">
                 <th:block th:replace="~{fragments/seplag-ui :: nicho(${evento.nicho})}"></th:block>
             </p>
@@ -57,6 +62,10 @@
     <!-- CASO B: O EVENTO NÃO POSSUI IMAGEM (FALLBACK) -->
     <div th:if="${evento.bannerUrl == null}" class="seplag-event-hero seplag-event-hero--plain">
         <div class="seplag-event-hero__content">
+            <span th:if="${eventoPrivado}" class="seplag-badge seplag-badge--warning">
+                <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                Evento privado · participação mediante aprovação
+            </span>
             <p th:if="${evento.nicho != null}" class="seplag-eyebrow">
                 <th:block th:replace="~{fragments/seplag-ui :: nicho(${evento.nicho})}"></th:block>
             </p>
@@ -76,16 +85,60 @@
 
     <section class="seplag-event-enroll" aria-labelledby="inscricao-titulo">
         <div>
-            <h2 id="inscricao-titulo">Inscrição no evento</h2>
+            <h2 id="inscricao-titulo">Participação no evento</h2>
             <p>Vagas: <strong th:text="${evento.vagasTotais ?: 'Ilimitadas'}">Ilimitadas</strong></p>
+            <p th:if="${eventoPrivado}" class="seplag-card__hint">
+                <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                Este evento é privado. Envie uma solicitação e aguarde a aprovação do organizador.
+            </p>
         </div>
 
-        <form th:action="@{/eventos/{id}/inscrever(id=${evento.id})}" method="POST">
-            <button type="submit" class="seplag-btn seplag-btn-primary">
-                <i class="fa-solid fa-check-to-slot" aria-hidden="true"></i>
-                Realizar Inscrição
+        <div class="seplag-event-enroll__actions">
+            <button type="button" class="seplag-btn seplag-btn-secondary"
+                    data-share-open
+                    th:attr="data-share-title=${evento.titulo},data-share-url=${urlCompartilhamento}">
+                <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+                Compartilhar
             </button>
-        </form>
+
+            <a sec:authorize="isAnonymous()" th:href="@{/login}" class="seplag-btn seplag-btn-primary">
+                <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
+                Entrar para se inscrever
+            </a>
+
+            <div sec:authorize="isAuthenticated()" class="seplag-event-enroll__status">
+                <a th:if="${ehOrganizador}" th:href="@{/organizador/eventos/{id}/inscritos(id=${evento.id})}"
+                   class="seplag-btn seplag-btn-primary">
+                    <i class="fa-solid fa-users-gear" aria-hidden="true"></i>
+                    Gerenciar inscritos
+                </a>
+
+                <div th:if="${!ehOrganizador and solicitacaoPendente}"
+                     class="seplag-alert seplag-alert--warning" role="status">
+                    <i class="fa-solid fa-clock" aria-hidden="true"></i>
+                    <span>Sua solicitação de participação está aguardando aprovação do organizador.</span>
+                </div>
+
+                <div th:if="${!ehOrganizador and inscricaoAtiva}"
+                     class="seplag-alert seplag-alert--success" role="status">
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                    <span>Sua participação neste evento está confirmada.</span>
+                </div>
+
+                <p th:if="${!ehOrganizador and inscricaoRecusada}" class="seplag-card__hint">
+                    <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                    Sua solicitação anterior foi recusada pelo organizador. Você pode solicitar novamente.
+                </p>
+
+                <form th:if="${!ehOrganizador and podeSolicitar}"
+                      th:action="@{/eventos/{id}/inscrever(id=${evento.id})}" method="POST">
+                    <button type="submit" class="seplag-btn seplag-btn-primary">
+                        <i class="fa-solid fa-check-to-slot" aria-hidden="true"></i>
+                        <span th:text="${evento.privado == true} ? 'Solicitar participação' : 'Realizar Inscrição'">Realizar Inscrição</span>
+                    </button>
+                </form>
+            </div>
+        </div>
     </section>
 
     <div class="seplag-event-layout">
@@ -157,7 +210,7 @@
         <div class="seplag-card__header">
             <div>
                 <h2 class="seplag-card__title" id="avaliacoes-titulo">Avaliações</h2>
-                <p class="seplag-card__hint">O que os participantes estão dizendo sobre este curso.</p>
+                <p class="seplag-card__hint">O que os participantes estão dizendo sobre este evento.</p>
             </div>
         </div>
         <div class="seplag-card__body">
@@ -401,6 +454,8 @@
 </main>
 
 <footer th:replace="~{fragments/seplag-ui :: public-footer}"></footer>
+
+<div th:replace="~{fragments/seplag-ui :: share-sheet(${evento.titulo}, ${urlCompartilhamento})}"></div>
 
 </body>
 </html>

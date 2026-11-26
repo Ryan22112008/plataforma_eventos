@@ -46,10 +46,12 @@ public interface EventoRepository extends JpaRepository<Evento, Long> {
      Optional<Evento> findByIdComOrganizador(@Param("id") Long id);
 
      // --- Busca apenas eventos ativos e com vagas para a listagem principal ---
-     @Query("SELECT e FROM Evento e WHERE e.status = :status AND e.vagasRestantes > 0 ORDER BY e.dataInicio ASC")
+     @Query("SELECT e FROM Evento e WHERE e.status = :status AND e.vagasRestantes > 0 " +
+             "AND (e.privado = false OR e.privado IS NULL) ORDER BY e.dataInicio ASC")
      List<Evento> buscarEventosDisponiveis(@Param("status") StatusEvento status);
 
      @Query(value = "SELECT e FROM Evento e WHERE e.status = :status " +
+             "AND (e.privado = false OR e.privado IS NULL) " +
              "AND (:temBusca = true OR e.vagasRestantes > 0) " +
              "AND (:temBusca = false OR LOWER(e.titulo) LIKE LOWER(CONCAT('%', :busca, '%')) " +
              "OR CAST(e.descricao AS string) LIKE CONCAT('%', :busca, '%')) " +
@@ -61,6 +63,7 @@ public interface EventoRepository extends JpaRepository<Evento, Long> {
              "OR (:vigencia = 'EM_ANDAMENTO' AND e.dataInicio <= :hoje AND e.dataTermino >= :hoje) " +
              "OR (:vigencia = 'ENCERRADOS' AND e.dataTermino < :hoje))",
              countQuery = "SELECT COUNT(e) FROM Evento e WHERE e.status = :status " +
+                     "AND (e.privado = false OR e.privado IS NULL) " +
                      "AND (:temBusca = true OR e.vagasRestantes > 0) " +
                      "AND (:temBusca = false OR LOWER(e.titulo) LIKE LOWER(CONCAT('%', :busca, '%')) " +
                      "OR CAST(e.descricao AS string) LIKE CONCAT('%', :busca, '%')) " +
@@ -90,6 +93,7 @@ public interface EventoRepository extends JpaRepository<Evento, Long> {
      @Query("SELECT e FROM Evento e WHERE " +
              "(LOWER(e.titulo) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
              "CAST(e.descricao AS string) LIKE CONCAT('%', :termo, '%')) " +
-             "AND e.status = :status")
+             "AND e.status = :status " +
+             "AND (e.privado = false OR e.privado IS NULL)")
      List<Evento> pesquisarEventosAtivos(@Param("termo") String termo, @Param("status") StatusEvento status);
 }

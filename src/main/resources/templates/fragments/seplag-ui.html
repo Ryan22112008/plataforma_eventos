@@ -16,6 +16,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/seplag-ui-v2.css}">
     <link rel="stylesheet" th:href="@{/css/quiz.css}">
+    <link rel="stylesheet" th:href="@{/css/seplag-share.css}">
+    <script th:src="@{/js/seplag-share.js}" defer></script>
 </th:block>
 
 <!-- ======================================================================
@@ -58,7 +60,7 @@
 
         <nav class="seplag-public-nav" aria-label="Navegação principal">
             <a th:href="@{/}" th:classappend="${active == 'cursos'} ? 'is-active'"
-               th:attr="aria-current=${active == 'cursos' ? 'page' : null}">Cursos</a>
+               th:attr="aria-current=${active == 'cursos' ? 'page' : null}">Eventos</a>
             <a sec:authorize="hasRole('SUPER_ADMIN')" th:href="@{/super-admin/usuarios}">
                 <i class="fa-solid fa-user-shield" aria-hidden="true"></i>
                 Painel Super Admin
@@ -68,7 +70,7 @@
             </a>
             <a sec:authorize="hasRole('PARTICIPANTE')" th:href="@{/participante/meus-certificados}">
                 <i class="fa-solid fa-award" aria-hidden="true"></i>
-                Meus certificados
+                Minhas declarações de presença
             </a>
             <a sec:authorize="isAuthenticated()" th:href="@{/perfil}"
                th:classappend="${active == 'perfil'} ? 'is-active'"
@@ -150,6 +152,13 @@
            th:attr="aria-current=${active == 'quizzes' ? 'page' : null}">
             <i class="fa-solid fa-gamepad" aria-hidden="true"></i>
             <span>Quizzes</span>
+        </a>
+
+        <a th:href="@{/organizador/relatorios}" class="seplag-nav__link"
+           th:classappend="${active == 'relatorios'} ? 'is-active'"
+           th:attr="aria-current=${active == 'relatorios' ? 'page' : null}">
+            <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
+            <span>Relatórios</span>
         </a>
 
         <p class="seplag-nav__label">Plataforma</p>
@@ -253,6 +262,67 @@
         <span class="seplag-topbar__user" sec:authentication="name">Organizador</span>
     </div>
 </header>
+
+<!-- ======================================================================
+     Folha de compartilhamento estilo aplicativos móveis.
+     Uso: <div th:replace="~{fragments/seplag-ui :: share-sheet(${evento.titulo}, ${urlCompartilhamento})}"></div>
+     e um gatilho com o atributo data-share-open.
+     ====================================================================== -->
+<div th:fragment="share-sheet(titulo, url)" class="seplag-share" id="seplag-share-modal"
+     th:attr="data-share-title=${titulo},data-share-url=${url}"
+     role="dialog" aria-modal="true" aria-labelledby="seplag-share-title" hidden>
+    <div class="seplag-share__backdrop" data-share-action="close" aria-hidden="true"></div>
+    <div class="seplag-share__panel" role="document">
+        <div class="seplag-share__handle" aria-hidden="true"></div>
+        <div class="seplag-share__header">
+            <div>
+                <h2 class="seplag-share__title" id="seplag-share-title">Compartilhar evento</h2>
+                <p class="seplag-share__subtitle" th:text="${titulo}">Título do evento</p>
+            </div>
+            <button type="button" class="seplag-share__close" data-share-action="close"
+                    aria-label="Fechar compartilhamento">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <div class="seplag-share__grid" aria-label="Opções de compartilhamento">
+            <button type="button" class="seplag-share__option" data-share-network="whatsapp">
+                <span class="seplag-share__icon seplag-share__icon--whatsapp"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i></span>
+                <span>WhatsApp</span>
+            </button>
+            <button type="button" class="seplag-share__option" data-share-network="facebook">
+                <span class="seplag-share__icon seplag-share__icon--facebook"><i class="fa-brands fa-facebook-f" aria-hidden="true"></i></span>
+                <span>Facebook</span>
+            </button>
+            <button type="button" class="seplag-share__option" data-share-network="x">
+                <span class="seplag-share__icon seplag-share__icon--x"><i class="fa-brands fa-x-twitter" aria-hidden="true"></i></span>
+                <span>X</span>
+            </button>
+            <button type="button" class="seplag-share__option" data-share-network="telegram">
+                <span class="seplag-share__icon seplag-share__icon--telegram"><i class="fa-brands fa-telegram" aria-hidden="true"></i></span>
+                <span>Telegram</span>
+            </button>
+            <button type="button" class="seplag-share__option" data-share-network="linkedin">
+                <span class="seplag-share__icon seplag-share__icon--linkedin"><i class="fa-brands fa-linkedin-in" aria-hidden="true"></i></span>
+                <span>LinkedIn</span>
+            </button>
+            <button type="button" class="seplag-share__option" data-share-network="email">
+                <span class="seplag-share__icon seplag-share__icon--email"><i class="fa-solid fa-envelope" aria-hidden="true"></i></span>
+                <span>E-mail</span>
+            </button>
+            <button type="button" class="seplag-share__option" data-share-action="copy">
+                <span class="seplag-share__icon seplag-share__icon--copy"><i class="fa-solid fa-link" aria-hidden="true"></i></span>
+                <span id="seplag-share-copy-label">Copiar link</span>
+            </button>
+            <button type="button" class="seplag-share__option" data-share-action="native">
+                <span class="seplag-share__icon seplag-share__icon--native"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></span>
+                <span>Mais opções</span>
+            </button>
+        </div>
+
+        <p class="seplag-share__feedback" id="seplag-share-feedback" role="status" aria-live="polite"></p>
+    </div>
+</div>
 
 </body>
 </html>

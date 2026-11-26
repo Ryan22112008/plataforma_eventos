@@ -60,11 +60,22 @@
             </div>
         </div>
 
+        <div th:if="${totalPendentes > 0}" class="seplag-flash">
+            <div class="seplag-alert seplag-alert--warning" role="status">
+                <i class="fa-solid fa-clock" aria-hidden="true"></i>
+                <span th:text="${totalPendentes} == 1
+                        ? 'Existe 1 solicitação de participação aguardando aprovação.'
+                        : 'Existem ' + ${totalPendentes} + ' solicitações de participação aguardando aprovação.'">
+                    Existem solicitações aguardando aprovação.
+                </span>
+            </div>
+        </div>
+
         <div class="seplag-page-head">
             <div class="seplag-page-head__copy">
                 <p class="seplag-eyebrow">Organizador</p>
                 <h1 th:text="${evento.titulo}">Evento</h1>
-                <p>Confira a frequência de cada participante e valide a participação para liberar o certificado.</p>
+                <p>Confira a frequência de cada participante, aprove solicitações e valide a participação para liberar a declaração de presença.</p>
             </div>
 
             <div class="seplag-toolbar">
