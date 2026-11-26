@@ -20,7 +20,6 @@
             <a th:href="@{/organizador/eventos/{id}/inscritos(id=${evento.id})}" class="seplag-subnav__link"><i class="fa-solid fa-users" aria-hidden="true"></i> Inscritos</a>
             <a th:href="@{/presencas/{id}/frequencia(id=${evento.id})}" class="seplag-subnav__link"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i> Frequência</a>
             <a th:href="@{/organizador/eventos/{id}/sorteios(id=${evento.id})}" class="seplag-subnav__link is-active" aria-current="page"><i class="fa-solid fa-ticket" aria-hidden="true"></i> Sorteios</a>
-            <a th:href="@{/organizador/eventos/{id}/relatorios(id=${evento.id})}" class="seplag-subnav__link"><i class="fa-solid fa-chart-pie" aria-hidden="true"></i> Relatórios</a>
         </nav>
         <div th:if="${erroNegocio}" class="seplag-alert seplag-alert--error" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i><span th:text="${erroNegocio}">Não foi possível concluir o sorteio.</span></div>
 
