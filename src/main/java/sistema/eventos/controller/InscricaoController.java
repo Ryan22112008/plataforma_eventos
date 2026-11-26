@@ -52,19 +52,11 @@ public class InscricaoController {
                                     RedirectAttributes redirectAttributes) {
         try {
             Usuario participante = usuarioService.buscarPorEmail(userDetails.getUsername());
-<<<<<<< HEAD
-            sistema.eventos.model.StatusInscricao status = inscricaoService.inscreverUsuario(id, participante);
-
-            if (status == sistema.eventos.model.StatusInscricao.PENDENTE) {
-                redirectAttributes.addFlashAttribute("sucesso",
-                        "Solicitação de participação enviada! Aguarde a aprovação do organizador.");
-=======
             StatusInscricao status = inscricaoService.inscreverUsuario(id, participante);
 
             if (status == StatusInscricao.PENDENTE) {
                 redirectAttributes.addFlashAttribute("sucesso",
-                        "Sua solicitação de participação foi enviada e aguarda decisão do organizador.");
->>>>>>> 9f8190587fb70577392436388ea40a313988b188
+                        "Solicitação de participação enviada! Aguarde a aprovação do organizador.");
             } else {
                 redirectAttributes.addFlashAttribute("sucesso", "Sua inscrição foi realizada com sucesso!");
             }
@@ -108,11 +100,7 @@ public class InscricaoController {
 
             // --- VALIDAÇÃO SÊNIOR: O usuário logado é realmente o dono desta inscrição? ---
             if (!inscricao.getParticipante().getEmail().equals(userDetails.getUsername())) {
-<<<<<<< HEAD
                 throw new org.springframework.security.access.AccessDeniedException("Acesso negado: esta declaração de presença não pertence a você.");
-=======
-                throw new org.springframework.security.access.AccessDeniedException("Acesso negado: Esta declaração de presença não pertence a você.");
->>>>>>> 9f8190587fb70577392436388ea40a313988b188
             }
 
             // 2. Dispara a geração se passar na validação

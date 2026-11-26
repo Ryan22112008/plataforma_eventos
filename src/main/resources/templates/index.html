@@ -197,7 +197,6 @@
                     <p class="seplag-event-card__desc" th:text="${evento.descricao}">Descrição do evento.</p>
 
                     <div class="seplag-event-card__footer">
-<<<<<<< HEAD
                         <a th:href="@{/eventos/{id}(id=${evento.id})}" class="seplag-btn seplag-btn-primary seplag-btn--block">
                             <i class="fa-solid fa-eye" aria-hidden="true"></i>
                             Ver Detalhes
@@ -208,23 +207,6 @@
                             <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
                             Compartilhar
                         </button>
-=======
-                        <div class="seplag-event-card__footer-row">
-                            <a th:href="@{/eventos/{id}(id=${evento.id})}" class="seplag-btn seplag-btn-primary seplag-btn--block">
-                                <i class="fa-solid fa-eye" aria-hidden="true"></i>
-                                Ver Detalhes
-                            </a>
-                            <button type="button"
-                                    class="seplag-btn seplag-btn-secondary seplag-btn-share-icon"
-                                    data-share-trigger
-                                    th:data-share-url="@{/eventos/{id}(id=${evento.id})}"
-                                    th:data-share-title="${evento.titulo}"
-                                    th:aria-label="|Compartilhar evento ${evento.titulo}|"
-                                    title="Compartilhar evento">
-                                <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
-                            </button>
-                        </div>
->>>>>>> 9f8190587fb70577392436388ea40a313988b188
                     </div>
                 </div>
             </article>

@@ -37,11 +37,7 @@ public class VitrineEventoController {
     private final EventoService eventoService;
     private final AvaliacaoEventoService avaliacaoEventoService;
     private final UsuarioService usuarioService;
-<<<<<<< HEAD
     private final InscricaoService inscricaoService;
-=======
-    private final InscricaoRepository inscricaoRepository;
->>>>>>> 9f8190587fb70577392436388ea40a313988b188
 
     @GetMapping("/eventos/{id}")
     public String exibirDetalhesDoEvento(@PathVariable("id") Long id,
@@ -99,18 +95,10 @@ public class VitrineEventoController {
         AvaliacaoEventoResponseDto avaliacaoDoUsuario = usuario == null
                 ? null
                 : avaliacaoEventoService.buscarDoUsuarioNoEvento(id, usuario.getId()).orElse(null);
-<<<<<<< HEAD
-=======
-        boolean ehOrganizador = usuario != null && evento.getOrganizador() != null
-                && usuario.getId().equals(evento.getOrganizador().getId());
-        Inscricao inscricaoUsuario = usuario == null
-                ? null
-                : inscricaoRepository.findByParticipanteIdAndEventoIdComEvento(usuario.getId(), id).orElse(null);
->>>>>>> 9f8190587fb70577392436388ea40a313988b188
 
         model.addAttribute("usuarioAutenticado", usuario != null);
         model.addAttribute("ehOrganizador", ehOrganizador);
-        model.addAttribute("inscricaoUsuario", inscricaoUsuario);
+        model.addAttribute("inscricaoUsuario", inscricaoDoUsuario);
         model.addAttribute("avaliacaoDoUsuario", avaliacaoDoUsuario);
         model.addAttribute("usuarioPodeAvaliar", usuario != null && avaliacaoDoUsuario == null
                 && avaliacaoEventoService.podeAvaliar(evento, usuario.getId()));

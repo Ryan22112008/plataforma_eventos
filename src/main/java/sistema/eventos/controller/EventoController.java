@@ -287,15 +287,9 @@ public class EventoController {
     public void exportarRelatorioEvento(@PathVariable Long id, Authentication authentication, HttpServletResponse response) throws java.io.IOException {
         Evento evento=exigirAcessoAoEvento(id,authentication);List<Inscricao> inscricoes=inscricaoRepository.findByEventoId(id);
         try(Workbook wb=new XSSFWorkbook()){
-<<<<<<< HEAD
             Sheet resumo=wb.createSheet("Resumo");String[][] metrics={{"Evento",evento.getTitulo()},{"Inscrições",String.valueOf(inscricoes.size())},{"Check-ins",String.valueOf(inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.UTILIZADO).count())},{"Canceladas",String.valueOf(inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.CANCELADO).count())},{"Aguardando aprovação",String.valueOf(inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.PENDENTE).count())},{"Declarações de presença geradas",String.valueOf(inscricaoRepository.countByEventoIdAndCertificadoGeradoEmIsNotNull(id))}};
             for(int r=0;r<metrics.length;r++){Row row=resumo.createRow(r);row.createCell(0).setCellValue(metrics[r][0]);row.createCell(1).setCellValue(metrics[r][1]);}
             Sheet sheet=wb.createSheet("Inscrições");Row head=sheet.createRow(0);String[] cols={"Participante","E-mail","Status","Data da inscrição","Check-in","Declaração gerada em"};for(int c=0;c<cols.length;c++)head.createCell(c).setCellValue(cols[c]);int r=1;
-=======
-            Sheet resumo=wb.createSheet("Resumo");String[][] metrics={{"Evento",evento.getTitulo()},{"Inscrições",String.valueOf(inscricoes.size())},{"Check-ins",String.valueOf(inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.UTILIZADO).count())},{"Canceladas",String.valueOf(inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.CANCELADO).count())},{"Declarações de presença geradas",String.valueOf(inscricaoRepository.countByEventoIdAndCertificadoGeradoEmIsNotNull(id))}};
-            for(int r=0;r<metrics.length;r++){Row row=resumo.createRow(r);row.createCell(0).setCellValue(metrics[r][0]);row.createCell(1).setCellValue(metrics[r][1]);}
-            Sheet sheet=wb.createSheet("Inscrições");Row head=sheet.createRow(0);String[] cols={"Participante","E-mail","Status","Data da inscrição","Check-in","Declaração de presença gerada em"};for(int c=0;c<cols.length;c++)head.createCell(c).setCellValue(cols[c]);int r=1;
->>>>>>> 9f8190587fb70577392436388ea40a313988b188
             for(Inscricao i:inscricoes){Row row=sheet.createRow(r++);row.createCell(0).setCellValue(i.getParticipante().getNome());row.createCell(1).setCellValue(i.getParticipante().getEmail());row.createCell(2).setCellValue(rotuloInscricao(i.getStatus()));row.createCell(3).setCellValue(i.getDataCriacao()==null?"":i.getDataCriacao().toString());row.createCell(4).setCellValue(i.getDataCheckIn()==null?"":i.getDataCheckIn().toString());row.createCell(5).setCellValue(i.getCertificadoGeradoEm()==null?"":i.getCertificadoGeradoEm().toString());}
             for(Sheet s:wb)for(int c=0;c<s.getRow(0).getLastCellNum();c++)s.autoSizeColumn(c);
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");response.setHeader(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=relatorios-evento-"+id+".xlsx");wb.write(response.getOutputStream());
@@ -348,11 +342,7 @@ public class EventoController {
     }
 
     private Map<String,Object> chartInscricoes(String titulo,List<Inscricao> inscricoes,Function<Inscricao,String> categoria){Map<String,Long> counts=new LinkedHashMap<>();inscricoes.forEach(i->counts.merge(categoria.apply(i),1L,Long::sum));Map<String,Object> m=new LinkedHashMap<>();m.put("titulo",titulo);m.put("labels",new java.util.ArrayList<>(counts.keySet()));m.put("values",new java.util.ArrayList<>(counts.values()));m.put("total",inscricoes.size());return m;}
-<<<<<<< HEAD
     private String rotuloInscricao(StatusInscricao status){return switch(status){case ATIVO->"Ativa";case PENDENTE->"Aguardando aprovação";case RECUSADO->"Solicitação recusada";case UTILIZADO->"Check-in realizado";case CANCELADO->"Cancelada";};}
-=======
-    private String rotuloInscricao(StatusInscricao status){return switch(status){case ATIVO->"Ativa";case PENDENTE->"Pendente de aprovação";case RECUSADO->"Recusada";case UTILIZADO->"Check-in realizado";case CANCELADO->"Cancelada";};}
->>>>>>> 9f8190587fb70577392436388ea40a313988b188
 
     @GetMapping("/painel")
     public String painelOrganizador(Model model, @AuthenticationPrincipal UserDetails userDetails,
@@ -441,11 +431,7 @@ public class EventoController {
         } catch (org.springframework.security.access.AccessDeniedException e) {
             throw e;
         } catch (Exception e) {
-<<<<<<< HEAD
             log.error("Erro ao salvar imagem do certificado para o evento ID: " + id, e);
-=======
-            log.error("Erro ao salvar imagem da declaração de presença para o evento ID: " + id, e);
->>>>>>> 9f8190587fb70577392436388ea40a313988b188
             redirectAttributes.addFlashAttribute("erroNegocio", "Não foi possível salvar a arte da declaração de presença.");
         }
 
@@ -693,65 +679,6 @@ public class EventoController {
      * vínculo real entre inscrição, evento e participante no banco.
      * Nenhum percentual ou status é aceito do navegador.
      */
-    @PreAuthorize("hasAnyRole('ORGANIZADOR', 'SUPER_ADMIN')")
-    @PostMapping("/eventos/{eventoId}/inscricoes/{inscricaoId}/aprovar")
-    public String aprovarParticipacao(@PathVariable("eventoId") Long eventoId,
-                                      @PathVariable("inscricaoId") Long inscricaoId,
-                                      Authentication authentication,
-                                      RedirectAttributes redirectAttributes) {
-        try {
-            exigirAcessoAoEvento(eventoId, authentication);
-            inscricaoService.aprovarParticipacao(eventoId, inscricaoId);
-            redirectAttributes.addFlashAttribute("sucesso", "Participação aprovada com sucesso!");
-        } catch (org.springframework.security.access.AccessDeniedException e) {
-            throw e;
-        } catch (NegocioException e) {
-            redirectAttributes.addFlashAttribute("erroNegocio", e.getMessage());
-        }
-        return "redirect:/organizador/eventos/" + eventoId + "/inscritos";
-    }
-
-    @PreAuthorize("hasAnyRole('ORGANIZADOR', 'SUPER_ADMIN')")
-    @PostMapping("/eventos/{eventoId}/inscricoes/{inscricaoId}/recusar")
-    public String recusarParticipacao(@PathVariable("eventoId") Long eventoId,
-                                      @PathVariable("inscricaoId") Long inscricaoId,
-                                      Authentication authentication,
-                                      RedirectAttributes redirectAttributes) {
-        try {
-            exigirAcessoAoEvento(eventoId, authentication);
-            inscricaoService.recusarParticipacao(eventoId, inscricaoId);
-            redirectAttributes.addFlashAttribute("sucesso", "Solicitação de participação recusada.");
-        } catch (org.springframework.security.access.AccessDeniedException e) {
-            throw e;
-        } catch (NegocioException e) {
-            redirectAttributes.addFlashAttribute("erroNegocio", e.getMessage());
-        }
-        return "redirect:/organizador/eventos/" + eventoId + "/inscritos";
-    }
-
-    @PreAuthorize("hasAnyRole('ORGANIZADOR', 'SUPER_ADMIN')")
-    @PostMapping("/eventos/{eventoId}/inscricoes/autorizar-email")
-    public String autorizarParticipantePorEmail(@PathVariable("eventoId") Long eventoId,
-                                                @RequestParam("email") String email,
-                                                Authentication authentication,
-                                                RedirectAttributes redirectAttributes) {
-        try {
-            exigirAcessoAoEvento(eventoId, authentication);
-            if (email == null || email.isBlank()) {
-                throw new NegocioException("Informe o e-mail cadastrado do participante.");
-            }
-            Usuario usuario = usuarioService.buscarPorEmail(email.trim());
-            inscricaoService.autorizarParticipante(eventoId, usuario);
-            redirectAttributes.addFlashAttribute("sucesso",
-                    "Participante " + usuario.getNome() + " autorizado no evento.");
-        } catch (org.springframework.security.access.AccessDeniedException e) {
-            throw e;
-        } catch (NegocioException e) {
-            redirectAttributes.addFlashAttribute("erroNegocio", e.getMessage());
-        }
-        return "redirect:/organizador/eventos/" + eventoId + "/inscritos";
-    }
-
     @PreAuthorize("hasAnyRole('ORGANIZADOR', 'SUPER_ADMIN')")
     @PostMapping("/eventos/{eventoId}/inscricoes/{inscricaoId}/validar-participacao")
     public String validarParticipacaoDoInscrito(@PathVariable("eventoId") Long eventoId,
@@ -1043,11 +970,7 @@ public class EventoController {
         } catch (org.springframework.security.access.AccessDeniedException e) {
             throw e;
         } catch (Exception e) {
-<<<<<<< HEAD
             log.error("Falha ao gerar certificado da inscrição {}", inscricaoId, e);
-=======
-            log.error("Falha ao gerar declaração de presença da inscrição {}", inscricaoId, e);
->>>>>>> 9f8190587fb70577392436388ea40a313988b188
             throw new NegocioException("Não foi possível gerar a declaração de presença no momento.");
         }
     }

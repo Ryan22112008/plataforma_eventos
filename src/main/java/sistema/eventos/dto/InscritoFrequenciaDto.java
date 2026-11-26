@@ -31,12 +31,16 @@ public class InscritoFrequenciaDto {
     private boolean certificadoLiberado;
     private boolean inscricaoCancelada;
 
-<<<<<<< HEAD
     /** Solicitação de participação em evento privado aguardando aprovação. */
     private boolean solicitacaoPendente;
 
     /** Solicitação de participação recusada pelo organizador. */
     private boolean inscricaoRecusada;
+
+    /** Sorteios incluem somente inscrições confirmadas e não recusadas. */
+    public boolean isInscricaoAprovada() {
+        return statusInscricao == StatusInscricao.ATIVO || statusInscricao == StatusInscricao.UTILIZADO;
+    }
 
     public String getRotuloStatus() {
         if (solicitacaoPendente) return "Aguardando aprovação";
@@ -44,18 +48,6 @@ public class InscritoFrequenciaDto {
         if (inscricaoCancelada) return "Cancelada";
         if (certificadoLiberado) return "Presença confirmada";
         return "Inscrição ativa";
-=======
-    public boolean isInscricaoPendente() {
-        return statusInscricao == StatusInscricao.PENDENTE;
-    }
-
-    public boolean isInscricaoRecusada() {
-        return statusInscricao == StatusInscricao.RECUSADO;
-    }
-
-    public boolean isInscricaoAprovada() {
-        return statusInscricao == StatusInscricao.ATIVO || statusInscricao == StatusInscricao.UTILIZADO;
->>>>>>> 9f8190587fb70577392436388ea40a313988b188
     }
 
     public String getFrequenciaFormatada() {

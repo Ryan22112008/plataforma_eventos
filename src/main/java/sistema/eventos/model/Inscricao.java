@@ -67,17 +67,10 @@ public class Inscricao extends EntidadeAuditavel {
             throw new IllegalStateException("Este ingresso está cancelado!");
         }
         if (this.status == StatusInscricao.PENDENTE) {
-<<<<<<< HEAD
             throw new IllegalStateException("A participação neste evento ainda aguarda aprovação do organizador.");
         }
         if (this.status == StatusInscricao.RECUSADO) {
             throw new IllegalStateException("A solicitação de participação foi recusada pelo organizador.");
-=======
-            throw new IllegalStateException("Esta solicitação ainda aguarda aprovação do organizador!");
-        }
-        if (this.status == StatusInscricao.RECUSADO) {
-            throw new IllegalStateException("Esta solicitação foi recusada pelo organizador!");
->>>>>>> 9f8190587fb70577392436388ea40a313988b188
         }
         this.status = StatusInscricao.UTILIZADO;
         this.dataCheckIn = LocalDateTime.now();

@@ -75,11 +75,7 @@ public class EventoAdminController {
         } catch (Exception e) {
             removeOldImage(novaFrente, null);
             removeOldImage(novoVerso, null);
-<<<<<<< HEAD
             log.error("Falha ao atualizar configuração da declaração de presença para evento {}", eventoId, e);
-=======
-            log.error("Falha ao atualizar configuração de declaração de presença para evento {}", eventoId, e);
->>>>>>> 9f8190587fb70577392436388ea40a313988b188
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Não foi possível salvar a configuração da declaração de presença.");
         }

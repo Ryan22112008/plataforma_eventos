@@ -21,11 +21,7 @@ import sistema.eventos.dto.AvaliacaoResumoDto;
 import sistema.eventos.model.Evento;
 import sistema.eventos.model.StatusEvento;
 import sistema.eventos.model.Usuario;
-<<<<<<< HEAD
 import sistema.eventos.service.InscricaoService;
-=======
-import sistema.eventos.repository.InscricaoRepository;
->>>>>>> 9f8190587fb70577392436388ea40a313988b188
 import sistema.eventos.service.AvaliacaoEventoService;
 import sistema.eventos.service.EventoService;
 import sistema.eventos.service.UsuarioService;
@@ -63,11 +59,7 @@ class VitrineEventoControllerWebTest {
     private UsuarioService usuarioService;
 
     @MockBean
-<<<<<<< HEAD
     private InscricaoService inscricaoService;
-=======
-    private InscricaoRepository inscricaoRepository;
->>>>>>> 9f8190587fb70577392436388ea40a313988b188
 
     @AfterEach
     void limparContextoDeSeguranca() {
