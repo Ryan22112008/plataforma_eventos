@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,8 +28,12 @@ import sistema.eventos.dto.RequestEventoDto;
 import sistema.eventos.exception.NegocioException;
 import sistema.eventos.model.Evento;
 import sistema.eventos.model.Inscricao;
+import sistema.eventos.model.ModalidadeEvento;
+import sistema.eventos.model.NichoEvento;
+import sistema.eventos.model.PeriodoSorteio;
 import sistema.eventos.model.SorteioResultado;
 import sistema.eventos.model.SorteioRodada;
+import sistema.eventos.model.StatusEvento;
 import sistema.eventos.model.Usuario;
 import sistema.eventos.repository.SessaoRepository;
 import sistema.eventos.repository.InscricaoRepository;
@@ -41,8 +46,13 @@ import sistema.eventos.service.CertificadoService;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.stream.Collectors;
@@ -64,13 +74,200 @@ public class EventoController {
     private final CertificadoService certificadoService;
     private final InscricaoRepository inscricaoRepository;
 
+    @GetMapping("/relatorios")
+    public String relatoriosGeraisOrganizador(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(value = "periodo", defaultValue = "todos") String periodo,
+            Model model) {
+        Usuario organizador = usuarioService.buscarPorEmail(userDetails.getUsername());
+        LocalDate hoje = LocalDate.now();
+        LocalDate inicio = switch (periodo) {
+            case "30" -> hoje.minusDays(29);
+            case "90" -> hoje.minusDays(89);
+            case "ano" -> hoje.withDayOfYear(1);
+            default -> null;
+        };
+
+        List<Evento> todosEventos = eventoService.listarPorOrganizador(organizador.getId());
+        List<Long> eventoIds = todosEventos.stream().map(Evento::getId).toList();
+        List<Inscricao> todasInscricoes = eventoIds.isEmpty()
+                ? List.of()
+                : inscricaoRepository.findByEventoIdInComRelacoes(eventoIds);
+
+        List<Evento> eventosPeriodo = todosEventos.stream()
+                .filter(e -> inicio == null || (e.getDataCriacao() != null && !e.getDataCriacao().toLocalDate().isBefore(inicio)))
+                .toList();
+        List<Inscricao> inscricoesPeriodo = todasInscricoes.stream()
+                .filter(i -> inicio == null || (i.getDataCriacao() != null && !i.getDataCriacao().toLocalDate().isBefore(inicio)))
+                .toList();
+
+        long checkinsPeriodo = inscricoesPeriodo.stream()
+                .filter(i -> i.getStatus() == StatusInscricao.UTILIZADO)
+                .count();
+        long declaracoesGeradas = todasInscricoes.stream()
+                .filter(i -> i.getCertificadoGeradoEm() != null)
+                .count();
+        long declaracoesDisponiveis = todasInscricoes.stream()
+                .filter(i -> i.getStatus() == StatusInscricao.UTILIZADO && i.getCertificadoGeradoEm() == null)
+                .count();
+        long vagasPreenchidasPeriodo = eventosPeriodo.stream()
+                .mapToLong(e -> Math.max(0, (e.getVagasTotais() == null ? 0 : e.getVagasTotais())
+                        - (e.getVagasRestantes() == null ? 0 : e.getVagasRestantes())))
+                .sum();
+        long vagasTotaisPeriodo = eventosPeriodo.stream()
+                .mapToLong(e -> e.getVagasTotais() == null ? 0 : e.getVagasTotais())
+                .sum();
+
+        model.addAttribute("periodo", periodo);
+        model.addAttribute("totalEventos", todosEventos.size());
+        model.addAttribute("novosEventos", eventosPeriodo.size());
+        model.addAttribute("eventosPublicados", todosEventos.stream().filter(e -> e.getStatus() == StatusEvento.PUBLICADO).count());
+        model.addAttribute("eventosPrivados", todosEventos.stream().filter(Evento::isPrivado).count());
+        model.addAttribute("totalInscricoes", todasInscricoes.size());
+        model.addAttribute("novasInscricoes", inscricoesPeriodo.size());
+        model.addAttribute("totalCheckins", todasInscricoes.stream().filter(i -> i.getStatus() == StatusInscricao.UTILIZADO).count());
+        model.addAttribute("totalPendentes", todasInscricoes.stream().filter(i -> i.getStatus() == StatusInscricao.PENDENTE).count());
+        model.addAttribute("declaracoesGeradas", declaracoesGeradas);
+        model.addAttribute("taxaCheckin", percentual(checkinsPeriodo, inscricoesPeriodo.size()));
+        model.addAttribute("taxaOcupacao", percentual(vagasPreenchidasPeriodo, vagasTotaisPeriodo));
+
+        List<Map<String, Object>> charts = new ArrayList<>();
+        charts.add(chartDados("Status dos eventos", todosEventos,
+                e -> rotuloStatusEvento(e.getStatus()),
+                Arrays.stream(StatusEvento.values()).map(this::rotuloStatusEvento).toList()));
+        charts.add(chartDados("Visibilidade dos eventos", todosEventos,
+                e -> e.isPrivado() ? "Privado" : "Público",
+                List.of("Público", "Privado")));
+        charts.add(chartDados("Modalidade dos eventos", todosEventos,
+                e -> rotuloModalidade(e.getModalidade()),
+                List.of("Presencial", "Online", "Híbrido", "Não informado")));
+        charts.add(chartDados("Temas dos eventos", todosEventos,
+                e -> rotuloNicho(e.getNicho()),
+                List.of("Tecnologia", "Tecnologia e inovação", "Gestão pública", "Saúde", "Outros", "Não informado")));
+        charts.add(chartDados("Situação das inscrições", todasInscricoes,
+                i -> rotuloInscricao(i.getStatus()),
+                Arrays.stream(StatusInscricao.values()).map(this::rotuloInscricao).toList()));
+        charts.add(chartDados("Eventos cadastrados por trimestre", eventosPeriodo,
+                e -> e.getDataCriacao() == null ? "Sem data de cadastro" : rotuloTrimestre(e.getDataCriacao().toLocalDate()),
+                List.of()));
+
+        Map<String, Object> chartDeclaracoes = new LinkedHashMap<>();
+        chartDeclaracoes.put("titulo", "Declarações de presença geradas");
+        chartDeclaracoes.put("labels", List.of("Geradas", "Disponíveis para geração"));
+        chartDeclaracoes.put("values", List.of(declaracoesGeradas, declaracoesDisponiveis));
+        chartDeclaracoes.put("total", declaracoesGeradas + declaracoesDisponiveis);
+        charts.add(chartDeclaracoes);
+
+        Map<Long, List<Inscricao>> inscricoesPorEvento = todasInscricoes.stream()
+                .collect(Collectors.groupingBy(i -> i.getEvento().getId()));
+        List<Map<String, Object>> resumoEventos = new ArrayList<>();
+        for (Evento e : todosEventos) {
+            List<Inscricao> ins = inscricoesPorEvento.getOrDefault(e.getId(), List.of());
+            long checkins = ins.stream().filter(i -> i.getStatus() == StatusInscricao.UTILIZADO).count();
+            long pendentes = ins.stream().filter(i -> i.getStatus() == StatusInscricao.PENDENTE).count();
+            long decls = ins.stream().filter(i -> i.getCertificadoGeradoEm() != null).count();
+            int vagasTotais = e.getVagasTotais() == null ? 0 : e.getVagasTotais();
+            int vagasRest = e.getVagasRestantes() == null ? 0 : e.getVagasRestantes();
+            long ocupacao = vagasTotais == 0 ? 0 : Math.round((vagasTotais - vagasRest) * 100.0 / vagasTotais);
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("id", e.getId());
+            row.put("titulo", e.getTitulo());
+            row.put("privado", e.isPrivado());
+            row.put("status", rotuloStatusEvento(e.getStatus()));
+            row.put("dataInicio", e.getDataInicio());
+            row.put("dataTermino", e.getDataTermino());
+            row.put("inscricoes", ins.size());
+            row.put("pendentes", pendentes);
+            row.put("checkins", checkins);
+            row.put("declaracoes", decls);
+            row.put("ocupacao", ocupacao);
+            resumoEventos.add(row);
+        }
+
+        model.addAttribute("charts", charts);
+        model.addAttribute("resumoEventos", resumoEventos);
+        return "organizador-relatorios-geral";
+    }
+
+    @GetMapping("/relatorios/excel")
+    public void exportarRelatoriosGeraisExcel(@AuthenticationPrincipal UserDetails userDetails,
+                                              HttpServletResponse response) throws java.io.IOException {
+        Usuario organizador = usuarioService.buscarPorEmail(userDetails.getUsername());
+        List<Evento> eventos = eventoService.listarPorOrganizador(organizador.getId());
+        List<Long> eventoIds = eventos.stream().map(Evento::getId).toList();
+        List<Inscricao> inscricoes = eventoIds.isEmpty()
+                ? List.of()
+                : inscricaoRepository.findByEventoIdInComRelacoes(eventoIds);
+
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet resumo = workbook.createSheet("Resumo");
+            String[][] linhas = {
+                    {"Indicador", "Quantidade"},
+                    {"Eventos do organizador", String.valueOf(eventos.size())},
+                    {"Eventos públicos", String.valueOf(eventos.stream().filter(e -> !e.isPrivado()).count())},
+                    {"Eventos privados", String.valueOf(eventos.stream().filter(Evento::isPrivado).count())},
+                    {"Inscrições totais", String.valueOf(inscricoes.size())},
+                    {"Check-ins realizados", String.valueOf(inscricoes.stream().filter(i -> i.getStatus() == StatusInscricao.UTILIZADO).count())},
+                    {"Declarações de presença geradas", String.valueOf(inscricoes.stream().filter(i -> i.getCertificadoGeradoEm() != null).count())}
+            };
+            for (int r = 0; r < linhas.length; r++) {
+                Row row = resumo.createRow(r);
+                row.createCell(0).setCellValue(linhas[r][0]);
+                row.createCell(1).setCellValue(linhas[r][1]);
+            }
+
+            Sheet evSheet = workbook.createSheet("Eventos");
+            Row evHead = evSheet.createRow(0);
+            String[] evCols = {"Evento", "Visibilidade", "Status", "Modalidade", "Tema", "Inscrições", "Check-ins", "Declarações de presença geradas"};
+            for (int c = 0; c < evCols.length; c++) evHead.createCell(c).setCellValue(evCols[c]);
+            int er = 1;
+            for (Evento e : eventos) {
+                List<Inscricao> insEvento = inscricoes.stream().filter(i -> i.getEvento().getId().equals(e.getId())).toList();
+                Row row = evSheet.createRow(er++);
+                row.createCell(0).setCellValue(e.getTitulo());
+                row.createCell(1).setCellValue(e.isPrivado() ? "Privado" : "Público");
+                row.createCell(2).setCellValue(rotuloStatusEvento(e.getStatus()));
+                row.createCell(3).setCellValue(rotuloModalidade(e.getModalidade()));
+                row.createCell(4).setCellValue(rotuloNicho(e.getNicho()));
+                row.createCell(5).setCellValue(insEvento.size());
+                row.createCell(6).setCellValue(insEvento.stream().filter(i -> i.getStatus() == StatusInscricao.UTILIZADO).count());
+                row.createCell(7).setCellValue(insEvento.stream().filter(i -> i.getCertificadoGeradoEm() != null).count());
+            }
+
+            Sheet insSheet = workbook.createSheet("Inscrições");
+            Row insHead = insSheet.createRow(0);
+            String[] insCols = {"Participante", "E-mail", "Evento", "Status", "Inscrito em", "Check-in em", "Declaração de presença gerada em"};
+            for (int c = 0; c < insCols.length; c++) insHead.createCell(c).setCellValue(insCols[c]);
+            int ir = 1;
+            for (Inscricao i : inscricoes) {
+                Row row = insSheet.createRow(ir++);
+                row.createCell(0).setCellValue(i.getParticipante().getNome());
+                row.createCell(1).setCellValue(i.getParticipante().getEmail());
+                row.createCell(2).setCellValue(i.getEvento().getTitulo());
+                row.createCell(3).setCellValue(rotuloInscricao(i.getStatus()));
+                row.createCell(4).setCellValue(i.getDataCriacao() == null ? "" : i.getDataCriacao().toString());
+                row.createCell(5).setCellValue(i.getDataCheckIn() == null ? "" : i.getDataCheckIn().toString());
+                row.createCell(6).setCellValue(i.getCertificadoGeradoEm() == null ? "" : i.getCertificadoGeradoEm().toString());
+            }
+
+            for (Sheet sh : workbook) {
+                if (sh.getRow(0) != null) {
+                    for (int c = 0; c < sh.getRow(0).getLastCellNum(); c++) sh.autoSizeColumn(c);
+                }
+            }
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorios-organizador.xlsx");
+            workbook.write(response.getOutputStream());
+        }
+    }
+
     @GetMapping("/eventos/{id}/relatorios")
     public String relatoriosEvento(@PathVariable Long id, Authentication authentication, Model model) {
         Evento evento = exigirAcessoAoEvento(id, authentication);
         List<Inscricao> inscricoes = inscricaoRepository.findByEventoId(id);
         List<Map<String,Object>> charts = new java.util.ArrayList<>();
         charts.add(chartInscricoes("Situação das inscrições", inscricoes, i -> rotuloInscricao(i.getStatus())));
-        charts.add(chartInscricoes("Participantes com check-in", inscricoes, i -> i.getStatus()==StatusInscricao.UTILIZADO ? "Presença confirmada" : i.getStatus()==StatusInscricao.CANCELADO ? "Inscrição cancelada" : "Aguardando presença"));
+        charts.add(chartInscricoes("Participantes com check-in", inscricoes, i -> i.getStatus()==StatusInscricao.UTILIZADO ? "Presença confirmada" : i.getStatus()==StatusInscricao.CANCELADO ? "Inscrição cancelada" : i.getStatus()==StatusInscricao.PENDENTE ? "Aguardando aprovação" : i.getStatus()==StatusInscricao.RECUSADO ? "Solicitação recusada" : "Aguardando presença"));
         long certificadosGerados=inscricoes.stream().filter(i->i.getCertificadoGeradoEm()!=null).count();
         long certificadosDisponiveis=inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.UTILIZADO&&i.getCertificadoGeradoEm()==null).count();
         Map<String,Object> chartCertificados=new LinkedHashMap<>();chartCertificados.put("titulo","Declarações de presença geradas");chartCertificados.put("labels",List.of("Geradas","Disponíveis para geração"));chartCertificados.put("values",List.of(certificadosGerados,certificadosDisponiveis));chartCertificados.put("total",certificadosGerados+certificadosDisponiveis);charts.add(chartCertificados);
@@ -90,17 +287,72 @@ public class EventoController {
     public void exportarRelatorioEvento(@PathVariable Long id, Authentication authentication, HttpServletResponse response) throws java.io.IOException {
         Evento evento=exigirAcessoAoEvento(id,authentication);List<Inscricao> inscricoes=inscricaoRepository.findByEventoId(id);
         try(Workbook wb=new XSSFWorkbook()){
+<<<<<<< HEAD
             Sheet resumo=wb.createSheet("Resumo");String[][] metrics={{"Evento",evento.getTitulo()},{"Inscrições",String.valueOf(inscricoes.size())},{"Check-ins",String.valueOf(inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.UTILIZADO).count())},{"Canceladas",String.valueOf(inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.CANCELADO).count())},{"Aguardando aprovação",String.valueOf(inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.PENDENTE).count())},{"Declarações de presença geradas",String.valueOf(inscricaoRepository.countByEventoIdAndCertificadoGeradoEmIsNotNull(id))}};
             for(int r=0;r<metrics.length;r++){Row row=resumo.createRow(r);row.createCell(0).setCellValue(metrics[r][0]);row.createCell(1).setCellValue(metrics[r][1]);}
             Sheet sheet=wb.createSheet("Inscrições");Row head=sheet.createRow(0);String[] cols={"Participante","E-mail","Status","Data da inscrição","Check-in","Declaração gerada em"};for(int c=0;c<cols.length;c++)head.createCell(c).setCellValue(cols[c]);int r=1;
+=======
+            Sheet resumo=wb.createSheet("Resumo");String[][] metrics={{"Evento",evento.getTitulo()},{"Inscrições",String.valueOf(inscricoes.size())},{"Check-ins",String.valueOf(inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.UTILIZADO).count())},{"Canceladas",String.valueOf(inscricoes.stream().filter(i->i.getStatus()==StatusInscricao.CANCELADO).count())},{"Declarações de presença geradas",String.valueOf(inscricaoRepository.countByEventoIdAndCertificadoGeradoEmIsNotNull(id))}};
+            for(int r=0;r<metrics.length;r++){Row row=resumo.createRow(r);row.createCell(0).setCellValue(metrics[r][0]);row.createCell(1).setCellValue(metrics[r][1]);}
+            Sheet sheet=wb.createSheet("Inscrições");Row head=sheet.createRow(0);String[] cols={"Participante","E-mail","Status","Data da inscrição","Check-in","Declaração de presença gerada em"};for(int c=0;c<cols.length;c++)head.createCell(c).setCellValue(cols[c]);int r=1;
+>>>>>>> 9f8190587fb70577392436388ea40a313988b188
             for(Inscricao i:inscricoes){Row row=sheet.createRow(r++);row.createCell(0).setCellValue(i.getParticipante().getNome());row.createCell(1).setCellValue(i.getParticipante().getEmail());row.createCell(2).setCellValue(rotuloInscricao(i.getStatus()));row.createCell(3).setCellValue(i.getDataCriacao()==null?"":i.getDataCriacao().toString());row.createCell(4).setCellValue(i.getDataCheckIn()==null?"":i.getDataCheckIn().toString());row.createCell(5).setCellValue(i.getCertificadoGeradoEm()==null?"":i.getCertificadoGeradoEm().toString());}
             for(Sheet s:wb)for(int c=0;c<s.getRow(0).getLastCellNum();c++)s.autoSizeColumn(c);
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");response.setHeader(HttpHeaders.CONTENT_DISPOSITION,"attachment; filename=relatorios-evento-"+id+".xlsx");wb.write(response.getOutputStream());
         }
     }
 
+    private long percentual(long parte, long total) { return total == 0 ? 0 : Math.round(parte * 100.0 / total); }
+    private String rotuloTrimestre(LocalDate data) { return "" + ((data.getMonthValue() - 1) / 3 + 1) + "º tri de " + data.getYear(); }
+    private String rotuloStatusEvento(StatusEvento status) {
+        if (status == null) return "Não informado";
+        return switch (status) {
+            case PUBLICADO -> "Publicado";
+            case RASCUNHO -> "Rascunho";
+            case CANCELADO -> "Cancelado";
+            case ENCERRADO -> "Encerrado";
+        };
+    }
+    private String rotuloModalidade(ModalidadeEvento mod) {
+        if (mod == null) return "Não informado";
+        return switch (mod) {
+            case PRESENCIAL -> "Presencial";
+            case ONLINE -> "Online";
+            case HIBRIDO -> "Híbrido";
+        };
+    }
+    private String rotuloNicho(NichoEvento nicho) {
+        if (nicho == null) return "Não informado";
+        return switch (nicho) {
+            case TECNOLOGIA -> "Tecnologia";
+            case TECNOLOGIA_E_INOVACAO -> "Tecnologia e inovação";
+            case GESTAO_PUBLICA -> "Gestão pública";
+            case SAUDE -> "Saúde";
+            case OUTROS -> "Outros";
+        };
+    }
+    private <T> Map<String, Object> chartDados(String titulo, List<T> dados, Function<T, String> chave, List<String> categorias) {
+        Map<String, Long> contagens = new LinkedHashMap<>();
+        categorias.forEach(c -> contagens.put(c, 0L));
+        dados.forEach(d -> {
+            String c = chave.apply(d);
+            contagens.putIfAbsent(c, 0L);
+            contagens.merge(c, 1L, Long::sum);
+        });
+        Map<String, Object> resultado = new HashMap<>();
+        resultado.put("titulo", titulo);
+        resultado.put("labels", new ArrayList<>(contagens.keySet()));
+        resultado.put("values", new ArrayList<>(contagens.values()));
+        resultado.put("total", dados.size());
+        return resultado;
+    }
+
     private Map<String,Object> chartInscricoes(String titulo,List<Inscricao> inscricoes,Function<Inscricao,String> categoria){Map<String,Long> counts=new LinkedHashMap<>();inscricoes.forEach(i->counts.merge(categoria.apply(i),1L,Long::sum));Map<String,Object> m=new LinkedHashMap<>();m.put("titulo",titulo);m.put("labels",new java.util.ArrayList<>(counts.keySet()));m.put("values",new java.util.ArrayList<>(counts.values()));m.put("total",inscricoes.size());return m;}
+<<<<<<< HEAD
     private String rotuloInscricao(StatusInscricao status){return switch(status){case ATIVO->"Ativa";case PENDENTE->"Aguardando aprovação";case RECUSADO->"Solicitação recusada";case UTILIZADO->"Check-in realizado";case CANCELADO->"Cancelada";};}
+=======
+    private String rotuloInscricao(StatusInscricao status){return switch(status){case ATIVO->"Ativa";case PENDENTE->"Pendente de aprovação";case RECUSADO->"Recusada";case UTILIZADO->"Check-in realizado";case CANCELADO->"Cancelada";};}
+>>>>>>> 9f8190587fb70577392436388ea40a313988b188
 
     @GetMapping("/painel")
     public String painelOrganizador(Model model, @AuthenticationPrincipal UserDetails userDetails,
@@ -112,7 +364,14 @@ public class EventoController {
 
             Usuario organizadorReal = usuarioService.buscarPorEmail(userDetails.getUsername());
             var eventosDoOrganizador = eventoService.listarPorOrganizador(organizadorReal.getId());
+            List<Long> eventoIds = eventosDoOrganizador.stream().map(Evento::getId).toList();
+            Map<Long, Long> pendentesPorEvento = eventoIds.isEmpty()
+                    ? Map.of()
+                    : inscricaoRepository.findByEventoIdInComRelacoes(eventoIds).stream()
+                            .filter(i -> i.getStatus() == StatusInscricao.PENDENTE)
+                            .collect(Collectors.groupingBy(i -> i.getEvento().getId(), Collectors.counting()));
             model.addAttribute("eventos", eventosDoOrganizador);
+            model.addAttribute("pendentesPorEvento", pendentesPorEvento);
 
             return "painel-organizador";
 
@@ -182,7 +441,11 @@ public class EventoController {
         } catch (org.springframework.security.access.AccessDeniedException e) {
             throw e;
         } catch (Exception e) {
+<<<<<<< HEAD
             log.error("Erro ao salvar imagem do certificado para o evento ID: " + id, e);
+=======
+            log.error("Erro ao salvar imagem da declaração de presença para o evento ID: " + id, e);
+>>>>>>> 9f8190587fb70577392436388ea40a313988b188
             redirectAttributes.addFlashAttribute("erroNegocio", "Não foi possível salvar a arte da declaração de presença.");
         }
 
@@ -220,13 +483,22 @@ public class EventoController {
 
     @GetMapping("/eventos/{id}/sorteios")
     public String telaSorteio(@PathVariable("id") Long id,
+                              @RequestParam(value = "data", required = false)
+                              @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data,
+                              @RequestParam(value = "periodo", required = false) PeriodoSorteio periodo,
                               @RequestParam(value = "q", required = false) String busca,
                               @RequestParam(value = "page", required = false, defaultValue = "1") Integer pagina,
                               @RequestParam(value = "destaque", required = false) Long destaque,
                               Model model, Authentication authentication) {
         Evento evento = exigirAcessoAoEvento(id, authentication);
-        int minimo = sorteioService.percentualMinimo(evento);
-        List<SorteioService.ElegivelSorteio> participantesElegiveis = sorteioService.listarElegiveis(evento);
+        List<LocalDate> datasComSessoes = sorteioService.listarDatasComSessoes(id);
+        LocalDate dataSelecionada = data != null ? data
+                : (!datasComSessoes.isEmpty() ? datasComSessoes.get(0)
+                : (evento.getDataInicio() != null ? evento.getDataInicio() : LocalDate.now()));
+        PeriodoSorteio periodoSelecionado = periodo != null ? periodo : PeriodoSorteio.MATUTINO;
+
+        List<SorteioService.ElegivelSorteio> participantesElegiveis =
+                sorteioService.listarElegiveisPorDataEPeriodo(evento, dataSelecionada, periodoSelecionado);
         long jaVenceram = participantesElegiveis.stream()
                 .filter(SorteioService.ElegivelSorteio::vencedorAtivo)
                 .count();
@@ -253,7 +525,10 @@ public class EventoController {
                 : sorteioService.listarVencedoresDaRodada(rodadaApresentacao.getId());
 
         model.addAttribute("evento", evento);
-        model.addAttribute("percentualMinimo", minimo);
+        model.addAttribute("dataSelecionada", dataSelecionada);
+        model.addAttribute("periodoSelecionado", periodoSelecionado);
+        model.addAttribute("periodosSorteio", PeriodoSorteio.values());
+        model.addAttribute("datasComSessoes", datasComSessoes);
         model.addAttribute("totalElegiveis", participantesElegiveis.size());
         model.addAttribute("totalElegiveisJaVenceram", jaVenceram);
         model.addAttribute("totalElegiveisIneditos", participantesElegiveis.size() - jaVenceram);
@@ -293,6 +568,8 @@ public class EventoController {
 
     @PostMapping("/eventos/{id}/sorteios/realizar")
     public String realizarSorteio(@PathVariable("id") Long id,
+                                  @RequestParam("data") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data,
+                                  @RequestParam("periodo") PeriodoSorteio periodo,
                                   @RequestParam("quantidade") Integer quantidade,
                                   @RequestParam(value = "naoRepetirVencedores", required = false, defaultValue = "false")
                                   boolean naoRepetirVencedores,
@@ -301,15 +578,17 @@ public class EventoController {
         exigirAcessoAoEvento(id, authentication);
         try {
             SorteioRodada rodada = sorteioService.realizarSorteio(
-                    id, quantidade, naoRepetirVencedores, nomeAutor(authentication));
-            return "redirect:/organizador/eventos/" + id + "/sorteios?destaque=" + rodada.getId();
+                    id, data, periodo, quantidade, naoRepetirVencedores, nomeAutor(authentication));
+            return "redirect:/organizador/eventos/" + id + "/sorteios?destaque=" + rodada.getId()
+                    + "&data=" + data + "&periodo=" + periodo.name();
         } catch (NegocioException e) {
             attributes.addFlashAttribute("erroNegocio", e.getMessage());
         } catch (Exception e) {
             log.error("Falha ao realizar sorteio do evento {} com quantidade {}.", id, quantidade, e);
             attributes.addFlashAttribute("erroNegocio", "Não foi possível realizar o sorteio agora. Tente novamente em instantes.");
         }
-        return "redirect:/organizador/eventos/" + id + "/sorteios";
+        return "redirect:/organizador/eventos/" + id + "/sorteios"
+                + (data != null && periodo != null ? "?data=" + data + "&periodo=" + periodo.name() : "");
     }
 
     @PostMapping("/eventos/{id}/sorteios/{rodadaId}/desfazer")
@@ -414,6 +693,65 @@ public class EventoController {
      * vínculo real entre inscrição, evento e participante no banco.
      * Nenhum percentual ou status é aceito do navegador.
      */
+    @PreAuthorize("hasAnyRole('ORGANIZADOR', 'SUPER_ADMIN')")
+    @PostMapping("/eventos/{eventoId}/inscricoes/{inscricaoId}/aprovar")
+    public String aprovarParticipacao(@PathVariable("eventoId") Long eventoId,
+                                      @PathVariable("inscricaoId") Long inscricaoId,
+                                      Authentication authentication,
+                                      RedirectAttributes redirectAttributes) {
+        try {
+            exigirAcessoAoEvento(eventoId, authentication);
+            inscricaoService.aprovarParticipacao(eventoId, inscricaoId);
+            redirectAttributes.addFlashAttribute("sucesso", "Participação aprovada com sucesso!");
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            throw e;
+        } catch (NegocioException e) {
+            redirectAttributes.addFlashAttribute("erroNegocio", e.getMessage());
+        }
+        return "redirect:/organizador/eventos/" + eventoId + "/inscritos";
+    }
+
+    @PreAuthorize("hasAnyRole('ORGANIZADOR', 'SUPER_ADMIN')")
+    @PostMapping("/eventos/{eventoId}/inscricoes/{inscricaoId}/recusar")
+    public String recusarParticipacao(@PathVariable("eventoId") Long eventoId,
+                                      @PathVariable("inscricaoId") Long inscricaoId,
+                                      Authentication authentication,
+                                      RedirectAttributes redirectAttributes) {
+        try {
+            exigirAcessoAoEvento(eventoId, authentication);
+            inscricaoService.recusarParticipacao(eventoId, inscricaoId);
+            redirectAttributes.addFlashAttribute("sucesso", "Solicitação de participação recusada.");
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            throw e;
+        } catch (NegocioException e) {
+            redirectAttributes.addFlashAttribute("erroNegocio", e.getMessage());
+        }
+        return "redirect:/organizador/eventos/" + eventoId + "/inscritos";
+    }
+
+    @PreAuthorize("hasAnyRole('ORGANIZADOR', 'SUPER_ADMIN')")
+    @PostMapping("/eventos/{eventoId}/inscricoes/autorizar-email")
+    public String autorizarParticipantePorEmail(@PathVariable("eventoId") Long eventoId,
+                                                @RequestParam("email") String email,
+                                                Authentication authentication,
+                                                RedirectAttributes redirectAttributes) {
+        try {
+            exigirAcessoAoEvento(eventoId, authentication);
+            if (email == null || email.isBlank()) {
+                throw new NegocioException("Informe o e-mail cadastrado do participante.");
+            }
+            Usuario usuario = usuarioService.buscarPorEmail(email.trim());
+            inscricaoService.autorizarParticipante(eventoId, usuario);
+            redirectAttributes.addFlashAttribute("sucesso",
+                    "Participante " + usuario.getNome() + " autorizado no evento.");
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            throw e;
+        } catch (NegocioException e) {
+            redirectAttributes.addFlashAttribute("erroNegocio", e.getMessage());
+        }
+        return "redirect:/organizador/eventos/" + eventoId + "/inscritos";
+    }
+
     @PreAuthorize("hasAnyRole('ORGANIZADOR', 'SUPER_ADMIN')")
     @PostMapping("/eventos/{eventoId}/inscricoes/{inscricaoId}/validar-participacao")
     public String validarParticipacaoDoInscrito(@PathVariable("eventoId") Long eventoId,
@@ -643,7 +981,7 @@ public class EventoController {
         // Redireciona de volta para a pauta de chamada atualizada
         return "redirect:/organizador/eventos/" + id + "/inscritos";
     }
-    @GetMapping("/certificado-preview/{id}")
+    @GetMapping({"/declaracao-preview/{id}", "/certificado-preview/{id}"})
     public String preVisualizarTemplateCertificado(@PathVariable("id") Long id, Model model, Authentication authentication) throws Exception {
         // 1. Busca os dados originais do evento
         Evento evento = exigirAcessoAoEvento(id, authentication);
@@ -664,7 +1002,7 @@ public class EventoController {
 
         String codigoPreview = "EV3-PREVIEW-ONLY";
         String urlPreview = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/certificados/validar").queryParam("codigo", codigoPreview).build().encode().toUriString();
+                .path("/declaracoes/validar").queryParam("codigo", codigoPreview).build().encode().toUriString();
         model.addAttribute("qrCodeBase64", gerarQrCodeBase64(urlPreview));
 
         // 5. Mocks de segurança para o restante do documento (Evita os erros de campos nulos)
@@ -688,7 +1026,7 @@ public class EventoController {
         return reference.startsWith("/") ? reference : "/imagens-eventos/" + reference;
     }
 
-    @GetMapping("/inscricoes/{inscricaoId}/certificado")
+    @GetMapping({"/inscricoes/{inscricaoId}/declaracao", "/inscricoes/{inscricaoId}/certificado"})
     public void baixarCertificadoComoProfessor(@PathVariable("inscricaoId") Long inscricaoId,
                                                Authentication authentication,
                                                HttpServletResponse response) {
@@ -697,7 +1035,7 @@ public class EventoController {
             exigirAcessoAoEvento(inscricao.getEvento().getId(), authentication);
             byte[] pdfBytes = certificadoService.gerarCertificadoPdf(inscricao);
             response.setContentType("application/pdf");
-            response.setHeader("Content-Disposition", "attachment; filename=\"certificado-evento-" + inscricaoId + ".pdf\"");
+            response.setHeader("Content-Disposition", "attachment; filename=\"declaracao-presenca-evento-" + inscricaoId + ".pdf\"");
             response.setHeader("Cache-Control", "private, no-store, max-age=0");
             response.setHeader("X-Content-Type-Options", "nosniff");
             response.setContentLength(pdfBytes.length);
@@ -705,7 +1043,11 @@ public class EventoController {
         } catch (org.springframework.security.access.AccessDeniedException e) {
             throw e;
         } catch (Exception e) {
+<<<<<<< HEAD
             log.error("Falha ao gerar certificado da inscrição {}", inscricaoId, e);
+=======
+            log.error("Falha ao gerar declaração de presença da inscrição {}", inscricaoId, e);
+>>>>>>> 9f8190587fb70577392436388ea40a313988b188
             throw new NegocioException("Não foi possível gerar a declaração de presença no momento.");
         }
     }

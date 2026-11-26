@@ -1,14 +1,21 @@
 <!DOCTYPE html>
+<<<<<<< HEAD
 <html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
 <head th:replace="~{fragments/seplag-ui :: head('Detalhes do Evento')}">
     <title>Detalhes do Evento | SEPLAG-MT</title>
+=======
+<html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/seplag-ui :: head-content('Detalhes do Evento')}"></th:block>
+    <meta name="robots" content="noindex,nofollow" th:if="${evento.privado}">
+>>>>>>> 9f8190587fb70577392436388ea40a313988b188
 </head>
 <body class="v2 seplag-public">
 
 <a class="seplag-skip-link" href="#conteudo">Ir para o conteúdo</a>
 
-<header th:replace="~{fragments/seplag-ui :: public-header('cursos')}"></header>
+<header th:replace="~{fragments/seplag-ui :: public-header('eventos')}"></header>
 
 <main class="seplag-public-main" id="conteudo">
 
@@ -55,6 +62,10 @@
                     <i class="fa-solid fa-display" aria-hidden="true"></i>
                     <th:block th:replace="~{fragments/seplag-ui :: modalidade(${evento.modalidade})}"></th:block>
                 </span>
+                <span th:if="${evento.privado}" class="seplag-badge seplag-badge--warning">
+                    <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                    Evento privado · Mediante aprovação
+                </span>
             </div>
         </div>
     </div>
@@ -79,12 +90,17 @@
                     <i class="fa-solid fa-display" aria-hidden="true"></i>
                     <th:block th:replace="~{fragments/seplag-ui :: modalidade(${evento.modalidade})}"></th:block>
                 </span>
+                <span th:if="${evento.privado}" class="seplag-badge seplag-badge--warning">
+                    <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                    Evento privado · Mediante aprovação
+                </span>
             </div>
         </div>
     </div>
 
     <section class="seplag-event-enroll" aria-labelledby="inscricao-titulo">
         <div>
+<<<<<<< HEAD
             <h2 id="inscricao-titulo">Participação no evento</h2>
             <p>Vagas: <strong th:text="${evento.vagasTotais ?: 'Ilimitadas'}">Ilimitadas</strong></p>
             <p th:if="${eventoPrivado}" class="seplag-card__hint">
@@ -97,10 +113,25 @@
             <button type="button" class="seplag-btn seplag-btn-secondary"
                     data-share-open
                     th:attr="data-share-title=${evento.titulo},data-share-url=${urlCompartilhamento}">
+=======
+            <h2 id="inscricao-titulo">Inscrição no evento</h2>
+            <p>Vagas: <strong th:text="${evento.vagasTotais ?: 'Ilimitadas'}">Ilimitadas</strong>
+                <span th:if="${evento.privado}"> · A participação depende da aprovação do organizador.</span>
+            </p>
+        </div>
+
+        <div class="seplag-toolbar">
+            <button type="button"
+                    class="seplag-btn seplag-btn-secondary"
+                    data-share-trigger
+                    th:data-share-url="@{/eventos/{id}(id=${evento.id})}"
+                    th:data-share-title="${evento.titulo}">
+>>>>>>> 9f8190587fb70577392436388ea40a313988b188
                 <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
                 Compartilhar
             </button>
 
+<<<<<<< HEAD
             <a sec:authorize="isAnonymous()" th:href="@{/login}" class="seplag-btn seplag-btn-primary">
                 <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
                 Entrar para se inscrever
@@ -138,6 +169,32 @@
                     </button>
                 </form>
             </div>
+=======
+            <th:block th:if="${inscricaoUsuario != null}">
+                <span th:if="${inscricaoUsuario.status.name() == 'PENDENTE'}" class="seplag-badge seplag-badge--warning">
+                    <i class="fa-regular fa-clock" aria-hidden="true"></i> Solicitação enviada · Aguardando aprovação
+                </span>
+                <span th:if="${inscricaoUsuario.status.name() == 'ATIVO'}" class="seplag-badge seplag-badge--success">
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i> Inscrição confirmada
+                </span>
+                <span th:if="${inscricaoUsuario.status.name() == 'UTILIZADO'}" class="seplag-badge seplag-badge--success">
+                    <i class="fa-solid fa-check-double" aria-hidden="true"></i> Presença confirmada
+                </span>
+                <span th:if="${inscricaoUsuario.status.name() == 'RECUSADO'}" class="seplag-badge seplag-badge--danger">
+                    <i class="fa-solid fa-ban" aria-hidden="true"></i> Solicitação não aprovada
+                </span>
+                <span th:if="${inscricaoUsuario.status.name() == 'CANCELADO'}" class="seplag-badge seplag-badge--neutral">
+                    <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i> Inscrição cancelada
+                </span>
+            </th:block>
+
+            <form th:if="${inscricaoUsuario == null}" th:action="@{/eventos/{id}/inscrever(id=${evento.id})}" method="POST">
+                <button type="submit" class="seplag-btn seplag-btn-primary">
+                    <i class="fa-solid fa-check-to-slot" aria-hidden="true"></i>
+                    <span th:text="${evento.privado ? 'Solicitar Participação' : 'Realizar Inscrição'}">Realizar Inscrição</span>
+                </button>
+            </form>
+>>>>>>> 9f8190587fb70577392436388ea40a313988b188
         </div>
     </section>
 
@@ -454,6 +511,8 @@
 </main>
 
 <footer th:replace="~{fragments/seplag-ui :: public-footer}"></footer>
+<dialog th:replace="~{fragments/seplag-ui :: share-modal}"></dialog>
+<script th:src="@{/js/seplag-shell.js}" defer></script>
 
 <div th:replace="~{fragments/seplag-ui :: share-sheet(${evento.titulo}, ${urlCompartilhamento})}"></div>
 

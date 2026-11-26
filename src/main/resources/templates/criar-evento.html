@@ -90,6 +90,7 @@
                     </div>
 
                     <div class="seplag-field">
+<<<<<<< HEAD
                         <label class="seplag-label" for="privado">Visibilidade do evento</label>
                         <label class="seplag-check-line" for="privado">
                             <input type="checkbox" th:field="*{privado}" id="privado" class="seplag-checkbox">
@@ -101,6 +102,25 @@
                                 </span>
                             </span>
                         </label>
+=======
+                        <span class="seplag-label">Visibilidade e controle de acesso</span>
+                        <div class="seplag-visibility-toggle" role="radiogroup" aria-label="Visibilidade do evento">
+                            <label class="seplag-visibility-option">
+                                <input type="radio" th:field="*{privado}" value="false">
+                                <span>
+                                    <strong><i class="fa-solid fa-globe" aria-hidden="true"></i> Evento Público</strong>
+                                    <small>Aparece na vitrine oficial e qualquer pessoa pode se inscrever diretamente.</small>
+                                </span>
+                            </label>
+                            <label class="seplag-visibility-option">
+                                <input type="radio" th:field="*{privado}" value="true">
+                                <span>
+                                    <strong><i class="fa-solid fa-lock" aria-hidden="true"></i> Evento Privado</strong>
+                                    <small>Oculto na vitrine pública. Acessível por link direto e você decide quem participa.</small>
+                                </span>
+                            </label>
+                        </div>
+>>>>>>> 9f8190587fb70577392436388ea40a313988b188
                     </div>
                 </div>
             </section>
@@ -248,7 +268,7 @@
                             <label class="seplag-label" for="certificadoFrenteInput">Layout da Declaração de Presença (Frente)</label>
 
                             <div th:if="${eventoDto.imagemFrenteAtual != null and !eventoDto.imagemFrenteAtual.startsWith('default-')}" class="seplag-current">
-                                <img th:src="${#strings.startsWith(eventoDto.imagemFrenteAtual, 'https://res.cloudinary.com/') ? eventoDto.imagemFrenteAtual : '/imagens-eventos/' + eventoDto.imagemFrenteAtual}" alt="Frente do certificado atualmente salva"
+                                <img th:src="${#strings.startsWith(eventoDto.imagemFrenteAtual, 'https://res.cloudinary.com/') ? eventoDto.imagemFrenteAtual : '/imagens-eventos/' + eventoDto.imagemFrenteAtual}" alt="Frente da declaração de presença atualmente salva"
                                      onerror="this.hidden=true; this.nextElementSibling.classList.remove('hidden')">
                                 <p class="hidden seplag-current__missing">A arte atual não está disponível no armazenamento. Envie-a novamente.</p>
                                 <p>Arte atual. Selecione outra somente para substituí-la.</p>
@@ -270,7 +290,7 @@
                             <label class="seplag-label" for="certificadoVersoInput">Layout da Declaração de Presença (Verso)</label>
 
                             <div th:if="${eventoDto.imagemVersoAtual != null and !eventoDto.imagemVersoAtual.startsWith('default-')}" class="seplag-current">
-                                <img th:src="${#strings.startsWith(eventoDto.imagemVersoAtual, 'https://res.cloudinary.com/') ? eventoDto.imagemVersoAtual : '/imagens-eventos/' + eventoDto.imagemVersoAtual}" alt="Verso do certificado atualmente salvo"
+                                <img th:src="${#strings.startsWith(eventoDto.imagemVersoAtual, 'https://res.cloudinary.com/') ? eventoDto.imagemVersoAtual : '/imagens-eventos/' + eventoDto.imagemVersoAtual}" alt="Verso da declaração de presença atualmente salva"
                                      onerror="this.hidden=true; this.nextElementSibling.classList.remove('hidden')">
                                 <p class="hidden seplag-current__missing">A arte atual não está disponível no armazenamento. Envie-a novamente.</p>
                                 <p>Arte atual. Selecione outra somente para substituí-la.</p>

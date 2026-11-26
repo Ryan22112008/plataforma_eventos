@@ -31,6 +31,9 @@ public interface InscricaoRepository extends JpaRepository<Inscricao, Long> {
     @Query("SELECT i FROM Inscricao i JOIN FETCH i.participante WHERE i.evento.id = :eventoId")
     List<Inscricao> findByEventoId(@Param("eventoId") Long eventoId);
 
+    @Query("SELECT i FROM Inscricao i JOIN FETCH i.participante JOIN FETCH i.evento WHERE i.evento.id IN :eventoIds")
+    List<Inscricao> findByEventoIdInComRelacoes(@Param("eventoIds") List<Long> eventoIds);
+
     @Query("SELECT i FROM Inscricao i LEFT JOIN FETCH i.participante LEFT JOIN FETCH i.evento WHERE i.id IN :ids")
     List<Inscricao> findAllByIdComRelacoes(@Param("ids") List<Long> ids);
 
@@ -59,7 +62,7 @@ public interface InscricaoRepository extends JpaRepository<Inscricao, Long> {
             "WHERE i.tokenIngresso = :tokenIngresso")
     Optional<Inscricao> findByTokenIngressoComRelacoes(@Param("tokenIngresso") String tokenIngresso);
 
-    @Query("SELECT COUNT(i) FROM Inscricao i WHERE i.evento.id = :eventoId AND i.status <> 'CANCELADO'")
+    @Query("SELECT COUNT(i) FROM Inscricao i WHERE i.evento.id = :eventoId AND i.status IN ('ATIVO', 'UTILIZADO')")
     long contarInscricoesValidasDoEvento(@Param("eventoId") Long eventoId);
 
     // --- CORRIGIDO: Adicionado JOIN FETCH para trazer o Evento associado ao usuário na listagem de sucesso ---

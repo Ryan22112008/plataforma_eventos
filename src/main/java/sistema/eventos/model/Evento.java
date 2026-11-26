@@ -121,9 +121,15 @@ public class Evento extends EntidadeAuditavel {
     @OneToMany(mappedBy = "evento", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Disciplina> disciplinas = new ArrayList<>();
 
+    @Builder.Default
     @Column(name = "presenca_finalizada")
     private boolean presencaFinalizada = false;
 
+    @Builder.Default
+    @Column(name = "privado")
+    private Boolean privado = false;
+
+    @Builder.Default
     @Column(name = "sorteio_frequencia_minima")
     private Integer sorteioFrequenciaMinima = 75;
 
@@ -143,6 +149,10 @@ public class Evento extends EntidadeAuditavel {
     @Builder.Default
     @OneToMany(mappedBy = "evento", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Sessao> sessoes = new ArrayList<>();
+
+    public boolean isPrivado() {
+        return Boolean.TRUE.equals(this.privado);
+    }
 
     public boolean possuiVagasDisponiveis() {
         return this.vagasRestantes != null && this.vagasRestantes > 0;
@@ -185,6 +195,10 @@ public class Evento extends EntidadeAuditavel {
 
         if (this.modalidade == null) {
             this.modalidade = ModalidadeEvento.PRESENCIAL;
+        }
+
+        if (this.privado == null) {
+            this.privado = false;
         }
 
         // --- FALLBACK SEGURO: Se o professor não fizer upload, o sistema adota arquivos padrão da aplicação ---

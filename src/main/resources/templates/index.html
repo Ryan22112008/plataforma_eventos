@@ -8,7 +8,7 @@
 
 <a class="seplag-skip-link" href="#conteudo">Ir para o conteúdo</a>
 
-<header th:replace="~{fragments/seplag-ui :: public-header('cursos')}"></header>
+<header th:replace="~{fragments/seplag-ui :: public-header('eventos')}"></header>
 
 <main id="conteudo">
 
@@ -197,6 +197,7 @@
                     <p class="seplag-event-card__desc" th:text="${evento.descricao}">Descrição do evento.</p>
 
                     <div class="seplag-event-card__footer">
+<<<<<<< HEAD
                         <a th:href="@{/eventos/{id}(id=${evento.id})}" class="seplag-btn seplag-btn-primary seplag-btn--block">
                             <i class="fa-solid fa-eye" aria-hidden="true"></i>
                             Ver Detalhes
@@ -207,6 +208,23 @@
                             <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
                             Compartilhar
                         </button>
+=======
+                        <div class="seplag-event-card__footer-row">
+                            <a th:href="@{/eventos/{id}(id=${evento.id})}" class="seplag-btn seplag-btn-primary seplag-btn--block">
+                                <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                                Ver Detalhes
+                            </a>
+                            <button type="button"
+                                    class="seplag-btn seplag-btn-secondary seplag-btn-share-icon"
+                                    data-share-trigger
+                                    th:data-share-url="@{/eventos/{id}(id=${evento.id})}"
+                                    th:data-share-title="${evento.titulo}"
+                                    th:aria-label="|Compartilhar evento ${evento.titulo}|"
+                                    title="Compartilhar evento">
+                                <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+                            </button>
+                        </div>
+>>>>>>> 9f8190587fb70577392436388ea40a313988b188
                     </div>
                 </div>
             </article>
@@ -228,6 +246,8 @@
 </main>
 
 <footer th:replace="~{fragments/seplag-ui :: public-footer}"></footer>
+<dialog th:replace="~{fragments/seplag-ui :: share-modal}"></dialog>
+<script th:src="@{/js/seplag-shell.js}" defer></script>
 
 <div th:replace="~{fragments/seplag-ui :: share-sheet('Eventos SEPLAG-MT', @{/})}"></div>
 

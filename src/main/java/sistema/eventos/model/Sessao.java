@@ -24,7 +24,7 @@ public class Sessao {
     // O código que o aluno vai escanear
     private String qrCodeToken;
 
-    // Relacionamento com o seu objeto de curso/evento
+    // Relacionamento com o evento
     @ManyToOne
     @JoinColumn(name = "evento_id")
     private Evento evento;

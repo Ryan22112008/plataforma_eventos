@@ -45,7 +45,7 @@ public class ParticipanteController {
         this.sessaoRepository = sessaoRepository;
     }
 
-    @GetMapping("/meus-certificados")
+    @GetMapping({"/minhas-declaracoes", "/meus-certificados"})
     public String meusCertificados(@AuthenticationPrincipal UserDetails userDetails, Model model) {
         Usuario participante = usuarioService.buscarPorEmail(userDetails.getUsername());
         List<Inscricao> certificadosDisponiveis = inscricaoService.buscarCertificadosDoUsuario(participante.getId());
@@ -82,7 +82,7 @@ public class ParticipanteController {
     // --- ADICIONADO: O motor de visualização do PDF na aba do navegador ---
     // Rota final: /participante/inscricoes/{id}/certificado
     // Rota final: /participante/inscricoes/{id}/certificado
-    @GetMapping("/inscricoes/{id}/certificado")
+    @GetMapping({"/inscricoes/{id}/declaracao", "/inscricoes/{id}/certificado"})
     public ResponseEntity<byte[]> visualizarCertificadoInline(@PathVariable("id") Long id,
                                                                @AuthenticationPrincipal UserDetails userDetails) {
         // Deixe as exceções subirem livremente. O GlobalExceptionHandler cuida delas.
@@ -100,7 +100,7 @@ public class ParticipanteController {
 
         // Força a abertura do PDF nativo dentro da aba do navegador
         headers.setContentDisposition(ContentDisposition.inline()
-                .filename("certificado-evento-" + id + ".pdf")
+                .filename("declaracao-presenca-evento-" + id + ".pdf")
                 .build());
 
         return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);

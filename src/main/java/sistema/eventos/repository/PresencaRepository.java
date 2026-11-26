@@ -41,4 +41,13 @@ public interface PresencaRepository extends JpaRepository<Presenca, Long> {
     List<PresencaPorAlunoProjection> contarPresencasPresentesPorAluno(
             @Param("eventoId") Long eventoId,
             @Param("status") StatusPresenca status);
+
+    @Query("SELECT DISTINCT p.aluno.id FROM Presenca p " +
+            "WHERE p.sessao.evento.id = :eventoId " +
+            "AND p.sessao.id IN :sessaoIds " +
+            "AND p.status = :status")
+    List<Long> findAlunosPresentesNasSessoes(
+            @Param("eventoId") Long eventoId,
+            @Param("sessaoIds") List<Long> sessaoIds,
+            @Param("status") StatusPresenca status);
 }

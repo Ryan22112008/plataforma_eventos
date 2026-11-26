@@ -103,7 +103,11 @@ public class CertificadoService {
         } catch (NegocioException ne) {
             throw ne;
         } catch (Exception e) {
+<<<<<<< HEAD
             log.error("Falha interna ao renderizar o certificado da inscrição {}.", inscricao.getId(), e);
+=======
+            log.error("Falha interna ao renderizar a declaração de presença da inscrição {}.", inscricao.getId(), e);
+>>>>>>> 9f8190587fb70577392436388ea40a313988b188
             throw new NegocioException("Não foi possível gerar a declaração de presença no momento.");
         }
     }
@@ -112,7 +116,7 @@ public class CertificadoService {
         UriComponentsBuilder urlBase = urlPublicaConfigurada == null || urlPublicaConfigurada.isBlank()
                 ? ServletUriComponentsBuilder.fromCurrentContextPath()
                 : UriComponentsBuilder.fromUriString(urlPublicaConfigurada.trim().replaceAll("/+$", ""));
-        return urlBase.path("/certificados/validar")
+        return urlBase.path("/declaracoes/validar")
                 .queryParam("codigo", codigo).build().encode().toUriString();
     }
 
@@ -134,7 +138,11 @@ public class CertificadoService {
         int slashIndex = path.lastIndexOf('/');
         int dotIndex = path.lastIndexOf('.');
         if (dotIndex <= slashIndex || dotIndex == path.length() - 1) {
+<<<<<<< HEAD
             throw new NegocioException("Arquivo da declaração de presença inválido.");
+=======
+            throw new NegocioException("Arquivo de declaração de presença inválido.");
+>>>>>>> 9f8190587fb70577392436388ea40a313988b188
         }
         return path.substring(dotIndex + 1).toLowerCase();
     }

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/seplag-ui :: head('Meus certificados')}"></head>
+<head th:replace="~{fragments/seplag-ui :: head('Minhas declarações de presença')}"></head>
 <body class="v2 seplag-public">
 <a class="seplag-skip-link" href="#conteudo">Ir para o conteúdo</a>
 
@@ -11,20 +11,20 @@
     <nav class="seplag-breadcrumb" aria-label="Trilha de navegação">
         <ol>
             <li><a th:href="@{/}">Início</a></li>
-            <li aria-current="page">Meus certificados</li>
+            <li aria-current="page">Minhas declarações de presença</li>
         </ol>
     </nav>
 
     <section class="seplag-page-head">
         <div class="seplag-page-head__copy">
             <p class="seplag-eyebrow">Área do participante</p>
-            <h1>Meus certificados</h1>
-            <p>Acesse os documentos dos cursos e eventos em que sua presença foi confirmada.</p>
+            <h1>Minhas declarações de presença</h1>
+            <p>Acesse os documentos dos eventos em que sua presença foi confirmada.</p>
         </div>
 
         <div class="seplag-cert-context">
             <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
-            <span>Certificados liberados para a sua participação</span>
+            <span>Declarações de presença liberadas para a sua participação</span>
         </div>
     </section>
 
@@ -36,21 +36,21 @@
                 <i class="fa-solid fa-award"></i>
             </span>
             <div>
-                <h2 id="titulo-certificados">Seus certificados</h2>
+                <h2 id="titulo-certificados">Suas declarações de presença</h2>
                 <p>Disponíveis após a confirmação da participação no evento.</p>
             </div>
         </div>
 
         <p class="seplag-cert-overview__count">
             <strong th:text="${#lists.size(certificados)}">1</strong>
-            <span th:text="${#lists.size(certificados) == 1 ? 'certificado disponível' : 'certificados disponíveis'}">certificado disponível</span>
+            <span th:text="${#lists.size(certificados) == 1 ? 'declaração de presença disponível' : 'declarações de presença disponíveis'}">declaração de presença disponível</span>
         </p>
     </section>
 
     <section th:if="${not #lists.isEmpty(certificados)}"
              class="seplag-cert-grid"
              th:classappend="${#lists.size(certificados) == 1} ? 'seplag-cert-grid--single' : ''"
-             aria-label="Certificados disponíveis">
+             aria-label="Declarações de presença disponíveis">
         <article class="seplag-cert-card" th:each="inscricao : ${certificados}">
 
             <div class="seplag-cert-card__top">
@@ -65,7 +65,7 @@
 
             <div class="seplag-cert-card__body">
                 <div class="seplag-cert-card__identity">
-                    <p class="seplag-cert-card__kicker">Certificado de participação</p>
+                    <p class="seplag-cert-card__kicker">Declaração de presença</p>
                     <h3 class="seplag-cert-card__title" th:text="${inscricao.evento.titulo}">Nome do evento</h3>
                 </div>
 
@@ -94,13 +94,13 @@
                     Documento em PDF
                 </span>
 
-                <a th:href="@{/participante/inscricoes/{id}/certificado(id=${inscricao.id})}"
+                <a th:href="@{/participante/inscricoes/{id}/declaracao(id=${inscricao.id})}"
                    class="seplag-btn seplag-btn-primary"
                    target="_blank"
                    rel="noopener"
-                   th:aria-label="|Baixar certificado do evento ${inscricao.evento.titulo}|">
+                   th:aria-label="|Baixar declaração de presença do evento ${inscricao.evento.titulo}|">
                     <i class="fa-solid fa-download" aria-hidden="true"></i>
-                    <span>Baixar certificado</span>
+                    <span>Baixar declaração de presença</span>
                 </a>
             </div>
         </article>
@@ -113,11 +113,11 @@
         <span class="seplag-cert-empty__icon" aria-hidden="true">
             <i class="fa-solid fa-award"></i>
         </span>
-        <h2 id="titulo-sem-certificados">Nenhum certificado disponível</h2>
-        <p class="seplag-cert-empty__text">Os certificados aparecem aqui depois que sua presença for confirmada pela organização do evento.</p>
+        <h2 id="titulo-sem-certificados">Nenhuma declaração de presença disponível</h2>
+        <p class="seplag-cert-empty__text">As declarações de presença aparecem aqui depois que sua presença for confirmada pela organização do evento.</p>
         <a th:href="@{/}" class="seplag-btn seplag-btn-primary">
             <i class="fa-solid fa-compass" aria-hidden="true"></i>
-            Explorar cursos
+            Explorar eventos
         </a>
     </section>
 

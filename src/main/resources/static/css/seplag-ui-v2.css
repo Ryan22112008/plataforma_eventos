@@ -2179,7 +2179,7 @@ html.v2-root {
 }
 
 /* ==========================================================================
-   Páginas públicas — vitrine, detalhes do evento e validação de certificado
+   Páginas públicas — vitrine, detalhes do evento e validação de declaração de presença
    Reaproveita tokens, botões, badges, cards e formulários da fundação v2.
    ========================================================================== */
 
@@ -3104,7 +3104,7 @@ html.v2-root {
 }
 
 /* --------------------------------------------------------------------------
-   Validação de certificado
+   Validação de declaração de presença
    -------------------------------------------------------------------------- */
 
 .v2 .seplag-verify {
@@ -5462,7 +5462,7 @@ html.v2-root {
 }
 
 /* ==========================================================================
-   Área do participante — Meus certificados
+   Área do participante — Minhas declarações de presença
    ========================================================================== */
 
 .v2 .seplag-cert-page .seplag-page-head {
@@ -6797,6 +6797,239 @@ html.v2-root {
     color: rgba(255, 255, 255, .58);
     font-size: clamp(.78rem, 1.35vw, .96rem);
     line-height: 1.5;
+}
+
+/* Modal de compartilhamento estilo YouTube & badges extras ---------------- */
+
+.seplag-share-dialog {
+    width: min(510px, calc(100vw - 24px));
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, .14);
+    border-radius: 18px;
+    background: #1a1822;
+    color: #f4f3f8;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, .65);
+}
+
+.seplag-share-dialog::backdrop {
+    background: rgba(5, 4, 10, .72);
+    backdrop-filter: blur(4px);
+}
+
+.seplag-share-dialog__box {
+    display: grid;
+    gap: 18px;
+    padding: 20px 22px 22px;
+}
+
+.seplag-share-dialog__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.seplag-share-dialog__titles h2 {
+    margin: 0;
+    font-size: 1.12rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.seplag-share-dialog__subtitle {
+    margin: 4px 0 0;
+    font-size: .85rem;
+    color: rgba(244, 243, 248, .7);
+}
+
+.seplag-share-dialog__close {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .08);
+    color: #f4f3f8;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.seplag-share-dialog__close:hover {
+    background: rgba(255, 255, 255, .18);
+}
+
+.seplag-share-targets {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    overflow-x: auto;
+    padding: 4px 2px 8px;
+}
+
+.seplag-share-target {
+    display: grid;
+    justify-items: center;
+    gap: 7px;
+    min-width: 64px;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: rgba(244, 243, 248, .88);
+    text-decoration: none;
+    font-size: .76rem;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.seplag-share-target.hidden {
+    display: none;
+}
+
+.seplag-share-target__icon {
+    width: 56px;
+    height: 56px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: #ffffff;
+    font-size: 1.38rem;
+    transition: transform .16s ease, filter .16s ease;
+}
+
+.seplag-share-target:hover .seplag-share-target__icon {
+    transform: translateY(-2px);
+    filter: brightness(1.08);
+}
+
+.seplag-share-target__icon.is-whatsapp { background: #25D366; }
+.seplag-share-target__icon.is-facebook { background: #1877F2; }
+.seplag-share-target__icon.is-x { background: #0f0f12; border: 1px solid rgba(255, 255, 255, .2); }
+.seplag-share-target__icon.is-linkedin { background: #0A66C2; }
+.seplag-share-target__icon.is-telegram { background: #229ED9; }
+.seplag-share-target__icon.is-email { background: #5b6474; }
+.seplag-share-target__icon.is-more { background: rgba(255, 255, 255, .14); }
+
+.seplag-share-copy {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 8px 7px 14px;
+    border: 1px solid rgba(255, 255, 255, .16);
+    border-radius: 12px;
+    background: #0f0e14;
+}
+
+.seplag-share-copy__input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: #e9e7f2;
+    font-size: .86rem;
+    outline: none;
+}
+
+.seplag-share-copy__btn {
+    border: 0;
+    border-radius: 999px;
+    padding: 8px 18px;
+    background: #3ea6ff;
+    color: #08121f;
+    font-weight: 700;
+    font-size: .84rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.seplag-share-copy__btn:hover {
+    background: #65b8ff;
+}
+
+.seplag-share-copy__btn.is-copied {
+    background: #22c55e;
+    color: #041d0f;
+}
+
+.seplag-share-dialog__feedback {
+    margin: -8px 0 0;
+    min-height: 1.1em;
+    font-size: .8rem;
+    color: #86efac;
+}
+
+.seplag-event-card__footer-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.seplag-event-card__footer-row > .seplag-btn--block {
+    flex: 1;
+}
+
+.seplag-btn-share-icon {
+    min-height: 44px;
+    padding: 0 14px;
+    flex-shrink: 0;
+}
+
+.seplag-visibility-toggle {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.seplag-visibility-option {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .02);
+    cursor: pointer;
+}
+
+.seplag-visibility-option:has(input:checked) {
+    border-color: rgba(168, 85, 247, .65);
+    background: rgba(168, 85, 247, .12);
+}
+
+.seplag-visibility-option input {
+    margin-top: 3px;
+}
+
+.seplag-visibility-option strong {
+    display: block;
+    font-size: .95rem;
+    color: #ffffff;
+}
+
+.seplag-visibility-option small {
+    display: block;
+    margin-top: 3px;
+    font-size: .8rem;
+    color: rgba(255, 255, 255, .68);
+}
+
+.seplag-pending-box {
+    border-color: rgba(234, 179, 8, .32);
+}
+
+.seplag-invite-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: end;
+}
+
+.seplag-invite-inline .seplag-field {
+    flex: 1;
+    min-width: 240px;
+    margin: 0;
 }
 
 .sorteios-apresentacao__controles {

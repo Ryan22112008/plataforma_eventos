@@ -43,6 +43,9 @@
                 <i class="fa-solid fa-plus" aria-hidden="true"></i>
                 Criar Novo Evento
             </a>
+            <a th:href="@{/organizador/relatorios}" class="seplag-btn seplag-btn-secondary">
+                <i class="fa-solid fa-chart-pie" aria-hidden="true"></i> Relatórios gerais
+            </a>
         </div>
 
         <section class="seplag-stats seplag-events-stats" aria-label="Resumo dos eventos"
@@ -181,7 +184,7 @@
                                 </a>
 
                                 <form th:action="@{/organizador/evento/{id}/excluir(id=${evento.id})}" method="POST"
-                                      onsubmit="return confirm('⚠️ ATENÇÃO: Tem certeza absoluta que deseja excluir este curso? Todas as inscrições vinculadas a ele serão apagadas permanentemente.');"
+                                      onsubmit="return confirm('⚠️ ATENÇÃO: Tem certeza absoluta que deseja excluir este evento? Todas as inscrições vinculadas a ele serão apagadas permanentemente.');"
                                       class="seplag-inline-form">
                                     <button type="submit" class="seplag-action seplag-action--danger">
                                         <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
@@ -197,7 +200,7 @@
                             <div class="seplag-empty">
                                 <i class="fa-regular fa-calendar-plus" aria-hidden="true"></i>
                                 <strong>Você ainda não criou nenhum evento</strong>
-                                <p>Comece criando seu primeiro evento para acompanhar inscrições e liberar certificados.</p>
+                                <p>Comece criando seu primeiro evento para acompanhar inscrições e emitir declarações de presença.</p>
                                 <a th:href="@{/organizador/evento/novo}" class="seplag-btn seplag-btn-primary seplag-btn--sm">
                                     <i class="fa-solid fa-plus" aria-hidden="true"></i>
                                     Criar Novo Evento

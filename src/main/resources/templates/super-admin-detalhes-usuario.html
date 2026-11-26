@@ -153,13 +153,13 @@
 
                 <!-- Remover acesso de organizador -->
                 <form th:if="${usuario.perfil.name() == 'ROLE_ORGANIZADOR' and !ehPropriaConta}" th:action="@{/super-admin/usuarios/{id}/remover-organizador(id=${usuario.id})}" method="POST"
-                      onsubmit="return confirm('Revogar acesso de organizador? O usuário voltará para ROLE_PARTICIPANTE. Os eventos, inscrições, presenças, certificados e o histórico permanecerão.');"
+                      onsubmit="return confirm('Revogar acesso de organizador? O usuário voltará para ROLE_PARTICIPANTE. Os eventos, inscrições, presenças e declarações de presença e o histórico permanecerão.');"
                       class="seplag-admin-action seplag-admin-action--warning">
                     <div class="seplag-admin-action__head">
                         <i class="fa-solid fa-user-lock" aria-hidden="true"></i>
                         <div>
                             <h3>Revogar acesso de organizador</h3>
-                            <p>O perfil voltará para participante. Eventos, inscrições, presenças, certificados e histórico serão mantidos.</p>
+                            <p>O perfil voltará para participante. Eventos, inscrições, presenças e declarações de presença e histórico serão mantidos.</p>
                         </div>
                     </div>
                     <button type="submit" class="seplag-btn seplag-btn-secondary">Confirmar revogação</button>
@@ -167,13 +167,13 @@
 
                 <!-- Promover para Super Admin -->
                 <form th:if="${usuario.perfil.name() != 'ROLE_SUPER_ADMIN' and !ehPropriaConta}" th:action="@{/super-admin/usuarios/{id}/promover-super-admin(id=${usuario.id})}" method="POST"
-                      onsubmit="return confirm('Promover este usuário para SUPER_ADMIN? A conta manterá o mesmo e-mail, histórico, inscrições, eventos e certificados. Esta ação concede acesso total à Super Administração.');"
+                      onsubmit="return confirm('Promover este usuário para SUPER_ADMIN? A conta manterá o mesmo e-mail, histórico, inscrições, eventos e declarações de presença. Esta ação concede acesso total à Super Administração.');"
                       class="seplag-admin-action seplag-admin-action--violet">
                     <div class="seplag-admin-action__head">
                         <i class="fa-solid fa-crown" aria-hidden="true"></i>
                         <div>
                             <h3>Promover para Super Admin</h3>
-                            <p>Altera o perfil desta conta para ROLE_SUPER_ADMIN sem criar uma nova conta. E-mail, histórico, inscrições, eventos e certificados são preservados.</p>
+                            <p>Altera o perfil desta conta para ROLE_SUPER_ADMIN sem criar uma nova conta. E-mail, histórico, inscrições, eventos e declarações de presença são preservados.</p>
                         </div>
                     </div>
                     <button type="submit" class="seplag-btn seplag-btn-primary">Confirmar promoção</button>
@@ -199,7 +199,7 @@
         <div class="seplag-card__header">
             <div>
                 <h2 class="seplag-card__title" id="historico-heading">Histórico de participação</h2>
-                <p class="seplag-card__hint">Eventos e cursos nos quais o usuário efetivamente participou.</p>
+                <p class="seplag-card__hint">Eventos nos quais o usuário efetivamente participou.</p>
             </div>
         </div>
         <div class="seplag-card__body">
@@ -212,7 +212,7 @@
                 <article th:each="item : ${historico}" class="seplag-item-card">
                     <div class="seplag-item-card__head">
                         <div>
-                            <h3 class="seplag-item-card__title" th:text="${item.tituloEvento}">Curso de Java</h3>
+                            <h3 class="seplag-item-card__title" th:text="${item.tituloEvento}">Evento de Java</h3>
                             <div class="seplag-item-card__meta">
                                 <span th:if="${item.dataInicio != null}" th:text="${#temporals.format(item.dataInicio, 'dd/MM/yyyy')}">10/10/2026</span>
                                 <span th:if="${item.dataInicio != null and item.dataTermino != null}" aria-hidden="true">a</span>
@@ -232,13 +232,13 @@
                             <p th:unless="${item.percentualFrequencia != null}" class="seplag-muted">—</p>
                         </div>
                         <div class="seplag-row-actions">
-                            <span class="seplag-card__hint">Certificado</span>
+                            <span class="seplag-card__hint">Declaração de presença</span>
                             <span th:if="${item.certificadoDisponivel}" class="seplag-badge seplag-badge--success">Disponível</span>
                             <span th:unless="${item.certificadoDisponivel}" class="seplag-badge seplag-badge--neutral">Não disponível</span>
                             <a th:if="${item.certificadoDisponivel}"
-                               th:href="@{/super-admin/usuarios/{usuarioId}/inscricoes/{inscricaoId}/certificado(usuarioId=${usuario.id}, inscricaoId=${item.inscricaoId})}"
+                               th:href="@{/super-admin/usuarios/{usuarioId}/inscricoes/{inscricaoId}/declaracao(usuarioId=${usuario.id}, inscricaoId=${item.inscricaoId})}"
                                class="seplag-btn seplag-btn-secondary seplag-btn--sm">
-                                <i class="fa-solid fa-download" aria-hidden="true"></i> Baixar certificado
+                                <i class="fa-solid fa-download" aria-hidden="true"></i> Baixar declaração de presença
                             </a>
                         </div>
                     </div>

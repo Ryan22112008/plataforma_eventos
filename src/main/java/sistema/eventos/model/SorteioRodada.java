@@ -5,7 +5,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,6 +43,13 @@ public class SorteioRodada extends EntidadeAuditavel {
     @Column(name = "percentual_minimo", nullable = false)
     private Integer percentualMinimo;
 
+    @Column(name = "data_referencia")
+    private LocalDate dataReferencia;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "periodo_referencia", length = 20)
+    private PeriodoSorteio periodoReferencia;
+
     @Column(name = "total_elegiveis", nullable = false)
     private Integer totalElegiveis;
 
@@ -75,5 +84,13 @@ public class SorteioRodada extends EntidadeAuditavel {
 
     public String getPremioExibicao() {
         return premio == null || premio.isBlank() ? "—" : premio;
+    }
+
+    public String getCriterioDataPeriodoExibicao() {
+        if (dataReferencia != null && periodoReferencia != null) {
+            return dataReferencia.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                    + " · " + periodoReferencia.getDescricao();
+        }
+        return "Frequência ≥ " + (percentualMinimo == null ? 0 : percentualMinimo) + "%";
     }
 }

@@ -12,6 +12,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import sistema.eventos.exception.NegocioException;
 import sistema.eventos.model.Evento;
 import sistema.eventos.model.Inscricao;
+import sistema.eventos.model.StatusInscricao;
 import sistema.eventos.model.Usuario;
 import sistema.eventos.service.EventoService;
 import sistema.eventos.service.InscricaoService;
@@ -51,11 +52,19 @@ public class InscricaoController {
                                     RedirectAttributes redirectAttributes) {
         try {
             Usuario participante = usuarioService.buscarPorEmail(userDetails.getUsername());
+<<<<<<< HEAD
             sistema.eventos.model.StatusInscricao status = inscricaoService.inscreverUsuario(id, participante);
 
             if (status == sistema.eventos.model.StatusInscricao.PENDENTE) {
                 redirectAttributes.addFlashAttribute("sucesso",
                         "Solicitação de participação enviada! Aguarde a aprovação do organizador.");
+=======
+            StatusInscricao status = inscricaoService.inscreverUsuario(id, participante);
+
+            if (status == StatusInscricao.PENDENTE) {
+                redirectAttributes.addFlashAttribute("sucesso",
+                        "Sua solicitação de participação foi enviada e aguarda decisão do organizador.");
+>>>>>>> 9f8190587fb70577392436388ea40a313988b188
             } else {
                 redirectAttributes.addFlashAttribute("sucesso", "Sua inscrição foi realizada com sucesso!");
             }
@@ -88,8 +97,8 @@ public class InscricaoController {
         }
     }
 
-    // --- 4. FLUXO DE CERTIFICADOS: Download do PDF Gerado em Tempo Real ---
-    @GetMapping("/participante/inscricao/{inscricaoId}/certificado")
+    // --- 4. FLUXO DE DECLARAÇÕES DE PRESENÇA: Download do PDF Gerado em Tempo Real ---
+    @GetMapping({"/participante/inscricao/{inscricaoId}/declaracao", "/participante/inscricao/{inscricaoId}/certificado"})
     public void baixarCertificado(@PathVariable("inscricaoId") Long inscricaoId,
                                   @AuthenticationPrincipal UserDetails userDetails, // ADICIONADO PARA SEGURANÇA
                                   HttpServletResponse response) {
@@ -99,7 +108,11 @@ public class InscricaoController {
 
             // --- VALIDAÇÃO SÊNIOR: O usuário logado é realmente o dono desta inscrição? ---
             if (!inscricao.getParticipante().getEmail().equals(userDetails.getUsername())) {
+<<<<<<< HEAD
                 throw new org.springframework.security.access.AccessDeniedException("Acesso negado: esta declaração de presença não pertence a você.");
+=======
+                throw new org.springframework.security.access.AccessDeniedException("Acesso negado: Esta declaração de presença não pertence a você.");
+>>>>>>> 9f8190587fb70577392436388ea40a313988b188
             }
 
             // 2. Dispara a geração se passar na validação
@@ -107,7 +120,7 @@ public class InscricaoController {
 
             // 3. Define os metadados do cabeçalho HTTP
             response.setContentType("application/pdf");
-            response.setHeader("Content-Disposition", "attachment; filename=certificado-evento-" + inscricaoId + ".pdf");
+            response.setHeader("Content-Disposition", "attachment; filename=declaracao-presenca-evento-" + inscricaoId + ".pdf");
             response.setHeader("Cache-Control", "private, no-store, max-age=0");
             response.setHeader("X-Content-Type-Options", "nosniff");
             response.setContentLength(pdfBytes.length);
