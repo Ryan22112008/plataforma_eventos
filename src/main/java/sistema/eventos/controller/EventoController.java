@@ -1074,7 +1074,7 @@ public class EventoController {
      * Diferente do relatório por evento, reúne inscrições, presenças,
      * solicitações pendentes e declarações de presença de toda a carteira.
      */
-    @GetMapping("/relatorios")
+    @GetMapping("/relatorios/consolidado")
     public String relatoriosConsolidados(Authentication authentication, Model model) {
         Usuario organizador = usuarioService.buscarPorEmail(authentication.getName());
         List<Evento> eventos = eventoService.listarPorOrganizador(organizador.getId());
@@ -1180,7 +1180,7 @@ public class EventoController {
         return "organizador-relatorios";
     }
 
-    @GetMapping("/relatorios/excel")
+    @GetMapping("/relatorios/consolidado/excel")
     public void exportarRelatoriosConsolidados(Authentication authentication, HttpServletResponse response)
             throws java.io.IOException {
         Usuario organizador = usuarioService.buscarPorEmail(authentication.getName());
