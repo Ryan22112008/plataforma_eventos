@@ -41,6 +41,16 @@ public interface InscricaoRepository extends JpaRepository<Inscricao, Long> {
 
     boolean existsByParticipanteIdAndEventoIdAndStatusNot(Long participanteId, Long eventoId, StatusInscricao status);
 
+    boolean existsByParticipanteIdAndEventoIdAndStatusIn(Long participanteId, Long eventoId, List<StatusInscricao> statuses);
+
+    /**
+     * Inscrições de todos os eventos de um organizador, com evento e
+     * participante carregados para o relatório consolidado.
+     */
+    @Query("SELECT i FROM Inscricao i JOIN FETCH i.evento e JOIN FETCH i.participante p " +
+            "WHERE e.organizador.id = :organizadorId ORDER BY e.dataInicio DESC, i.id DESC")
+    List<Inscricao> findByOrganizadorIdComRelacoes(@Param("organizadorId") Long organizadorId);
+
     // 🎯 ADICIONADO PARA O CHECK-IN VIA QR CODE:
     // Busca a inscrição única do aluno no evento e já traz o Evento junto (evitando Lazy)
     @Query("SELECT i FROM Inscricao i JOIN FETCH i.evento WHERE i.participante.id = :participanteId AND i.evento.id = :eventoId")

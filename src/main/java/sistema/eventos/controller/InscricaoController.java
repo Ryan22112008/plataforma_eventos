@@ -56,7 +56,7 @@ public class InscricaoController {
 
             if (status == StatusInscricao.PENDENTE) {
                 redirectAttributes.addFlashAttribute("sucesso",
-                        "Sua solicitação de participação foi enviada e aguarda decisão do organizador.");
+                        "Solicitação de participação enviada! Aguarde a aprovação do organizador.");
             } else {
                 redirectAttributes.addFlashAttribute("sucesso", "Sua inscrição foi realizada com sucesso!");
             }
@@ -100,7 +100,7 @@ public class InscricaoController {
 
             // --- VALIDAÇÃO SÊNIOR: O usuário logado é realmente o dono desta inscrição? ---
             if (!inscricao.getParticipante().getEmail().equals(userDetails.getUsername())) {
-                throw new org.springframework.security.access.AccessDeniedException("Acesso negado: Esta declaração de presença não pertence a você.");
+                throw new org.springframework.security.access.AccessDeniedException("Acesso negado: esta declaração de presença não pertence a você.");
             }
 
             // 2. Dispara a geração se passar na validação

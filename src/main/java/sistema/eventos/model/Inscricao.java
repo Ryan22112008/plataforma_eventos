@@ -50,7 +50,7 @@ public class Inscricao extends EntidadeAuditavel {
     @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private StatusInscricao status = StatusInscricao.ATIVO; // ATIVO, CANCELADO, UTILIZADO (Check-in feito)
+    private StatusInscricao status = StatusInscricao.ATIVO; // ATIVO, PENDENTE, RECUSADO, CANCELADO, UTILIZADO
 
     // --- NOVO: Data do Check-in ---
     @Column(name = "data_check_in")
@@ -67,10 +67,10 @@ public class Inscricao extends EntidadeAuditavel {
             throw new IllegalStateException("Este ingresso está cancelado!");
         }
         if (this.status == StatusInscricao.PENDENTE) {
-            throw new IllegalStateException("Esta solicitação ainda aguarda aprovação do organizador!");
+            throw new IllegalStateException("A participação neste evento ainda aguarda aprovação do organizador.");
         }
         if (this.status == StatusInscricao.RECUSADO) {
-            throw new IllegalStateException("Esta solicitação foi recusada pelo organizador!");
+            throw new IllegalStateException("A solicitação de participação foi recusada pelo organizador.");
         }
         this.status = StatusInscricao.UTILIZADO;
         this.dataCheckIn = LocalDateTime.now();

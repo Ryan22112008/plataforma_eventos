@@ -103,7 +103,7 @@ public class CertificadoService {
         } catch (NegocioException ne) {
             throw ne;
         } catch (Exception e) {
-            log.error("Falha interna ao renderizar a declaração de presença da inscrição {}.", inscricao.getId(), e);
+            log.error("Falha interna ao renderizar o certificado da inscrição {}.", inscricao.getId(), e);
             throw new NegocioException("Não foi possível gerar a declaração de presença no momento.");
         }
     }
@@ -134,7 +134,7 @@ public class CertificadoService {
         int slashIndex = path.lastIndexOf('/');
         int dotIndex = path.lastIndexOf('.');
         if (dotIndex <= slashIndex || dotIndex == path.length() - 1) {
-            throw new NegocioException("Arquivo de declaração de presença inválido.");
+            throw new NegocioException("Arquivo da declaração de presença inválido.");
         }
         return path.substring(dotIndex + 1).toLowerCase();
     }

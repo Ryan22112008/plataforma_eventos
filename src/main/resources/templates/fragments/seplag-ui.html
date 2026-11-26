@@ -16,6 +16,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/seplag-ui-v2.css}">
     <link rel="stylesheet" th:href="@{/css/quiz.css}">
+    <link rel="stylesheet" th:href="@{/css/seplag-share.css}">
+    <script th:src="@{/js/seplag-share.js}" defer></script>
 </th:block>
 
 <!-- ======================================================================
@@ -57,8 +59,8 @@
         </a>
 
         <nav class="seplag-public-nav" aria-label="Navegação principal">
-            <a th:href="@{/}" th:classappend="${active == 'eventos'} ? 'is-active'"
-               th:attr="aria-current=${active == 'eventos' ? 'page' : null}">Eventos</a>
+            <a th:href="@{/}" th:classappend="${active == 'cursos'} ? 'is-active'"
+               th:attr="aria-current=${active == 'cursos' ? 'page' : null}">Eventos</a>
             <a sec:authorize="hasRole('SUPER_ADMIN')" th:href="@{/super-admin/usuarios}">
                 <i class="fa-solid fa-user-shield" aria-hidden="true"></i>
                 Painel Super Admin
@@ -66,8 +68,8 @@
             <a sec:authorize="hasRole('ORGANIZADOR')" th:href="@{/organizador/painel}">
                 Painel do organizador
             </a>
-            <a sec:authorize="hasRole('PARTICIPANTE')" th:href="@{/participante/minhas-declaracoes}">
-                <i class="fa-solid fa-file-signature" aria-hidden="true"></i>
+            <a sec:authorize="hasRole('PARTICIPANTE')" th:href="@{/participante/meus-certificados}">
+                <i class="fa-solid fa-award" aria-hidden="true"></i>
                 Minhas declarações de presença
             </a>
             <a sec:authorize="isAuthenticated()" th:href="@{/perfil}"
@@ -157,6 +159,13 @@
            th:attr="aria-current=${active == 'quizzes' ? 'page' : null}">
             <i class="fa-solid fa-gamepad" aria-hidden="true"></i>
             <span>Quizzes</span>
+        </a>
+
+        <a th:href="@{/organizador/relatorios}" class="seplag-nav__link"
+           th:classappend="${active == 'relatorios'} ? 'is-active'"
+           th:attr="aria-current=${active == 'relatorios' ? 'page' : null}">
+            <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
+            <span>Relatórios</span>
         </a>
 
         <p class="seplag-nav__label">Plataforma</p>
@@ -262,64 +271,65 @@
 </header>
 
 <!-- ======================================================================
-     Modal de compartilhamento estilo YouTube
+     Folha de compartilhamento estilo aplicativos móveis.
+     Uso: <div th:replace="~{fragments/seplag-ui :: share-sheet(${evento.titulo}, ${urlCompartilhamento})}"></div>
+     e um gatilho com o atributo data-share-open.
      ====================================================================== -->
-<dialog th:fragment="share-modal" id="seplagShareModal" class="seplag-share-dialog" aria-labelledby="shareModalTitulo">
-    <div class="seplag-share-dialog__box">
-        <div class="seplag-share-dialog__header">
-            <div class="seplag-share-dialog__titles">
-                <h2 id="shareModalTitulo">Compartilhar</h2>
-                <p id="shareModalEventoNome" class="seplag-share-dialog__subtitle"></p>
+<div th:fragment="share-sheet(titulo, url)" class="seplag-share" id="seplag-share-modal"
+     th:attr="data-share-title=${titulo},data-share-url=${url}"
+     role="dialog" aria-modal="true" aria-labelledby="seplag-share-title" hidden>
+    <div class="seplag-share__backdrop" data-share-action="close" aria-hidden="true"></div>
+    <div class="seplag-share__panel" role="document">
+        <div class="seplag-share__handle" aria-hidden="true"></div>
+        <div class="seplag-share__header">
+            <div>
+                <h2 class="seplag-share__title" id="seplag-share-title">Compartilhar evento</h2>
+                <p class="seplag-share__subtitle" th:text="${titulo}">Título do evento</p>
             </div>
-            <button type="button" class="seplag-share-dialog__close" data-share-close
-                    aria-label="Fechar janela de compartilhamento">
+            <button type="button" class="seplag-share__close" data-share-action="close"
+                    aria-label="Fechar compartilhamento">
                 <i class="fa-solid fa-xmark" aria-hidden="true"></i>
             </button>
         </div>
 
-        <div class="seplag-share-targets" role="list" aria-label="Opções de compartilhamento">
-            <a id="shareWhatsApp" target="_blank" rel="noopener noreferrer" class="seplag-share-target" role="listitem">
-                <span class="seplag-share-target__icon is-whatsapp"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i></span>
+        <div class="seplag-share__grid" aria-label="Opções de compartilhamento">
+            <button type="button" class="seplag-share__option" data-share-network="whatsapp">
+                <span class="seplag-share__icon seplag-share__icon--whatsapp"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i></span>
                 <span>WhatsApp</span>
-            </a>
-            <a id="shareFacebook" target="_blank" rel="noopener noreferrer" class="seplag-share-target" role="listitem">
-                <span class="seplag-share-target__icon is-facebook"><i class="fa-brands fa-facebook-f" aria-hidden="true"></i></span>
+            </button>
+            <button type="button" class="seplag-share__option" data-share-network="facebook">
+                <span class="seplag-share__icon seplag-share__icon--facebook"><i class="fa-brands fa-facebook-f" aria-hidden="true"></i></span>
                 <span>Facebook</span>
-            </a>
-            <a id="shareX" target="_blank" rel="noopener noreferrer" class="seplag-share-target" role="listitem">
-                <span class="seplag-share-target__icon is-x">
-                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
-                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                    </svg>
-                </span>
+            </button>
+            <button type="button" class="seplag-share__option" data-share-network="x">
+                <span class="seplag-share__icon seplag-share__icon--x"><i class="fa-brands fa-x-twitter" aria-hidden="true"></i></span>
                 <span>X</span>
-            </a>
-            <a id="shareLinkedIn" target="_blank" rel="noopener noreferrer" class="seplag-share-target" role="listitem">
-                <span class="seplag-share-target__icon is-linkedin"><i class="fa-brands fa-linkedin-in" aria-hidden="true"></i></span>
-                <span>LinkedIn</span>
-            </a>
-            <a id="shareTelegram" target="_blank" rel="noopener noreferrer" class="seplag-share-target" role="listitem">
-                <span class="seplag-share-target__icon is-telegram"><i class="fa-brands fa-telegram" aria-hidden="true"></i></span>
+            </button>
+            <button type="button" class="seplag-share__option" data-share-network="telegram">
+                <span class="seplag-share__icon seplag-share__icon--telegram"><i class="fa-brands fa-telegram" aria-hidden="true"></i></span>
                 <span>Telegram</span>
-            </a>
-            <a id="shareEmail" class="seplag-share-target" role="listitem">
-                <span class="seplag-share-target__icon is-email"><i class="fa-regular fa-envelope" aria-hidden="true"></i></span>
+            </button>
+            <button type="button" class="seplag-share__option" data-share-network="linkedin">
+                <span class="seplag-share__icon seplag-share__icon--linkedin"><i class="fa-brands fa-linkedin-in" aria-hidden="true"></i></span>
+                <span>LinkedIn</span>
+            </button>
+            <button type="button" class="seplag-share__option" data-share-network="email">
+                <span class="seplag-share__icon seplag-share__icon--email"><i class="fa-solid fa-envelope" aria-hidden="true"></i></span>
                 <span>E-mail</span>
-            </a>
-            <button type="button" id="shareNativeBtn" class="seplag-share-target hidden" role="listitem">
-                <span class="seplag-share-target__icon is-more"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></span>
-                <span>Mais</span>
+            </button>
+            <button type="button" class="seplag-share__option" data-share-action="copy">
+                <span class="seplag-share__icon seplag-share__icon--copy"><i class="fa-solid fa-link" aria-hidden="true"></i></span>
+                <span id="seplag-share-copy-label">Copiar link</span>
+            </button>
+            <button type="button" class="seplag-share__option" data-share-action="native">
+                <span class="seplag-share__icon seplag-share__icon--native"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></span>
+                <span>Mais opções</span>
             </button>
         </div>
 
-        <div class="seplag-share-copy">
-            <label class="seplag-sr-only" for="shareLinkInput">Link do evento</label>
-            <input id="shareLinkInput" type="text" readonly class="seplag-share-copy__input">
-            <button type="button" id="shareCopyBtn" class="seplag-share-copy__btn">Copiar</button>
-        </div>
-        <p id="shareCopyFeedback" class="seplag-share-dialog__feedback" role="status" aria-live="polite"></p>
+        <p class="seplag-share__feedback" id="seplag-share-feedback" role="status" aria-live="polite"></p>
     </div>
-</dialog>
+</div>
 
 </body>
 </html>

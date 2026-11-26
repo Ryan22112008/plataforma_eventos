@@ -90,23 +90,17 @@
                     </div>
 
                     <div class="seplag-field">
-                        <span class="seplag-label">Visibilidade e controle de acesso</span>
-                        <div class="seplag-visibility-toggle" role="radiogroup" aria-label="Visibilidade do evento">
-                            <label class="seplag-visibility-option">
-                                <input type="radio" th:field="*{privado}" value="false">
-                                <span>
-                                    <strong><i class="fa-solid fa-globe" aria-hidden="true"></i> Evento Público</strong>
-                                    <small>Aparece na vitrine oficial e qualquer pessoa pode se inscrever diretamente.</small>
+                        <label class="seplag-label" for="privado">Visibilidade do evento</label>
+                        <label class="seplag-check-line" for="privado">
+                            <input type="checkbox" th:field="*{privado}" id="privado" class="seplag-checkbox">
+                            <span>
+                                <strong>Evento privado</strong>
+                                <span class="seplag-card__hint">
+                                    Não aparece na vitrine pública. O acesso é feito pelo link compartilhado e cada
+                                    solicitação de participação precisa ser aprovada pelo organizador.
                                 </span>
-                            </label>
-                            <label class="seplag-visibility-option">
-                                <input type="radio" th:field="*{privado}" value="true">
-                                <span>
-                                    <strong><i class="fa-solid fa-lock" aria-hidden="true"></i> Evento Privado</strong>
-                                    <small>Oculto na vitrine pública. Acessível por link direto e você decide quem participa.</small>
-                                </span>
-                            </label>
-                        </div>
+                            </span>
+                        </label>
                     </div>
                 </div>
             </section>

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <th:block th:replace="~{fragments/seplag-ui :: head-content('Detalhes do Evento')}"></th:block>
-    <meta name="robots" content="noindex,nofollow" th:if="${evento.privado}">
+<html lang="pt-BR" class="v2-root" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+<head th:replace="~{fragments/seplag-ui :: head('Detalhes do Evento')}">
+    <title>Detalhes do Evento | SEPLAG-MT</title>
 </head>
 <body class="v2 seplag-public">
 
@@ -38,6 +38,10 @@
     <div th:if="${evento.bannerUrl != null}" class="seplag-event-hero"
          th:style="|background-image: linear-gradient(115deg, rgba(3, 3, 5, 0.62), rgba(15, 8, 24, 0.82)), url('${#strings.startsWith(evento.bannerUrl, 'https://res.cloudinary.com/') ? evento.bannerUrl : '/imagens-eventos/' + evento.bannerUrl}');|">
         <div class="seplag-event-hero__content">
+            <span th:if="${eventoPrivado}" class="seplag-badge seplag-badge--warning">
+                <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                Evento privado · participação mediante aprovação
+            </span>
             <p th:if="${evento.nicho != null}" class="seplag-eyebrow">
                 <th:block th:replace="~{fragments/seplag-ui :: nicho(${evento.nicho})}"></th:block>
             </p>
@@ -62,6 +66,10 @@
     <!-- CASO B: O EVENTO NÃO POSSUI IMAGEM (FALLBACK) -->
     <div th:if="${evento.bannerUrl == null}" class="seplag-event-hero seplag-event-hero--plain">
         <div class="seplag-event-hero__content">
+            <span th:if="${eventoPrivado}" class="seplag-badge seplag-badge--warning">
+                <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                Evento privado · participação mediante aprovação
+            </span>
             <p th:if="${evento.nicho != null}" class="seplag-eyebrow">
                 <th:block th:replace="~{fragments/seplag-ui :: nicho(${evento.nicho})}"></th:block>
             </p>
@@ -85,46 +93,59 @@
 
     <section class="seplag-event-enroll" aria-labelledby="inscricao-titulo">
         <div>
-            <h2 id="inscricao-titulo">Inscrição no evento</h2>
-            <p>Vagas: <strong th:text="${evento.vagasTotais ?: 'Ilimitadas'}">Ilimitadas</strong>
-                <span th:if="${evento.privado}"> · A participação depende da aprovação do organizador.</span>
+            <h2 id="inscricao-titulo">Participação no evento</h2>
+            <p>Vagas: <strong th:text="${evento.vagasTotais ?: 'Ilimitadas'}">Ilimitadas</strong></p>
+            <p th:if="${eventoPrivado}" class="seplag-card__hint">
+                <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                Este evento é privado. Envie uma solicitação e aguarde a aprovação do organizador.
             </p>
         </div>
 
-        <div class="seplag-toolbar">
-            <button type="button"
-                    class="seplag-btn seplag-btn-secondary"
-                    data-share-trigger
-                    th:data-share-url="@{/eventos/{id}(id=${evento.id})}"
-                    th:data-share-title="${evento.titulo}">
+        <div class="seplag-event-enroll__actions">
+            <button type="button" class="seplag-btn seplag-btn-secondary"
+                    data-share-open
+                    th:attr="data-share-title=${evento.titulo},data-share-url=${urlCompartilhamento}">
                 <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
                 Compartilhar
             </button>
 
-            <th:block th:if="${inscricaoUsuario != null}">
-                <span th:if="${inscricaoUsuario.status.name() == 'PENDENTE'}" class="seplag-badge seplag-badge--warning">
-                    <i class="fa-regular fa-clock" aria-hidden="true"></i> Solicitação enviada · Aguardando aprovação
-                </span>
-                <span th:if="${inscricaoUsuario.status.name() == 'ATIVO'}" class="seplag-badge seplag-badge--success">
-                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i> Inscrição confirmada
-                </span>
-                <span th:if="${inscricaoUsuario.status.name() == 'UTILIZADO'}" class="seplag-badge seplag-badge--success">
-                    <i class="fa-solid fa-check-double" aria-hidden="true"></i> Presença confirmada
-                </span>
-                <span th:if="${inscricaoUsuario.status.name() == 'RECUSADO'}" class="seplag-badge seplag-badge--danger">
-                    <i class="fa-solid fa-ban" aria-hidden="true"></i> Solicitação não aprovada
-                </span>
-                <span th:if="${inscricaoUsuario.status.name() == 'CANCELADO'}" class="seplag-badge seplag-badge--neutral">
-                    <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i> Inscrição cancelada
-                </span>
-            </th:block>
+            <a sec:authorize="isAnonymous()" th:href="@{/login}" class="seplag-btn seplag-btn-primary">
+                <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
+                Entrar para se inscrever
+            </a>
 
-            <form th:if="${inscricaoUsuario == null}" th:action="@{/eventos/{id}/inscrever(id=${evento.id})}" method="POST">
-                <button type="submit" class="seplag-btn seplag-btn-primary">
-                    <i class="fa-solid fa-check-to-slot" aria-hidden="true"></i>
-                    <span th:text="${evento.privado ? 'Solicitar Participação' : 'Realizar Inscrição'}">Realizar Inscrição</span>
-                </button>
-            </form>
+            <div sec:authorize="isAuthenticated()" class="seplag-event-enroll__status">
+                <a th:if="${ehOrganizador}" th:href="@{/organizador/eventos/{id}/inscritos(id=${evento.id})}"
+                   class="seplag-btn seplag-btn-primary">
+                    <i class="fa-solid fa-users-gear" aria-hidden="true"></i>
+                    Gerenciar inscritos
+                </a>
+
+                <div th:if="${!ehOrganizador and solicitacaoPendente}"
+                     class="seplag-alert seplag-alert--warning" role="status">
+                    <i class="fa-solid fa-clock" aria-hidden="true"></i>
+                    <span>Sua solicitação de participação está aguardando aprovação do organizador.</span>
+                </div>
+
+                <div th:if="${!ehOrganizador and inscricaoAtiva}"
+                     class="seplag-alert seplag-alert--success" role="status">
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                    <span>Sua participação neste evento está confirmada.</span>
+                </div>
+
+                <p th:if="${!ehOrganizador and inscricaoRecusada}" class="seplag-card__hint">
+                    <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                    Sua solicitação anterior foi recusada pelo organizador. Você pode solicitar novamente.
+                </p>
+
+                <form th:if="${!ehOrganizador and podeSolicitar}"
+                      th:action="@{/eventos/{id}/inscrever(id=${evento.id})}" method="POST">
+                    <button type="submit" class="seplag-btn seplag-btn-primary">
+                        <i class="fa-solid fa-check-to-slot" aria-hidden="true"></i>
+                        <span th:text="${evento.privado == true} ? 'Solicitar participação' : 'Realizar Inscrição'">Realizar Inscrição</span>
+                    </button>
+                </form>
+            </div>
         </div>
     </section>
 
@@ -441,8 +462,9 @@
 </main>
 
 <footer th:replace="~{fragments/seplag-ui :: public-footer}"></footer>
-<dialog th:replace="~{fragments/seplag-ui :: share-modal}"></dialog>
 <script th:src="@{/js/seplag-shell.js}" defer></script>
+
+<div th:replace="~{fragments/seplag-ui :: share-sheet(${evento.titulo}, ${urlCompartilhamento})}"></div>
 
 </body>
 </html>

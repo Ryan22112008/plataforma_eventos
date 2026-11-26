@@ -42,12 +42,13 @@ public class PresencaService {
             throw new IllegalStateException("Esta sessão não está aberta para check-in.");
         }
 
-        // 3. Validação de Inscrição (O participante tem inscrição aprovada?)
-        Inscricao inscricao = inscricaoRepository
-                .findByParticipanteIdAndEventoIdComEvento(alunoId, sessao.getEvento().getId())
-                .orElseThrow(() -> new SecurityException("Participante não possui inscrição neste evento."));
-        if (inscricao.getStatus() != StatusInscricao.ATIVO && inscricao.getStatus() != StatusInscricao.UTILIZADO) {
-            throw new SecurityException("Participante não possui inscrição aprovada neste evento.");
+        // 3. Validação de Inscrição (O aluno tem direito a estar aqui?)
+        // Somente inscrições confirmadas (ATIVO) ou já com presença (UTILIZADO)
+        // permitem check-in; solicitações pendentes/recusadas não são válidas.
+        if (!inscricaoRepository.existsByParticipanteIdAndEventoIdAndStatusIn(
+                alunoId, sessao.getEvento().getId(),
+                List.of(StatusInscricao.ATIVO, StatusInscricao.UTILIZADO))) {
+            throw new SecurityException("Aluno não possui inscrição confirmada neste evento.");
         }
 
         // 4. Idempotência (Já marcou?)
@@ -98,6 +99,11 @@ public class PresencaService {
         Sessao sessao = sessaoRepository.findById(sessaoId)
                 .orElseThrow(() -> new NegocioException("Sessão não encontrada."));
         validarAcessoAoEvento(sessao.getEvento(), professorNome);
+        if (!inscricaoRepository.existsByParticipanteIdAndEventoIdAndStatusIn(
+                alunoId, sessao.getEvento().getId(),
+                List.of(StatusInscricao.ATIVO, StatusInscricao.UTILIZADO))) {
+            throw new NegocioException("O participante não possui inscrição confirmada neste evento.");
+        }
 
         // 1. Busca um registro existente ou cria um novo se não existir (o "upsert")
         Presenca presenca = presencaRepository.findByAlunoIdAndSessaoId(alunoId, sessaoId)
@@ -167,8 +173,10 @@ public class PresencaService {
                 throw new NegocioException("A sessão informada não pertence a este evento.");
             }
 
-            if (!inscricaoRepository.existsByParticipanteIdAndEventoId(alteracao.getAlunoId(), eventoId)) {
-                throw new NegocioException("O participante informado não pertence a este evento.");
+            if (!inscricaoRepository.existsByParticipanteIdAndEventoIdAndStatusIn(
+                    alteracao.getAlunoId(), eventoId,
+                    List.of(StatusInscricao.ATIVO, StatusInscricao.UTILIZADO))) {
+                throw new NegocioException("O participante informado não possui inscrição confirmada neste evento.");
             }
 
             sessoes.add(sessao);

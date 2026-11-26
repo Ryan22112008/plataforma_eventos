@@ -41,6 +41,9 @@ public class RequestEventoDto {
 
     private Integer vagasTotais;
 
+    /** Evento privado exige aprovação do organizador para cada participante. */
+    private boolean privado;
+
     private String local;
 
     @NotNull(message = "A modalidade é obrigatória.")
@@ -59,9 +62,6 @@ public class RequestEventoDto {
     @NotNull(message = "A carga horária é obrigatória.")
     @Min(value = 1, message = "A carga horária deve ser de no mínimo 1 hora.")
     private Integer cargaHoraria;
-
-    @Builder.Default
-    private Boolean privado = false;
 
     // --- NOVOS CAMPOS SÊNIOR ADICIONADOS PARA COMPATIBILIDADE COM O CANVA E FORMULÁRIO ---
 

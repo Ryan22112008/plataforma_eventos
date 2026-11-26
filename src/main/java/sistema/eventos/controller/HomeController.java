@@ -146,7 +146,7 @@ public class HomeController {
     public String exibirDetalhesEvento(@PathVariable("id") Long id, Model model) {
         Evento evento = eventoRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Evento não encontrado com o ID: " + id));
-        if (evento.getStatus() != StatusEvento.PUBLICADO) {
+        if (evento.getStatus() != StatusEvento.PUBLICADO || evento.isEventoPrivado()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
 
