@@ -158,7 +158,7 @@ public class QuizController {
     private Usuario usuario(Authentication a){return usuarios.findByEmailIgnoreCase(a.getName()).orElseThrow();}
     private String codigo(){java.security.SecureRandom random=new java.security.SecureRandom();String x;do{x=random.ints(6,0,10).mapToObj(String::valueOf).collect(Collectors.joining());}while(quizzes.existsByCodigoIgnoreCase(x));return x;}
     private int valor(Integer x,int d){return x==null?d:Math.max(1,Math.min(10000,x));} private String blank(String x){return x==null||x.isBlank()?null:x.trim();} private String avatar(String x){return List.of("astronauta","raposa","gato","robo","coruja","capivara").contains(x)?x:"astronauta";}
-    private String csvEscape(String s){return "\""+s.replace("\"","\"\"")+"\"";}
+    private String csvEscape(String s){String v=s==null?"":s;if(!v.isEmpty()&&"=+-@\t\r".indexOf(v.charAt(0))>=0)v="'"+v;return "\""+v.replace("\"","\"\"")+"\"";}
     public static class QuizInput {public String titulo,descricao; public Integer pontosFacil,pontosMedio,pontosDificil,quantidadeFacil,quantidadeMedio,quantidadeDificil; public List<QuestionInput> perguntas;}
     public static class QuestionInput {public Long bancoId;public String enunciado,imagemUrl,dificuldade;public Integer segundos;public Boolean bonus;public List<OptionInput> alternativas;}
     public static class OptionInput {public String texto,imagemUrl;public boolean correta;}

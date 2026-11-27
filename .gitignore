@@ -41,3 +41,6 @@ build/
 dados/
 uploads/
 private_uploads/
+
+# Logs
+*.log

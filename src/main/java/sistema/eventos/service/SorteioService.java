@@ -633,6 +633,10 @@ public class SorteioService {
     }
 
     private String csvEscape(String valor) {
-        return "\"" + (valor == null ? "" : valor.replace("\"", "\"\"")) + "\"";
+        String texto = valor == null ? "" : valor;
+        if (!texto.isEmpty() && "=+-@\t\r".indexOf(texto.charAt(0)) >= 0) {
+            texto = "'" + texto;
+        }
+        return "\"" + texto.replace("\"", "\"\"") + "\"";
     }
 }

@@ -65,7 +65,7 @@ public class EmailService {
 
         try {
             mailSender.send(message);
-            logger.info("Notificação de aprovação de organizador enviada para {}.", usuario.getEmail());
+            logger.info("Notificação de aprovação de organizador enviada para o usuário {}.", usuario.getId());
 
         } catch (Exception e) {
             logger.warn("Falha ao enviar notificação de aprovação de organizador.", e);
@@ -90,7 +90,7 @@ public class EmailService {
 
         try {
             mailSender.send(message);
-            logger.info("Notificação de rejeição de organizador enviada para {}.", usuario.getEmail());
+            logger.info("Notificação de rejeição de organizador enviada para o usuário {}.", usuario.getId());
 
         } catch (Exception e) {
             logger.warn("Falha ao enviar notificação de rejeição de organizador.", e);

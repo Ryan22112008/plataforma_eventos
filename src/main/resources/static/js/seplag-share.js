@@ -19,16 +19,21 @@
         return modal.getAttribute('data-share-title') || document.title;
     }
 
-    function linksDeCompartilhamento(titulo, url) {
+    function linksDeCompartilhamento(titulo, url, privado) {
         var texto = encodeURIComponent(titulo);
         var link = encodeURIComponent(url);
+        var corpoEmail = 'Confira este evento na plataforma SEPLAG-MT: ' + titulo + '\n' + url;
+        if (privado) {
+            corpoEmail += '\n\nEste evento é privado. Entre na plataforma com sua conta para visualizar os detalhes e solicitar participação.';
+        }
         return {
             whatsapp: 'https://wa.me/?text=' + texto + '%20' + link,
             facebook: 'https://www.facebook.com/sharer/sharer.php?u=' + link,
             x: 'https://twitter.com/intent/tweet?text=' + texto + '&url=' + link,
             telegram: 'https://t.me/share/url?url=' + link + '&text=' + texto,
             linkedin: 'https://www.linkedin.com/sharing/share-offsite/?url=' + link,
-            email: 'mailto:?subject=' + texto + '&body=' + texto + '%0A' + link
+            email: 'mailto:?subject=' + encodeURIComponent('Convite: ' + titulo)
+                + '&body=' + encodeURIComponent(corpoEmail)
         };
     }
 
@@ -131,6 +136,7 @@
             if (gatilho.hasAttribute('data-share-url')) {
                 modal.setAttribute('data-share-url', gatilho.getAttribute('data-share-url'));
             }
+            modal.setAttribute('data-share-private', gatilho.getAttribute('data-share-private') === 'true' ? 'true' : 'false');
             configurarNativo(modal);
             abrir(modal);
             return;
@@ -158,7 +164,12 @@
         var rede = evento.target.closest('[data-share-network]');
         if (rede) {
             evento.preventDefault();
-            var mapa = linksDeCompartilhamento(tituloDoModal(modal), urlDoModal(modal));
+            var mapa = linksDeCompartilhamento(
+                tituloDoModal(modal),
+                urlDoModal(modal),
+                rede.getAttribute('data-share-network') === 'email'
+                    && modal.getAttribute('data-share-private') === 'true'
+            );
             var destino = mapa[rede.getAttribute('data-share-network')];
             if (destino) {
                 if (destino.indexOf('mailto:') === 0) {
