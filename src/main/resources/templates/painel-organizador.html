@@ -179,8 +179,8 @@
                                 </a>
                                 <button th:if="${evento.privado and evento.status != null and evento.status.name() == 'PUBLICADO'}"
                                         type="button" class="seplag-action"
-                                        data-share-trigger
-                                        th:attr="data-share-url=@{/eventos/{id}(id=${evento.id})},data-share-title=${evento.titulo}"
+                                        data-share-open
+                                        th:attr="data-share-title=${evento.titulo},data-share-url=@{/eventos/{id}(id=${evento.id})}"
                                         title="Compartilhar link do evento privado">
                                     <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
                                     Compartilhar link

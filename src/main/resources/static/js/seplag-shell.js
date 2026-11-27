@@ -206,7 +206,7 @@
     }
 
     document.addEventListener('click', function (event) {
-        var trigger = event.target.closest('[data-share-trigger]');
+        var trigger = event.target.closest('[data-share-trigger], [data-share-open]');
         if (trigger) {
             event.preventDefault();
             openShareModal(
