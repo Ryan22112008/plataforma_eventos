@@ -87,7 +87,7 @@
             </div>
 
             <div sec:authorize="isAuthenticated()" class="seplag-public-header__group">
-                <a th:replace="~{fragments/seplag-ui :: avatar(${fotoPerfilUrl}, ${usuarioLogado != null ? usuarioLogado.nome : null})}"></a>
+                <a th:replace="~{fragments/seplag-ui :: avatar(${fotoPerfilUrl}, ${nomeUsuarioLogado})}"></a>
                 <span class="seplag-public-header__user">
                     Olá, <strong sec:authentication="name">Usuário</strong>
                 </span>
@@ -226,7 +226,7 @@
                 <span>Ir para o site</span>
             </a>
             <span class="seplag-admin-header__divider" aria-hidden="true"></span>
-            <a th:replace="~{fragments/seplag-ui :: avatar(${fotoPerfilUrl}, ${usuarioLogado != null ? usuarioLogado.nome : null})}"></a>
+            <a th:replace="~{fragments/seplag-ui :: avatar(${fotoPerfilUrl}, ${nomeUsuarioLogado})}"></a>
             <div class="seplag-admin-user">
                 <span class="seplag-admin-user__name" sec:authentication="name">Usuário</span>
                 <span class="seplag-admin-user__role">Super administrador</span>
@@ -258,7 +258,7 @@
 
     <div class="seplag-topbar__actions">
         <span class="seplag-badge seplag-badge--role">Organizador</span>
-        <a th:replace="~{fragments/seplag-ui :: avatar(${fotoPerfilUrl}, ${usuarioLogado != null ? usuarioLogado.nome : null})}"></a>
+        <a th:replace="~{fragments/seplag-ui :: avatar(${fotoPerfilUrl}, ${nomeUsuarioLogado})}"></a>
         <span class="seplag-topbar__user" sec:authentication="name">Organizador</span>
     </div>
 </header>

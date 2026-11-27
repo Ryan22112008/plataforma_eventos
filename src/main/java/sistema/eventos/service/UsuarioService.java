@@ -91,7 +91,7 @@ public class UsuarioService {
     public Usuario buscarPorEmail(String email) {
         String normalizedEmail = email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
         return usuarioRepository.findByEmailIgnoreCase(normalizedEmail)
-                .orElseThrow(() -> new NegocioException("Usuário com e-mail " + email + " não encontrado."));
+                .orElseThrow(() -> new NegocioException("Usuário não encontrado."));
     }
     @Transactional
     public Usuario salvar(Usuario usuario) {

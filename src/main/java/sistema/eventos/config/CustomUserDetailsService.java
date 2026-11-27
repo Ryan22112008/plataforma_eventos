@@ -4,23 +4,30 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.stereotype.Service;
 import java.util.Locale;
 import sistema.eventos.model.Usuario;
 import sistema.eventos.repository.UsuarioRepository;
+import sistema.eventos.service.LoginAttemptService;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UsuarioRepository usuarioRepository;
+    private final LoginAttemptService loginAttemptService;
 
-    public CustomUserDetailsService(UsuarioRepository usuarioRepository) {
+    public CustomUserDetailsService(UsuarioRepository usuarioRepository, LoginAttemptService loginAttemptService) {
         this.usuarioRepository = usuarioRepository;
+        this.loginAttemptService = loginAttemptService;
     }
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         String normalizedEmail = email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
+        if (loginAttemptService.estaBloqueado(normalizedEmail)) {
+            throw new LockedException("Credenciais inválidas.");
+        }
         Usuario usuario = usuarioRepository.findByEmailIgnoreCase(normalizedEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("Credenciais inválidas."));
 

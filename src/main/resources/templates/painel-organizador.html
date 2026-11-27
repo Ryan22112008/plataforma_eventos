@@ -177,7 +177,6 @@
                                     <i class="fa-solid fa-users" aria-hidden="true"></i>
                                     Ver Inscritos
                                 </a>
-<<<<<<< HEAD
                                 <a th:href="@{/organizador/eventos/{id}/relatorios(id=${evento.id})}" class="seplag-action"><i class="fa-solid fa-chart-pie" aria-hidden="true"></i> Relatórios</a>
                                 <button type="button" class="seplag-action seplag-action--share"
                                         th:if="${evento.status != null and evento.status.name() == 'PUBLICADO'}"
@@ -187,20 +186,10 @@
                                     <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
                                     Compartilhar
                                 </button>
-=======
-                                <button th:if="${evento.privado and evento.status != null and evento.status.name() == 'PUBLICADO'}"
-                                        type="button" class="seplag-action"
-                                        data-share-open
-                                        th:attr="data-share-title=${evento.titulo},data-share-url=@{/eventos/{id}(id=${evento.id})}"
-                                        title="Compartilhar link do evento privado">
-                                    <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
-                                    Compartilhar link
-                                </button>
-                                <span th:if="${evento.privado and (evento.status == null or evento.status.name() != 'PUBLICADO')}"
+                                <span th:if="${evento.privado == true and (evento.status == null or evento.status.name() != 'PUBLICADO')}"
                                       class="seplag-card__hint" role="status">
                                     Publique o evento para compartilhar o link.
                                 </span>
->>>>>>> 1e5bea0723de0651d8d9c4cddf384ec403289b5d
                                 <a th:href="@{/organizador/evento/editar/{id}(id=${evento.id})}" class="seplag-action seplag-action--warning">
                                     <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
                                     Editar Evento

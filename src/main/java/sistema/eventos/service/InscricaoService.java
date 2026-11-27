@@ -113,6 +113,9 @@ public class InscricaoService {
     }
 
     private void validarEventoAbertoParaInscricao(Evento evento) {
+        if (evento.getStatus() == sistema.eventos.model.StatusEvento.RASCUNHO) {
+            throw new NegocioException("As inscrições ainda não estão abertas para este evento.");
+        }
         if (evento.getStatus() != null &&
                 (evento.getStatus().name().equals("CANCELADO") || evento.getStatus().name().equals("ENCERRADO"))) {
             throw new NegocioException("Não é possível se inscrever: este evento foi cancelado ou já se encerrou.");

@@ -9,6 +9,9 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+import sistema.eventos.service.LoginAttemptService;
 
 @Configuration
 @EnableWebSecurity
@@ -16,12 +19,17 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Bean
+    public LoginAttemptService loginAttemptService() {
+        return new LoginAttemptService();
+    }
+
+    @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, LoginAttemptService loginAttemptService) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
                         // Libera as pastas estáticas padrão (css, js, etc.)
@@ -44,6 +52,15 @@ public class SecurityConfig {
                 .headers(headers -> headers
                         .contentTypeOptions(org.springframework.security.config.Customizer.withDefaults())
                         .frameOptions(frame -> frame.deny())
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(
+                                "default-src 'self'; "
+                                        + "base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; "
+                                        + "script-src 'self' 'unsafe-inline' https://unpkg.com; "
+                                        + "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com; "
+                                        + "img-src 'self' data: blob: https://res.cloudinary.com https://server.arcgisonline.com https://*.basemaps.cartocdn.com; "
+                                        + "font-src 'self' data: https://cdnjs.cloudflare.com; "
+                                        + "connect-src 'self' https://nominatim.openstreetmap.org; "
+                                        + "frame-src https://maps.google.com"))
                         .referrerPolicy(referrer -> referrer.policy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
                         .permissionsPolicy(permissions -> permissions.policy("camera=(), microphone=(), geolocation=()"))
                         // Spring Security habilita HSTS por padrão; mantém a API compatível com a versão gerenciada pelo Boot.
@@ -53,6 +70,19 @@ public class SecurityConfig {
                         .usernameParameter("username")
                         .passwordParameter("password")
                         .defaultSuccessUrl("/dashboard")
+                        .failureHandler((request, response, exception) -> {
+                            if (!(exception instanceof LockedException)) {
+                                loginAttemptService.registrarFalha(request.getParameter("username"));
+                            }
+                            response.sendRedirect(request.getContextPath() + "/login?error=true");
+                        })
+                        .successHandler((request, response, authentication) -> {
+                            loginAttemptService.registrarSucesso(authentication.getName());
+                            SavedRequestAwareAuthenticationSuccessHandler handler =
+                                    new SavedRequestAwareAuthenticationSuccessHandler();
+                            handler.setDefaultTargetUrl("/dashboard");
+                            handler.onAuthenticationSuccess(request, response, authentication);
+                        })
                         .permitAll()
                 )
                 .logout(logout -> logout

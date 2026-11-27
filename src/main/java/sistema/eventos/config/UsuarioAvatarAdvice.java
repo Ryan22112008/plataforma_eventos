@@ -48,7 +48,7 @@ public class UsuarioAvatarAdvice {
             return;
         }
 
-        model.addAttribute("usuarioLogado", usuario);
+        model.addAttribute("nomeUsuarioLogado", usuario.getNome());
         model.addAttribute("fotoPerfilUrl", storage.publicImageUrl(usuario.getFotoPerfil()));
     }
 }
