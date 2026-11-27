@@ -147,6 +147,9 @@ public class EventoController {
         charts.add(chartDados("Situação das inscrições", todasInscricoes,
                 i -> rotuloInscricao(i.getStatus()),
                 Arrays.stream(StatusInscricao.values()).map(this::rotuloInscricao).toList()));
+        charts.add(chartDados("Total de inscritos por evento", todasInscricoes,
+                i -> i.getEvento().getTitulo(),
+                List.of()));
         charts.add(chartDados("Eventos cadastrados por trimestre", eventosPeriodo,
                 e -> e.getDataCriacao() == null ? "Sem data de cadastro" : rotuloTrimestre(e.getDataCriacao().toLocalDate()),
                 List.of()));
